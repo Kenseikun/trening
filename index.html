@@ -52,7 +52,7 @@
 
   /* Tytuł na falującej linii, litery opadają jak krople przy otwarciu */
   .float .w { white-space: nowrap }
-  .float .w span { display: inline-block; transform: translateY(calc(sin(var(--k) * 32deg) * .1em)) }
+  .float .w span { display: inline-block; transform: translateY(calc(sin(var(--k) / var(--n) * 360deg) * .1em)) }
   .float.enter .w span { animation: drop .7s var(--ease) calc(var(--k) * 45ms) both }
   @keyframes drop { from { translate: 0 -.45em; opacity: 0 } }
 
@@ -90,11 +90,11 @@
   .stats.quad b { font-size: 2.2rem; font-weight: 500 }
 
   /* Postać w ogrodzie */
-  .garden { border: 1px solid var(--line); border-radius: 26px; padding: 10px 6px 14px; margin-top: 14px; background: radial-gradient(60% 55% at 50% 42%, rgba(141,163,141,.13), transparent 70%) }
+  .garden { border: 1px solid var(--line); border-radius: 26px; padding: 8px 6px 10px; margin-top: 12px; background: radial-gradient(60% 55% at 50% 42%, rgba(141,163,141,.13), transparent 70%) }
   .views { display: grid; grid-template-columns: 1fr 1fr; gap: 2px }
   .views figure { margin: 0; text-align: center }
   .views figcaption { font-size: .66rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--stone) }
-  .body { width: 100%; height: auto; display: block; overflow: visible }
+  .body { width: 100%; height: auto; max-height: 208px; display: block; margin: 0 auto; overflow: visible }
   .body path { fill: none; stroke: var(--cream); stroke-opacity: .85; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round }
   .body .dt { stroke-opacity: .45 }
   .body .mu.p { fill: var(--red); fill-opacity: .9 }
@@ -112,7 +112,7 @@
   @keyframes appear { from { opacity: 0 } }
   @keyframes flow { to { stroke-dashoffset: -12 } }
   .legend { list-style: none; margin: 10px 8px 0; padding: 0; columns: 2; column-gap: 20px }
-  .legend li { display: flex; align-items: center; gap: 9px; padding: 6px 0; break-inside: avoid; border-bottom: 1px solid var(--line) }
+  .legend li { display: flex; align-items: center; gap: 9px; padding: 4px 0; break-inside: avoid; border-bottom: 1px solid var(--line) }
   .legend span { flex: 1; font-size: .9rem; line-height: 1.15 }
   .legend b { font-size: 1.05rem; font-weight: 600 }
   .bn { flex: none; width: 21px; height: 21px; border-radius: 50%; background: var(--red); color: var(--ink); display: grid; place-items: center; font: 700 .7rem var(--font); font-style: normal }
@@ -354,6 +354,7 @@ function floatText(el, text, enter) {
   let k = 0;
   el.setAttribute('aria-label', text);
   el.classList.toggle('enter', !!enter);
+  el.style.setProperty('--n', Math.max(4, text.replace(/ /g, '').length));
   el.innerHTML = text.split(' ').map(w => `<span class="w" aria-hidden="true">${[...w].map(c => `<span style="--k:${k++}">${esc(c)}</span>`).join('')}</span>`).join(' ');
 }
 const plural = (n, one, few, many) => n === 1 ? one : n % 10 > 1 && n % 10 < 5 && (n % 100 < 12 || n % 100 > 14) ? few : many;
