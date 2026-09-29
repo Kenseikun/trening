@@ -1,8 +1,15 @@
-// Biblioteka ćwiczeń. img: folder w img/ → dwie klatki (start/koniec) przenikające się w pętli;
-// 'Folder/1' → jedna klatka (ćwiczenia statyczne). Zdjęcia: free-exercise-db (Unlicense, domena publiczna).
+// Biblioteka ćwiczeń; animacje ruchu są w moves.js.
+// p = mięśnie główne, s = pomocnicze (klucze z MUSCLES).
+globalThis.MUSCLES = {
+  chest: 'klatka piersiowa', shoulders: 'barki', biceps: 'bicepsy', triceps: 'tricepsy', forearms: 'przedramiona',
+  abs: 'brzuch', obliques: 'skośne brzucha', traps: 'czworoboczne', lats: 'najszersze grzbietu', midback: 'środek pleców',
+  lowerback: 'prostowniki grzbietu', glutes: 'pośladki', quads: 'czworogłowe ud', hamstrings: 'dwugłowe ud',
+  adductors: 'przywodziciele', calves: 'łydki',
+};
+
 globalThis.EXERCISES = {
   'podciaganie': {
-    name: 'Podciąganie nachwytem', img: 'Pullups',
+    name: 'Podciąganie nachwytem', p: ['lats'], s: ['biceps', 'midback', 'forearms'],
     steps: ['Chwyt nachwytem, trochę szerzej niż barki. Start z pełnego zwisu, łokcie proste.',
       'Najpierw ściągnij łopatki w dół, potem ciągnij łokcie w stronę żeber.',
       'Broda nad drążek, klatka blisko drążka.',
@@ -11,7 +18,7 @@ globalThis.EXERCISES = {
       'Liczy się tylko pełne powtórzenie, od prostych łokci do brody nad drążkiem.'],
   },
   'podciaganie-podchwyt': {
-    name: 'Podciąganie podchwytem', img: 'Chin-Up',
+    name: 'Podciąganie podchwytem', p: ['lats', 'biceps'], s: ['midback', 'forearms'],
     steps: ['Chwyt podchwytem (dłonie do siebie) na szerokość barków, pełny zwis.',
       'Ściągnij łopatki i ciągnij łokcie w dół wzdłuż tułowia.',
       'Broda nad drążek, pół sekundy pauzy.',
@@ -19,7 +26,7 @@ globalThis.EXERCISES = {
     tips: ['Zwykle łatwiejsze niż nachwyt, dobre do budowania liczby powtórzeń.'],
   },
   'podciaganie-guma': {
-    name: 'Podciąganie z gumą', img: 'Band_Assisted_Pull-Up',
+    name: 'Podciąganie z gumą', p: ['lats'], s: ['biceps', 'midback'],
     steps: ['Zawiąż gumę na drążku (pętla przez pętlę) i włóż w nią stopę albo kolano.',
       'Chwyt jak w zwykłym podciąganiu (nachwyt lub podchwyt, patrz notatka), pełny zwis.',
       'Podciągnij się, broda nad drążek.',
@@ -28,7 +35,7 @@ globalThis.EXERCISES = {
       'Co kilka tygodni cieńsza guma. Cel: podciąganie bez pomocy.'],
   },
   'podciaganie-negatyw': {
-    name: 'Negatywy podciągania', img: 'Pullups',
+    name: 'Negatywy podciągania', p: ['lats'], s: ['biceps', 'midback', 'forearms'],
     steps: ['Wejdź nad drążek z podskoku albo z podwyższenia, broda nad drążkiem.',
       'Opuszczaj się jak najwolniej (cel: 5 s) aż do pełnego zwisu.',
       'Stań, weź oddech i powtórz.'],
@@ -36,7 +43,7 @@ globalThis.EXERCISES = {
       'Jeśli nie trzymasz tempa, skróć serię zamiast „spadać”.'],
   },
   'podciaganie-lopatek': {
-    name: 'Podciąganie łopatek', img: 'Scapular_Pull-Up',
+    name: 'Podciąganie łopatek', p: ['traps'], s: ['lats', 'midback'],
     steps: ['Pełny zwis nachwytem. Łokcie proste przez całe ćwiczenie.',
       'Ściągnij łopatki w dół i do tyłu, ciało uniesie się o kilka centymetrów.',
       'Przytrzymaj 1 s i powoli wróć do zwisu.'],
@@ -44,7 +51,7 @@ globalThis.EXERCISES = {
       'To podstawa zdrowych barków i czystego podciągania.'],
   },
   'zwis': {
-    name: 'Zwis na drążku', img: 'Pullups/0',
+    name: 'Zwis na drążku', p: ['forearms'], s: ['lats', 'shoulders'],
     steps: ['Chwyć drążek nachwytem na szerokość barków.',
       'Zawiśnij na prostych rękach, nogi razem.',
       'Oddychaj spokojnie i trzymaj do końca czasu.'],
@@ -52,7 +59,7 @@ globalThis.EXERCISES = {
       'Wzmacnia chwyt i odciąża kręgosłup.'],
   },
   'trx-wioslowanie': {
-    name: 'TRX wiosłowanie', img: 'Suspended_Row',
+    name: 'TRX wiosłowanie', p: ['midback'], s: ['lats', 'biceps', 'shoulders'],
     steps: ['Chwyć uchwyty i odchyl się do tyłu na prostych rękach, ciało proste jak deska.',
       'Ściągnij łopatki i przyciągnij klatkę do dłoni, łokcie blisko tułowia.',
       'Sekunda pauzy na górze, potem powoli do prostych rąk.'],
@@ -60,14 +67,14 @@ globalThis.EXERCISES = {
       'Biodra nie opadają, pośladki napięte.'],
   },
   'wioslowanie-australijskie': {
-    name: 'Wiosłowanie australijskie', img: 'Inverted_Row',
+    name: 'Wiosłowanie australijskie', p: ['midback'], s: ['lats', 'biceps'],
     steps: ['Połóż się pod niskim drążkiem (na wysokości bioder), chwyć nachwytem szerzej niż barki.',
       'Ciało proste od pięt do głowy, pięty na ziemi.',
       'Przyciągnij klatkę do drążka, ściągając łopatki, i powoli opuść.'],
     tips: ['Łatwiej: ugięte kolana. Trudniej: nogi na podwyższeniu.'],
   },
   'dipy': {
-    name: 'Dipy na poręczach', img: 'Parallel_Bar_Dip',
+    name: 'Dipy na poręczach', p: ['triceps', 'chest'], s: ['shoulders'],
     steps: ['Podpór na prostych rękach, barki w dół (z dala od uszu), nogi lekko ugięte z tyłu.',
       'Opuszczaj się z lekkim pochyleniem tułowia, aż łokcie zegną się do ok. 90°.',
       'Wypchnij się do pełnego wyprostu łokci.'],
@@ -75,7 +82,7 @@ globalThis.EXERCISES = {
       'Łokcie prowadź do tyłu, nie na boki.'],
   },
   'dipy-negatyw': {
-    name: 'Negatywy dipów', img: 'Parallel_Bar_Dip',
+    name: 'Negatywy dipów', p: ['triceps', 'chest'], s: ['shoulders'],
     steps: ['Wejdź do podporu na prostych rękach, z podskoku albo z podwyższenia.',
       'Opuszczaj się wolno (cel: 4 s) do zgięcia łokci ok. 90°.',
       'Stań, wróć do podporu i powtórz.'],
@@ -83,7 +90,7 @@ globalThis.EXERCISES = {
       'Jeśli czujesz przód barku, zmniejsz zakres.'],
   },
   'podpor-porecze': {
-    name: 'Podpór na poręczach', img: 'Parallel_Bar_Dip/1',
+    name: 'Podpór na poręczach', p: ['triceps', 'shoulders'], s: ['chest', 'abs'],
     steps: ['Wejdź na poręcze, ręce proste, łokcie zablokowane.',
       'Barki mocno w dół, klatka do przodu, brzuch napięty.',
       'Trzymaj pozycję do końca czasu.'],
@@ -91,7 +98,7 @@ globalThis.EXERCISES = {
       'Przygotowuje barki i nadgarstki do dipów.'],
   },
   'pompki': {
-    name: 'Pompki', img: 'Pushups',
+    name: 'Pompki', p: ['chest'], s: ['triceps', 'shoulders', 'abs'],
     steps: ['Dłonie trochę szerzej niż barki, ciało proste od głowy do pięt.',
       'Opuść klatkę prawie do podłogi, łokcie ok. 45° od tułowia.',
       'Wypchnij się do prostych rąk.'],
@@ -99,7 +106,7 @@ globalThis.EXERCISES = {
       'Łatwiej: dłonie na podwyższeniu. Trudniej: nogi na podwyższeniu.'],
   },
   'pompki-trx': {
-    name: 'Pompki na TRX', img: 'Suspended_Push-Up',
+    name: 'Pompki na TRX', p: ['chest'], s: ['triceps', 'shoulders', 'abs'],
     steps: ['Chwyć uchwyty, odejdź i pochyl się do przodu z prostymi rękami przed klatką.',
       'Ciało proste. Zginaj łokcie, aż dłonie znajdą się przy klatce.',
       'Wypchnij się do startu, pilnując, żeby uchwyty się nie rozjeżdżały.'],
@@ -107,7 +114,7 @@ globalThis.EXERCISES = {
       'Panowanie nad chwiejnymi uchwytami to sedno tego ćwiczenia.'],
   },
   'pompki-waskie': {
-    name: 'Pompki wąskie', img: 'Push-Ups_-_Close_Triceps_Position',
+    name: 'Pompki wąskie', p: ['triceps'], s: ['chest', 'shoulders'],
     steps: ['Dłonie pod barkami albo bliżej, palce do przodu.',
       'Opuszczaj się z łokciami blisko tułowia.',
       'Wypchnij się do prostych rąk.'],
@@ -115,28 +122,28 @@ globalThis.EXERCISES = {
       'Nie rozkładaj łokci na boki.'],
   },
   'pompki-nogi-wyzej': {
-    name: 'Pompki z nogami wyżej', img: 'Push-Ups_With_Feet_Elevated',
+    name: 'Pompki z nogami wyżej', p: ['chest', 'shoulders'], s: ['triceps'],
     steps: ['Stopy na ławce albo podwyższeniu, dłonie na ziemi szerzej niż barki.',
       'Ciało proste, opuść klatkę do podłogi.',
       'Wypchnij się do prostych rąk.'],
     tips: ['Im wyższe podwyższenie, tym więcej pracy barków.', 'Nie łam bioder.'],
   },
   'pompki-na-podwyzszeniu': {
-    name: 'Pompki na podwyższeniu', img: 'Incline_Push-Up',
+    name: 'Pompki na podwyższeniu', p: ['chest'], s: ['triceps', 'shoulders'],
     steps: ['Dłonie na ławce albo skrzyni, ciało proste, stopy na ziemi.',
       'Opuść klatkę do krawędzi, łokcie ok. 45°.',
       'Wypchnij się do prostych rąk.'],
     tips: ['Łatwiejsza wersja pompek: im wyżej dłonie, tym łatwiej.'],
   },
   'guma-rozciaganie': {
-    name: 'Rozciąganie gumy (pull-apart)', img: 'Band_Pull_Apart',
+    name: 'Rozciąganie gumy (pull-apart)', p: ['shoulders'], s: ['midback', 'traps'],
     steps: ['Trzymaj gumę przed sobą na wysokości barków, ręce proste, chwyt na szerokość barków.',
       'Rozciągnij gumę na boki, ściągając łopatki, aż dotknie klatki.',
       'Wróć powoli.'],
     tips: ['Barki nisko, nie unoś ich do uszu.', 'Świetne na rozgrzewkę i postawę.'],
   },
   'guma-rotacja': {
-    name: 'Rotacja zewnętrzna z gumą', img: 'External_Rotation_with_Band',
+    name: 'Rotacja zewnętrzna z gumą', p: ['shoulders'], s: [],
     steps: ['Przyczep gumę na wysokości łokcia i stań do niej bokiem.',
       'Łokieć przy boku (możesz włożyć zwinięty ręcznik), zgięty pod kątem 90°.',
       'Obracaj przedramię na zewnątrz, nie odrywając łokcia, i powoli wróć.'],
@@ -144,21 +151,21 @@ globalThis.EXERCISES = {
       'Seria na jedną rękę, potem na drugą.'],
   },
   'guma-odwrotne-rozpietki': {
-    name: 'Odwrotne rozpiętki z gumą', img: 'Back_Flyes_-_With_Bands',
+    name: 'Odwrotne rozpiętki z gumą', p: ['shoulders'], s: ['midback', 'traps'],
     steps: ['Przyczep gumę przed sobą na wysokości klatki albo trzymaj oba jej końce.',
       'Ręce lekko ugięte. Rozciągnij je na boki, ściągając łopatki.',
       'Sekunda pauzy i powoli wróć.'],
     tips: ['Pracują tylne części barków. Nie pomagaj sobie odchylaniem tułowia.'],
   },
   'kolana-porecze': {
-    name: 'Unoszenie kolan na poręczach', img: 'Knee_Hip_Raise_On_Parallel_Bars',
+    name: 'Unoszenie kolan na poręczach', p: ['abs'], s: ['triceps', 'shoulders'],
     steps: ['Podpór na poręczach na prostych rękach.',
       'Unieś kolana do klatki, lekko podwijając miednicę.',
       'Opuść nogi powoli, bez bujania.'],
     tips: ['Barki nisko przez całe ćwiczenie.', 'Trudniejsza wersja: proste nogi.'],
   },
   'kolana-zwis': {
-    name: 'Unoszenie kolan w zwisie', img: 'Hanging_Leg_Raise',
+    name: 'Unoszenie kolan w zwisie', p: ['abs'], s: ['forearms', 'lats'],
     steps: ['Zwis na drążku, łopatki lekko ściągnięte.',
       'Unieś kolana do klatki, podwijając miednicę.',
       'Opuść powoli, bez bujania.'],
@@ -166,7 +173,7 @@ globalThis.EXERCISES = {
       'Następny krok: proste nogi do poziomu.'],
   },
   'plank': {
-    name: 'Deska', img: 'Plank/1',
+    name: 'Deska', p: ['abs'], s: ['shoulders', 'glutes'],
     steps: ['Oprzyj się na przedramionach, łokcie pod barkami.',
       'Ciało proste od głowy do pięt, pośladki i brzuch napięte.',
       'Trzymaj, oddychając spokojnie.'],
@@ -174,14 +181,14 @@ globalThis.EXERCISES = {
       'Lepiej krócej, ale w idealnej pozycji.'],
   },
   'deska-bokiem': {
-    name: 'Deska bokiem', img: 'Side_Bridge/1',
+    name: 'Deska bokiem', p: ['obliques'], s: ['abs', 'shoulders'],
     steps: ['Połóż się na boku, łokieć pod barkiem, nogi proste jedna na drugiej.',
       'Unieś biodra tak, żeby ciało tworzyło jedną linię.',
       'Trzymaj, a w następnej serii zmień stronę.'],
     tips: ['Biodra wypchnięte do przodu, pośladki nie uciekają do tyłu.'],
   },
   'trx-rollout': {
-    name: 'TRX rollout', img: 'Suspended_Fallout',
+    name: 'TRX rollout', p: ['abs'], s: ['lats', 'shoulders'],
     steps: ['Chwyć uchwyty, stań przodem do zaczepienia z prostymi rękami przed sobą.',
       'Pochyl się do przodu, unosząc proste ręce nad głowę. Ciało proste jak deska.',
       'Wróć do startu siłą brzucha.'],
@@ -189,35 +196,35 @@ globalThis.EXERCISES = {
       'Trudność zależy od kąta. Zacznij bardziej pionowo.'],
   },
   'trx-kolana': {
-    name: 'TRX przyciąganie kolan', img: 'Suspended_Reverse_Crunch',
+    name: 'TRX przyciąganie kolan', p: ['abs'], s: ['shoulders'],
     steps: ['Stopy w pętlach TRX, podpór na prostych rękach jak do pompki.',
       'Przyciągnij kolana do klatki, lekko unosząc biodra.',
       'Wróć do prostej pozycji pod kontrolą.'],
     tips: ['Barki nad dłońmi. W pozycji startowej biodra nie opadają.'],
   },
   'dead-bug': {
-    name: 'Dead bug', img: 'Dead_Bug',
+    name: 'Dead bug', p: ['abs'], s: [],
     steps: ['Połóż się na plecach, ręce w górę, biodra i kolana zgięte pod kątem 90°.',
       'Dociśnij lędźwie do podłogi.',
       'Opuść jednocześnie przeciwną rękę i nogę, wróć i zmień stronę.'],
     tips: ['Lędźwie przez cały czas dociśnięte do podłogi. O to chodzi w tym ćwiczeniu.'],
   },
   'przysiad': {
-    name: 'Przysiad', img: 'Bodyweight_Squat',
+    name: 'Przysiad', p: ['quads', 'glutes'], s: ['hamstrings'],
     steps: ['Stopy na szerokość bioder lub barków, palce lekko na zewnątrz.',
       'Zejdź w dół, cofając biodra, kolana idą w kierunku palców.',
       'Zejdź przynajmniej do poziomu ud i wstań, dociskając całe stopy.'],
     tips: ['Pięty na ziemi, plecy proste.'],
   },
   'przysiad-guma': {
-    name: 'Przysiad z gumą', img: 'Squats_-_With_Bands',
+    name: 'Przysiad z gumą', p: ['quads'], s: ['glutes', 'hamstrings'],
     steps: ['Stań na gumie, drugi koniec trzymaj przy barkach.',
       'Zrób przysiad jak zwykle: biodra do tyłu, kolana w kierunku palców.',
       'Wstań dynamicznie. Na górze guma stawia największy opór.'],
     tips: ['Grubsza guma albo krótszy chwyt to większy opór.'],
   },
   'trx-przysiad-wykroczny': {
-    name: 'TRX przysiad wykroczny', img: 'Suspended_Split_Squat',
+    name: 'TRX przysiad wykroczny', p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
     steps: ['Stań tyłem do zaczepienia, jedna stopa w pętli TRX za Tobą.',
       'Zegnij przednią nogę, cofając tylną w pętli. Tułów lekko pochylony.',
       'Wypchnij się przednią nogą w górę. Cała seria na jedną nogę, potem druga.'],
@@ -225,7 +232,7 @@ globalThis.EXERCISES = {
       'Ciężar na przedniej nodze, tylna tylko pomaga w równowadze.'],
   },
   'przysiad-jednonoz': {
-    name: 'Przysiad jednonóż na podwyższeniu', img: 'Single-Leg_High_Box_Squat',
+    name: 'Przysiad jednonóż na podwyższeniu', p: ['quads'], s: ['glutes'],
     steps: ['Stań jedną nogą na krawędzi ławki albo skrzyni, druga noga zwisa swobodnie.',
       'Trzymaj się TRX-a albo słupka dla równowagi.',
       'Opuść się powoli na jednej nodze tak nisko, jak kontrolujesz, i wstań.'],
@@ -233,28 +240,28 @@ globalThis.EXERCISES = {
       'To droga do pistoletu. Z czasem coraz mniej pomagaj sobie rękami.'],
   },
   'wykroki': {
-    name: 'Wykroki chodzone', img: 'Bodyweight_Walking_Lunge',
+    name: 'Wykroki chodzone', p: ['quads', 'glutes'], s: ['hamstrings', 'calves'],
     steps: ['Zrób duży krok do przodu i opuść tylne kolano prawie do ziemi.',
       'Wypchnij się przednią nogą i przejdź do kolejnego kroku drugą nogą.',
       'Tułów wyprostowany, nogi na zmianę.'],
     tips: ['Przednie kolano nad stopą, nie ucieka do środka.'],
   },
   'mostek': {
-    name: 'Mostek biodrowy', img: 'Butt_Lift_Bridge',
+    name: 'Mostek biodrowy', p: ['glutes'], s: ['hamstrings'],
     steps: ['Połóż się na plecach, kolana zgięte, stopy blisko pośladków.',
       'Unieś biodra, mocno napinając pośladki, aż ciało utworzy linię od kolan do barków.',
       'Sekunda pauzy i powoli w dół.'],
     tips: ['Pracują pośladki, nie lędźwie. Nie przeginaj pleców.'],
   },
   'mostek-jednonoz': {
-    name: 'Mostek jednonóż', img: 'Single_Leg_Glute_Bridge',
+    name: 'Mostek jednonóż', p: ['glutes'], s: ['hamstrings'],
     steps: ['Jak mostek, ale z jedną nogą wyprostowaną w górze.',
       'Unieś biodra, odpychając się piętą nogi podporowej. Biodra na równi.',
       'Sekunda pauzy i powoli w dół. Seria na jedną nogę, potem druga.'],
     tips: ['Miednica nie przechyla się na bok.'],
   },
   'guma-sklon': {
-    name: 'Skłon z gumą (good morning)', img: 'Band_Good_Morning',
+    name: 'Skłon z gumą (good morning)', p: ['hamstrings'], s: ['glutes', 'lowerback'],
     steps: ['Stań na gumie, drugi koniec załóż za kark na barki.',
       'Kolana lekko ugięte. Pochyl tułów do przodu z prostymi plecami (ruch z bioder).',
       'Wróć do pionu, napinając pośladki.'],
@@ -262,14 +269,14 @@ globalThis.EXERCISES = {
       'Rozciąganie z tyłu ud jest tu normalne.'],
   },
   'guma-uginanie-nog': {
-    name: 'Uginanie nóg z gumą', img: 'Seated_Band_Hamstring_Curl',
+    name: 'Uginanie nóg z gumą', p: ['hamstrings'], s: ['calves'],
     steps: ['Przyczep gumę nisko przed sobą, załóż pętlę na kostki i usiądź na ławce.',
       'Zegnij kolana, przyciągając pięty pod siebie.',
       'Powoli wróć do wyprostu.'],
     tips: ['Można też leżąc na brzuchu albo na plecach ze stopami w TRX.'],
   },
   'lydki-guma': {
-    name: 'Wspięcia na palce z gumą', img: 'Calf_Raises_-_With_Bands',
+    name: 'Wspięcia na palce z gumą', p: ['calves'], s: [],
     steps: ['Stań na gumie przednią częścią stóp, końce gumy trzymaj przy barkach.',
       'Wspnij się wysoko na palce, sekunda pauzy.',
       'Powoli opuść pięty.'],
