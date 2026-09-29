@@ -1,0 +1,60 @@
+[
+  {
+    "name": "T1 · Góra A (drążek + dipy)",
+    "note": "Pon. Każda seria czysto, 2 powtórzenia zapasu. Wpisuj faktyczne liczby, bo na ich podstawie ułożę tydzień 2.",
+    "items": [
+      { "ex": "guma-rozciaganie", "sets": 2, "reps": 15, "rest": 20, "note": "Rozgrzewka" },
+      { "ex": "podciaganie-lopatek", "sets": 2, "reps": 8, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "podpor-porecze", "sets": 2, "time": 15, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "podciaganie", "sets": 5, "reps": 2, "rest": 120, "note": "Z pełnego zwisu, broda nad drążek. Jeśli Twój max to 1–2, rób po 1." },
+      { "ex": "dipy", "sets": 3, "reps": 5, "rest": 120, "note": "Łokcie do 90°. Jeśli 5 nie wychodzi, zrób tyle, ile czysto dasz radę, i wpisz faktyczną liczbę." },
+      { "ex": "podciaganie-negatyw", "sets": 3, "reps": 3, "rest": 120, "note": "5 s opuszczania" },
+      { "ex": "trx-wioslowanie", "sets": 3, "reps": 10, "rest": 90, "note": "Ustaw kąt tak, żeby 10. powtórzenie było trudne, ale czyste." },
+      { "ex": "kolana-porecze", "sets": 3, "reps": 10, "rest": 60 }
+    ]
+  },
+  {
+    "name": "T1 · Dół A",
+    "note": "Wt. Nogi, chwyt i brzuch. Spokojne tempo, pełny zakres.",
+    "items": [
+      { "ex": "przysiad", "sets": 2, "reps": 10, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "mostek", "sets": 1, "reps": 12, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "trx-przysiad-wykroczny", "sets": 3, "reps": "8/noga", "rest": 90 },
+      { "ex": "przysiad-jednonoz", "sets": 3, "reps": "5/noga", "rest": 90, "note": "Trzymaj się TRX-a dla równowagi, schodź tak nisko, jak kontrolujesz." },
+      { "ex": "guma-sklon", "sets": 3, "reps": 15, "rest": 60 },
+      { "ex": "mostek-jednonoz", "sets": 3, "reps": "12/noga", "rest": 60 },
+      { "ex": "lydki-guma", "sets": 3, "reps": 15, "rest": 45 },
+      { "ex": "zwis", "sets": 2, "time": 30, "rest": 60 },
+      { "ex": "plank", "sets": 3, "time": 40, "rest": 45 }
+    ]
+  },
+  {
+    "name": "T1 · Góra B (guma + pompki)",
+    "note": "Czw. Więcej powtórzeń z gumą, pompki i ćwiczenia na barki.",
+    "items": [
+      { "ex": "guma-rozciaganie", "sets": 2, "reps": 15, "rest": 20, "note": "Rozgrzewka" },
+      { "ex": "podciaganie-lopatek", "sets": 2, "reps": 8, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "podpor-porecze", "sets": 2, "time": 15, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "podciaganie-guma", "sets": 4, "reps": 6, "rest": 90, "note": "Podchwytem (dłonie do siebie). Dobierz gumę tak, żeby 6. powtórzenie było trudne." },
+      { "ex": "pompki", "sets": 4, "reps": 10, "rest": 90 },
+      { "ex": "dipy-negatyw", "sets": 3, "reps": 4, "rest": 90, "note": "4 s opuszczania" },
+      { "ex": "trx-wioslowanie", "sets": 3, "reps": 12, "rest": 75 },
+      { "ex": "trx-rollout", "sets": 3, "reps": 8, "rest": 60, "note": "Zacznij bardziej pionowo." },
+      { "ex": "guma-rotacja", "sets": 2, "reps": "15/ręka", "rest": 45 }
+    ]
+  },
+  {
+    "name": "T1 · Dół B",
+    "note": "Pt. Nogi, tył uda, praktyka na drążku i brzuch.",
+    "items": [
+      { "ex": "przysiad", "sets": 2, "reps": 10, "rest": 30, "note": "Rozgrzewka" },
+      { "ex": "wykroki", "sets": 3, "reps": "10/noga", "rest": 90 },
+      { "ex": "przysiad-guma", "sets": 3, "reps": 15, "rest": 75 },
+      { "ex": "guma-uginanie-nog", "sets": 3, "reps": 15, "rest": 60 },
+      { "ex": "mostek", "sets": 3, "reps": 15, "rest": 60 },
+      { "ex": "podciaganie", "sets": 3, "reps": 1, "rest": 120, "note": "Praktyka: jedno idealne powtórzenie, bez zmęczenia." },
+      { "ex": "trx-kolana", "sets": 3, "reps": 10, "rest": 60 },
+      { "ex": "deska-bokiem", "sets": 4, "time": 30, "rest": 30, "note": "Na zmianę: lewa i prawa strona." }
+    ]
+  }
+]

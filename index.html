@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<title>Trening</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { --bg:#101114; --card:#1b1d22; --line:#2c2f36; --fg:#f2f2f2; --mut:#a0a6ad; --acc:#c6f432; --warn:#ff6b4a; color-scheme:dark; }
+  * { box-sizing:border-box }
+  [hidden] { display:none !important }
+  body { margin:0; background:var(--bg); color:var(--fg); font:17px/1.45 system-ui,sans-serif; -webkit-tap-highlight-color:transparent }
+  main, section { max-width:560px; margin:0 auto; padding:16px 16px calc(16px + env(safe-area-inset-bottom)) }
+  h1 { font-size:28px; margin:8px 0 16px }
+  h2 { font-size:24px; margin:12px 0 4px }
+  p { margin:6px 0 }
+  small, .mut { color:var(--mut) }
+  button { font:inherit; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; cursor:pointer }
+  .big { display:block; width:100%; background:var(--acc); color:#111; border:0; font-weight:700; font-size:20px; padding:18px; margin-top:10px }
+  .link { background:none; border:0; color:var(--mut); text-decoration:underline; padding:10px 0 }
+  .row { display:flex; gap:10px; align-items:center }
+  .row > * { flex:1 }
+  details { background:var(--card); border-radius:14px; margin:10px 0; padding:2px 14px }
+  details details { background:none; padding:0; margin:0 }
+  summary { padding:12px 0; cursor:pointer; font-weight:600 }
+  summary small { font-weight:400; display:block }
+  ol, ul { padding-left:22px; margin:6px 0 }
+  li { margin:4px 0 }
+  textarea { width:100%; min-height:130px; background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px; font:14px/1.4 ui-monospace,monospace }
+  pre { white-space:pre-wrap; font:14px/1.45 ui-monospace,monospace; margin:6px 0 }
+  .note { color:var(--acc) }
+  .err { color:var(--warn) }
+  .anim { position:relative; aspect-ratio:3/2; background:#000; border-radius:12px; overflow:hidden }
+  .anim img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain }
+  .anim img + img { animation:flip 2.4s ease-in-out infinite }
+  @keyframes flip { 0%,40% { opacity:0 } 50%,90% { opacity:1 } 100% { opacity:0 } }
+  .lib button { display:block; width:100%; text-align:left; margin:6px 0 }
+  #work header { display:flex; justify-content:space-between; align-items:center; gap:10px }
+  .bar { position:sticky; bottom:0; background:var(--bg); padding:10px 0 4px }
+  #stepper button { font-size:28px; padding:8px 0 }
+  #val { font-size:34px; font-weight:800; text-align:center; font-variant-numeric:tabular-nums }
+  #timer { position:fixed; inset:0; max-width:none; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; background:var(--bg); gap:6px }
+  #timer .row { width:100%; max-width:480px }
+  #tLabel { font-size:20px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut) }
+  #tNum { font-size:min(30vw,190px); font-weight:800; line-height:1; font-variant-numeric:tabular-nums }
+  #timer.work #tLabel, #timer.work #tNum { color:var(--acc) }
+  #timer.hot #tNum { color:var(--warn) }
+  #tNext { max-width:420px; width:100% }
+  #tNext .anim { max-height:30vh; margin-top:8px }
+  dialog { background:var(--card); color:var(--fg); border:0; border-radius:16px; padding:16px; width:min(560px,94vw) }
+  dialog::backdrop { background:#000a }
+</style>
+</head>
+<body>
+
+<main id="home">
+  <h1>Trening</h1>
+  <details id="resume" open hidden><summary>Trening w toku</summary>
+    <p id="resumeName"></p>
+    <div class="row"><button id="resumeBtn" class="big">Wznów</button><button id="dropBtn">Porzuć</button></div>
+  </details>
+  <div id="plans"></div>
+  <details><summary>Import rozpiski</summary>
+    <textarea id="imp" placeholder="Wklej JSON z rozpiską od Claude"></textarea>
+    <div class="row"><button id="impBtn">Wczytaj</button><button id="promptBtn">Instrukcja dla Claude</button></div>
+    <p id="impMsg"></p>
+  </details>
+  <details><summary>Ćwiczenia</summary><div id="lib" class="lib"></div></details>
+  <details><summary>Historia</summary><div id="hist"></div></details>
+</main>
+
+<section id="work" hidden>
+  <header><small id="wProg"></small><button id="endBtn" class="link">Zakończ</button></header>
+  <div id="wCard"></div>
+  <div class="bar">
+    <div id="stepper" class="row"><button id="minus" aria-label="Mniej">−</button><output id="val">0</output><button id="plus" aria-label="Więcej">+</button></div>
+    <button id="doneBtn" class="big"></button>
+    <button id="skipEx" class="link">Pomiń ćwiczenie</button>
+  </div>
+</section>
+
+<section id="timer" hidden role="timer">
+  <div id="tLabel"></div>
+  <div id="tNum"></div>
+  <div class="row"><button id="tMinus">−15 s</button><button id="tSkip"></button><button id="tPlus">+15 s</button></div>
+  <div id="tNext"></div>
+</section>
+
+<section id="done" hidden>
+  <h2>Koniec treningu 💪</h2>
+  <pre id="sum"></pre>
+  <textarea id="doneNote" placeholder="Uwagi: jak poszło, czy coś bolało, która guma…"></textarea>
+  <button id="shareBtn" class="big">Wyślij do Claude</button>
+  <button id="saveBtn" class="link">Zapisz w historii i wróć</button>
+</section>
+
+<dialog id="dlg"><div id="dlgBody"></div><button id="dlgClose" class="big">Zamknij</button></dialog>
+
+<script src="exercises.js"></script>
+<script src="logic.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
+const load = (k, d) => { try { return JSON.parse(localStorage[k]) ?? d } catch { return d } };
+const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v));
+
+let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null);
+let tInt, lastBeep, ac, wl;
+const allPlans = () => [...imported, ...served];
+const save = () => store('cur', cur);
+const S = () => steps(cur.plan);
+const curItem = () => cur.plan.items[S()[cur.i].item];
+
+// --- wygląd ćwiczenia
+const anim = e => frames(e).length ? `<div class="anim">${frames(e).map(f => `<img src="${f}" alt="">`).join('')}</div>` : '';
+const video = it => `https://www.youtube.com/results?search_query=${encodeURIComponent(exName(it) + ' technika')}`;
+function card(it) {
+  const e = EXERCISES[it.ex];
+  return `${anim(e)}<h2>${esc(exName(it))}</h2>
+    ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
+    <details><summary>Jak wykonać</summary>
+      ${e ? `<ol>${e.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol><ul>${e.tips.map(s => `<li class="mut">${esc(s)}</li>`).join('')}</ul>` : ''}
+      <p><a href="${video(it)}" target="_blank" rel="noopener" style="color:var(--acc)">▶ Wideo z techniką</a></p>
+    </details>`;
+}
+
+// --- ekran startowy
+function renderHome() {
+  $('resume').hidden = !cur;
+  if (cur) $('resumeName').textContent = cur.phase === 'done' ? `${cur.plan.name}: niezapisane podsumowanie` : `${cur.plan.name}: seria ${cur.i + 1} z ${S().length}`;
+  $('plans').innerHTML = allPlans().map((p, k) => `<details><summary>${esc(p.name)}<small>${p.items.length} ćwiczeń${k < imported.length ? ' · zaimportowany' : ''}</small></summary>
+    ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
+    <ol>${p.items.map(it => `<li>${esc(exName(it))} <small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}</small></li>`).join('')}</ol>
+    <button class="big" data-start="${k}">Start</button>
+    ${k < imported.length ? `<button class="link" data-del="${k}">Usuń</button>` : ''}</details>`).join('')
+    || '<p class="mut">Brak rozpisek. Wklej JSON od Claude w sekcji Import.</p>';
+  $('hist').innerHTML = past.length
+    ? past.map(h => `<details><summary>${esc(h.split('\n')[0])}</summary><pre>${esc(h)}</pre></details>`).join('') + '<button id="histBtn">Wyślij ostatnie 10</button>'
+    : '<p class="mut">Pusto.</p>';
+}
+$('plans').onclick = e => {
+  const b = e.target.closest('button');
+  if (b?.dataset.start) start(allPlans()[b.dataset.start]);
+  if (b?.dataset.del && confirm('Usunąć ten trening?')) { imported.splice(b.dataset.del, 1); store('imported', imported); renderHome(); }
+};
+$('hist').onclick = e => e.target.id === 'histBtn' && send(past.slice(0, 10).join('\n\n'));
+$('lib').innerHTML = Object.entries(EXERCISES).sort((a, b) => a[1].name.localeCompare(b[1].name, 'pl'))
+  .map(([id, e]) => `<button data-ex="${id}">${esc(e.name)}</button>`).join('');
+$('lib').onclick = e => {
+  const id = e.target.closest('button')?.dataset.ex;
+  if (id) { $('dlgBody').innerHTML = card({ ex: id }); $('dlg').showModal(); }
+};
+$('dlgClose').onclick = () => $('dlg').close();
+
+$('impBtn').onclick = () => {
+  try {
+    // Z odpowiedzi czatu bierzemy fragment od pierwszego [ lub { do ostatniego ] lub } (pomija ``` i komentarze).
+    const t = $('imp').value, json = t.slice(t.search(/[[{]/), Math.max(t.lastIndexOf(']'), t.lastIndexOf('}')) + 1);
+    const plans = normalize(JSON.parse(json));
+    imported = [...plans, ...imported.filter(p => !plans.some(n => n.name === p.name))];
+    store('imported', imported);
+    $('imp').value = '';
+    $('impMsg').className = ''; $('impMsg').textContent = `Wczytano: ${plans.map(p => p.name).join(', ')}`;
+    renderHome();
+  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Błąd: ${err.message}`; }
+};
+$('promptBtn').onclick = () => send(claudePrompt(EXERCISES, past));
+
+async function send(text) {
+  try { if (navigator.share) return await navigator.share({ text }); } catch (e) { if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); alert('Skopiowano do schowka'); } catch { prompt('Skopiuj:', text); }
+}
+
+// --- trening
+function show(id) { for (const s of ['home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
+
+function start(plan) {
+  cur = { plan, i: 0, log: {}, phase: 'set', end: 0, t0: Date.now() };
+  wake();
+  renderSet();
+}
+
+function renderSet() {
+  clearInterval(tInt);
+  cur.phase = 'set'; save();
+  const st = S()[cur.i], it = curItem();
+  $('wProg').textContent = `Ćwiczenie ${st.item + 1}/${cur.plan.items.length} · Seria ${st.set}/${it.sets} · Cel: ${goal(it)}`;
+  $('wCard').innerHTML = card(it);
+  $('stepper').hidden = !!it.time;
+  $('val').value = cur.log[cur.i] ?? (parseInt(it.reps) || 0);
+  $('doneBtn').textContent = it.time ? `Start ${it.time} s` : 'Seria zrobiona ✓';
+  show('work');
+}
+$('minus').onclick = () => $('val').value = Math.max(0, +$('val').value - 1);
+$('plus').onclick = () => $('val').value = +$('val').value + 1;
+$('doneBtn').onclick = () => {
+  const it = curItem();
+  if (!it.time) return finishSet(+$('val').value);
+  timer('prep', 5, () => timer('work', it.time, () => finishSet(it.time)));
+};
+$('skipEx').onclick = () => {
+  const item = S()[cur.i].item, next = S().findIndex(s => s.item > item);
+  if (next < 0) return finish();
+  cur.i = next; renderSet();
+};
+$('endBtn').onclick = () => confirm('Zakończyć trening?') && finish();
+
+function finishSet(v) {
+  cur.log[cur.i] = v;
+  const rest = S()[cur.i].rest;
+  if (cur.i + 1 >= S().length) return finish();
+  cur.i++;
+  rest ? timer('rest', rest, renderSet) : renderSet();
+}
+
+// Odliczanie od znacznika czasu, żeby wstrzymanie strony nie przestawiało licznika. phase: prep | work | rest.
+let tDone;
+function timer(phase, sec, onEnd, end = Date.now() + sec * 1000) {
+  clearInterval(tInt);
+  Object.assign(cur, { phase, end }); save();
+  tDone = onEnd; lastBeep = null;
+  $('timer').className = phase === 'rest' ? '' : 'work';
+  $('tLabel').textContent = { prep: 'Przygotuj się', work: exName(curItem()), rest: 'Przerwa' }[phase];
+  $('tSkip').textContent = phase === 'work' ? 'Stop' : 'Pomiń';
+  $('tMinus').hidden = $('tPlus').hidden = phase !== 'rest';
+  const st = S()[cur.i], it = curItem();
+  $('tNext').innerHTML = phase === 'rest'
+    ? `<p class="mut">Następnie: <b>${esc(exName(it))}</b> · seria ${st.set}/${it.sets} · ${esc(goal(it))}</p>${st.set === 1 ? anim(EXERCISES[it.ex]) : ''}` : '';
+  show('timer');
+  tInt = setInterval(tick, 200); tick();
+}
+function tick() {
+  const left = Math.ceil((cur.end - Date.now()) / 1000);
+  if (left <= 0) {
+    clearInterval(tInt);
+    beep(880, .6); navigator.vibrate?.([300, 120, 300]);
+    return tDone();
+  }
+  $('tNum').textContent = fmt(left);
+  $('timer').classList.toggle('hot', left <= 3);
+  if (left <= 3 && left !== lastBeep) { lastBeep = left; beep(660, .12); }
+}
+$('tMinus').onclick = () => { cur.end -= 15000; save(); tick(); };
+$('tPlus').onclick = () => { cur.end += 15000; save(); tick(); };
+$('tSkip').onclick = () => {
+  clearInterval(tInt);
+  if (cur.phase !== 'work') return tDone();
+  finishSet(curItem().time - Math.max(0, Math.ceil((cur.end - Date.now()) / 1000)));
+};
+
+function finish() {
+  clearInterval(tInt);
+  cur.phase = 'done'; cur.t1 ??= Date.now(); save();
+  $('sum').textContent = summaryText(cur.plan, cur.log, '', cur.t0, cur.t1);
+  wl?.release(); wl = null;
+  show('done');
+}
+const finalText = () => summaryText(cur.plan, cur.log, $('doneNote').value, cur.t0, cur.t1);
+$('shareBtn').onclick = () => send(finalText());
+$('saveBtn').onclick = () => {
+  past.unshift(finalText()); past = past.slice(0, 100); store('history', past);
+  cur = null; save(); $('doneNote').value = '';
+  renderHome(); show('home');
+};
+
+// Wznowienie po zamknięciu aplikacji: przerwa liczy się dalej, seria na czas zaczyna się od nowa.
+$('resumeBtn').onclick = () => {
+  if (cur.phase === 'done') return finish();
+  wake();
+  cur.phase === 'rest' && cur.end > Date.now() ? timer('rest', 0, renderSet, cur.end) : renderSet();
+};
+$('dropBtn').onclick = () => { if (confirm('Porzucić trening bez zapisu?')) { cur = null; save(); renderHome(); } };
+
+// --- dźwięk i ekran (AudioContext tworzony przy dotknięciu Start/Wznów)
+function beep(freq, sec) {
+  try {
+    const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(.4, t); g.gain.exponentialRampToValueAtTime(.001, t + sec);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + sec);
+  } catch {}
+}
+async function wake() {
+  try { ac ??= new AudioContext(); ac.resume(); } catch {}
+  try { wl = await navigator.wakeLock?.request('screen'); } catch {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !cur || cur.phase === 'done') return;
+  if (!wl || wl.released) wake();
+  if (!$('timer').hidden) tick();
+});
+
+fetch('plans.json', { cache: 'no-cache' }).then(r => r.json()).then(d => { served = normalize(d); renderHome(); }).catch(console.warn);
+renderHome(); show('home');
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
