@@ -1,11 +1,5 @@
 // Czysta logika, bez DOM. Ładowana przez index.html i sw.js; `node logic.js` uruchamia autotest.
 
-// Klatki animacji ćwiczenia: 'Folder' → dwie, 'Folder/1' → jedna.
-function frames(e) {
-  if (!e?.img) return [];
-  return e.img.includes('/') ? [`img/${e.img}.jpg`] : [0, 1].map(n => `img/${e.img}/${n}.jpg`);
-}
-
 // Rozpiska (jeden trening albo tablica, np. wklejona od Claude) → tablica treningów z domyślnymi wartościami.
 function normalize(data) {
   const plans = Array.isArray(data) ? data : [data];
@@ -39,18 +33,56 @@ function steps(plan) {
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const exName = it => it.name || globalThis.EXERCISES?.[it.ex]?.name || it.ex;
 const goal = it => it.time ? `${it.time} s` : /^\d+$/.test(String(it.reps)) ? `${it.reps} powt.` : String(it.reps);
+// Typ treningu bez numeru tygodnia: „T2 · Góra A (…)” i „T1 · Góra A (…)” to ten sam typ.
+const planKind = name => String(name).replace(/^T\d+\s*·\s*/, '').replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase();
 
-// Podsumowanie do wklejenia Claude'owi. log: {indeks serii: wynik}.
-function summaryText(plan, log, note, t0, t1) {
+// Szacowany czas w minutach: ok. 40 s na serię powtórzeń (albo czas serii) plus przerwy.
+const estimate = plan => Math.round(steps(plan).reduce((t, s) => t + (plan.items[s.item].time || 40) + s.rest, 0) / 60);
+
+// Obciążenie mięśni: seria liczy się 1 dla mięśnia głównego i 0,5 dla pomocniczego.
+// sets(item, index) pozwala liczyć serie zaplanowane albo faktycznie zrobione.
+function muscleLoad(items, sets = it => it.sets) {
+  const load = {};
+  items.forEach((it, k) => {
+    const e = globalThis.EXERCISES?.[it.ex], n = sets(it, k);
+    if (!e || !n) return;
+    for (const m of e.p) load[m] = (load[m] || 0) + n;
+    for (const m of e.s) load[m] = (load[m] || 0) + n / 2;
+  });
+  return load;
+}
+// Posortowane udziały: [{ m, load, pct }].
+function muscleShare(load) {
+  const sum = Object.values(load).reduce((a, b) => a + b, 0) || 1;
+  return Object.entries(load).sort((a, b) => b[1] - a[1]).map(([m, v]) => ({ m, load: v, pct: Math.round(v / sum * 100) }));
+}
+
+// Wyniki treningu: per ćwiczenie + sumy. log: {indeks serii: wynik}.
+function stats(plan, log) {
   const st = steps(plan);
+  const per = plan.items.map((it, item) => ({
+    ex: it.ex, name: exName(it), time: !!it.time, sets: it.sets, reps: it.reps,
+    vals: st.flatMap((s, i) => s.item === item && log[i] != null ? [log[i]] : []),
+  }));
+  const sum = f => per.filter(f).flatMap(p => p.vals).reduce((a, b) => a + b, 0);
+  return { per, reps: sum(p => !p.time), hold: sum(p => p.time), done: Object.keys(log).length, total: st.length };
+}
+// Zmiana w % (null, gdy nie ma z czym porównać).
+const delta = (now, before) => before > 0 ? Math.round((now - before) / before * 100) : null;
+const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
+
+// Podsumowanie do wklejenia Claude'owi; prev = poprzedni trening tego samego typu (z historii).
+function summaryText(plan, log, note, t0, t1, prev) {
+  const s = stats(plan, log);
   const lines = [`Trening: ${plan.name} (${new Date(t0).toISOString().slice(0, 10)}, ${Math.round((t1 - t0) / 60000)} min)`];
   const skipped = [];
-  plan.items.forEach((it, item) => {
-    const vals = st.map((s, i) => s.item === item && log[i] != null ? log[i] + (it.time ? ' s' : '') : null).filter(v => v != null);
-    if (vals.length) lines.push(`${exName(it)} (cel ${it.sets}×${it.time ? it.time + ' s' : it.reps}): ${vals.join(', ')}`);
-    else skipped.push(exName(it));
-  });
+  for (const p of s.per) {
+    if (p.vals.length) lines.push(`${p.name} (cel ${p.sets}×${p.time ? plan.items.find(i => i.ex === p.ex).time + ' s' : p.reps}): ${p.vals.map(v => v + (p.time ? ' s' : '')).join(', ')}`);
+    else skipped.push(p.name);
+  }
   if (skipped.length) lines.push(`Pominięte: ${skipped.join(', ')}`);
+  lines.push(`Serie: ${s.done}/${s.total}, powtórzenia razem: ${s.reps}` + (s.hold ? `, czas w napięciu: ${s.hold} s` : ''));
+  if (prev) lines.push(`Poprzednio (${new Date(prev.t0).toISOString().slice(0, 10)}): powtórzenia ${prev.reps} → ${s.reps} (${signed(delta(s.reps, prev.reps))})`);
   if (note?.trim()) lines.push(`Uwagi: ${note.trim()}`);
   return lines.join('\n');
 }
@@ -72,14 +104,31 @@ if (typeof module !== 'undefined' && require.main === module) {
   require('./exercises.js');
   const plans = normalize(JSON.parse(fs.readFileSync(path.join(__dirname, 'plans.json'), 'utf8')));
   for (const p of plans) for (const it of p.items) assert(EXERCISES[it.ex], `${p.name}: nieznane ćwiczenie "${it.ex}"`);
-  for (const [id, e] of Object.entries(EXERCISES)) for (const f of frames(e)) assert(fs.existsSync(path.join(__dirname, f)), `${id}: brak ${f}`);
+  const { EX_MOVE, MOVES } = require('./moves.js');
+  for (const [id, e] of Object.entries(EXERCISES)) {
+    assert(MOVES[EX_MOVE[id]?.[0]], `${id}: brak animacji w moves.js`);
+    for (const m of [...e.p, ...e.s]) assert(MUSCLES[m], `${id}: nieznany mięsień "${m}"`);
+    assert(e.p.length, `${id}: brak mięśni głównych`);
+  }
 
-  const p = normalize({ name: 'x', items: [{ ex: 'pompki', sets: 2, reps: 5, rest: 60 }, { ex: 'plank', sets: 1, time: 30 }] })[0];
+  const p = normalize({ name: 'T2 · Góra A (x)', items: [{ ex: 'pompki', sets: 2, reps: 5, rest: 60 }, { ex: 'plank', sets: 1, time: 30 }] })[0];
   assert.deepStrictEqual(steps(p), [{ item: 0, set: 1, rest: 60 }, { item: 0, set: 2, rest: 60 }, { item: 1, set: 1, rest: 0 }]);
   assert.throws(() => normalize({ name: 'x', items: [{ ex: 'a', sets: 3 }] }), /reps/);
   assert.strictEqual(fmt(125), '2:05');
-  const sum = summaryText(p, { 0: 5, 1: 4 }, 'ok', 0, 60000);
+  assert.strictEqual(planKind(p.name), planKind('T1 · Góra A (drążek + dipy)'));
+  assert.strictEqual(estimate(p), 4); // 40+60+40+60+30 s = 230 s
+
+  const load = muscleLoad(p.items);
+  assert.deepStrictEqual(load, { chest: 2, triceps: 1, shoulders: 1.5, abs: 2, glutes: 0.5 });
+  assert.strictEqual(muscleShare(load)[0].pct, 29);
+
+  const s = stats(p, { 0: 5, 1: 4, 2: 30 });
+  assert.deepStrictEqual([s.reps, s.hold, s.done, s.total], [9, 30, 3, 3]);
+  assert.strictEqual(delta(9, 8), 13);
+  assert.strictEqual(signed(delta(9, 8)), '+13%');
+  const sum = summaryText(p, { 0: 5, 1: 4 }, 'ok', 0, 60000, { t0: 0, reps: 8 });
   assert.match(sum, /Pompki \(cel 2×5\): 5, 4/);
   assert.match(sum, /Pominięte: Deska/);
-  console.log(`OK: ${plans.length} treningi, ${Object.keys(EXERCISES).length} ćwiczeń, zdjęcia na miejscu`);
+  assert.match(sum, /powtórzenia 8 → 9 \(\+13%\)/);
+  console.log(`OK: ${plans.length} treningi, ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu`);
 }

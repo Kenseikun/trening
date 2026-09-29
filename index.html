@@ -3,156 +3,506 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#101114">
+<meta name="theme-color" content="#3F4A46">
 <title>Trening</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
+<link rel="preload" href="fonts/quicksand-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root { --bg:#101114; --card:#1b1d22; --line:#2c2f36; --fg:#f2f2f2; --mut:#a0a6ad; --acc:#c6f432; --warn:#ff6b4a; color-scheme:dark; }
-  * { box-sizing:border-box }
-  [hidden] { display:none !important }
-  body { margin:0; background:var(--bg); color:var(--fg); font:17px/1.45 system-ui,sans-serif; -webkit-tap-highlight-color:transparent }
-  main, section { max-width:560px; margin:0 auto; padding:16px 16px calc(16px + env(safe-area-inset-bottom)) }
-  h1 { font-size:28px; margin:8px 0 16px }
-  h2 { font-size:24px; margin:12px 0 4px }
-  p { margin:6px 0 }
-  small, .mut { color:var(--mut) }
-  button { font:inherit; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; cursor:pointer }
-  .big { display:block; width:100%; background:var(--acc); color:#111; border:0; font-weight:700; font-size:20px; padding:18px; margin-top:10px }
-  .link { background:none; border:0; color:var(--mut); text-decoration:underline; padding:10px 0 }
-  .row { display:flex; gap:10px; align-items:center }
-  .row > * { flex:1 }
-  details { background:var(--card); border-radius:14px; margin:10px 0; padding:2px 14px }
-  details details { background:none; padding:0; margin:0 }
-  summary { padding:12px 0; cursor:pointer; font-weight:600 }
-  summary small { font-weight:400; display:block }
-  ol, ul { padding-left:22px; margin:6px 0 }
-  li { margin:4px 0 }
-  textarea { width:100%; min-height:130px; background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:10px; padding:10px; font:14px/1.4 ui-monospace,monospace }
-  pre { white-space:pre-wrap; font:14px/1.45 ui-monospace,monospace; margin:6px 0 }
-  .note { color:var(--acc) }
-  .err { color:var(--warn) }
-  .anim { position:relative; aspect-ratio:3/2; background:#000; border-radius:12px; overflow:hidden }
-  .anim img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain }
-  .anim img + img { animation:flip 2.4s ease-in-out infinite }
-  @keyframes flip { 0%,40% { opacity:0 } 50%,90% { opacity:1 } 100% { opacity:0 } }
-  .lib button { display:block; width:100%; text-align:left; margin:6px 0 }
-  #work header { display:flex; justify-content:space-between; align-items:center; gap:10px }
-  .bar { position:sticky; bottom:0; background:var(--bg); padding:10px 0 4px }
-  #stepper button { font-size:28px; padding:8px 0 }
-  #val { font-size:34px; font-weight:800; text-align:center; font-variant-numeric:tabular-nums }
-  #timer { position:fixed; inset:0; max-width:none; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; background:var(--bg); gap:6px }
-  #timer .row { width:100%; max-width:480px }
-  #tLabel { font-size:20px; letter-spacing:.12em; text-transform:uppercase; color:var(--mut) }
-  #tNum { font-size:min(30vw,190px); font-weight:800; line-height:1; font-variant-numeric:tabular-nums }
-  #timer.work #tLabel, #timer.work #tNum { color:var(--acc) }
-  #timer.hot #tNum { color:var(--warn) }
-  #tNext { max-width:420px; width:100% }
-  #tNext .anim { max-height:30vh; margin-top:8px }
-  dialog { background:var(--card); color:var(--fg); border:0; border-radius:16px; padding:16px; width:min(560px,94vw) }
-  dialog::backdrop { background:#000a }
+  @font-face { font-family: 'Quicksand'; font-weight: 300 700; font-display: swap; src: url(fonts/quicksand-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Quicksand'; font-weight: 300 700; font-display: swap; src: url(fonts/quicksand-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+  /* Ogród deszczu: czerwony deszcz = wysiłek i pracujące mięśnie, niebieski = regeneracja, jasne kropki = zrobione serie. */
+  :root {
+    --ground: #3F4A46; --deep: #333C39; --ink: #0F1113; --cream: #E7E8E2; --stone: #CDD1CE; --moss: #8DA38D;
+    --blue: #6AA7FF; --red: #FF6B6B; --gear: #9DB89A; --panel: #37413D; --line: rgba(231,232,226,.2); --line-strong: rgba(231,232,226,.5);
+    --font: 'Quicksand', system-ui, sans-serif; --ease: cubic-bezier(.22,.8,.2,1);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box }
+  [hidden] { display: none !important }
+  html { font-size: 112.5%; -webkit-text-size-adjust: 100%; scroll-padding-bottom: 190px }
+  body {
+    margin: 0; color: var(--cream); font: 500 1rem/1.45 var(--font);
+    background: radial-gradient(120% 60% at 50% -8%, #47534E 0%, transparent 62%), radial-gradient(130% 80% at 50% 115%, #2D3532 0%, transparent 60%), var(--ground);
+    min-height: 100dvh; -webkit-tap-highlight-color: transparent; caret-color: var(--blue);
+  }
+  ::selection { background: var(--blue); color: var(--ink) }
+  .sheet { max-width: 560px; margin: 0 auto; min-height: 100dvh; padding: 18px 18px 0; display: flex; flex-direction: column }
+  h1 { font-size: 2.3rem; line-height: 1.05; font-weight: 500; text-transform: lowercase; letter-spacing: .005em; margin: 8px 0 2px; text-wrap: balance }
+  h2 { display: flex; align-items: center; gap: 10px; font-size: .74rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; margin: 30px 0 12px }
+  h2::after { content: ''; flex: 1; height: 1px; background: var(--line) }
+  p { margin: 6px 0 }
+  .stone { color: var(--stone) }
+  .lbl { font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--stone) }
+  .note { border: 1px solid var(--line); border-radius: 18px; padding: 12px 16px; margin: 14px 0; color: var(--stone) }
+  a { color: var(--cream); text-underline-offset: 4px }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; vertical-align: .55em; margin-left: 3px }
+  .dot.b { background: var(--blue) } .dot.r { background: var(--red) } .dot.c { background: var(--cream) }
+
+  /* Nagłówek */
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 56px }
+  .brand { display: block; font-size: 1.35rem; font-weight: 600; letter-spacing: .02em; text-transform: lowercase; line-height: 1.15 }
+  .head .lbl { letter-spacing: .14em }
+  .menu { display: flex; gap: 4px }
+  .menu button { flex-direction: column; gap: 4px; min-height: 0; padding: 0; border: 0; width: 64px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; color: var(--stone) }
+  .menu button:active { background: none; transform: none }
+  .menu .ring { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--cream); transition: background-color .15s }
+  .menu button:active .ring { background: rgba(231,232,226,.14) }
+
+  /* Tytuł na falującej linii, litery opadają jak krople przy otwarciu */
+  .float .w { white-space: nowrap }
+  .float .w span { display: inline-block; transform: translateY(calc(sin(var(--k) * 32deg) * .1em)) }
+  .float.enter .w span { animation: drop .7s var(--ease) calc(var(--k) * 45ms) both }
+  @keyframes drop { from { translate: 0 -.45em; opacity: 0 } }
+
+  /* Pastylki */
+  button {
+    font: 600 1rem/1.1 var(--font); letter-spacing: .02em; text-transform: lowercase; color: var(--cream);
+    background: transparent; border: 1.5px solid var(--line-strong); border-radius: 999px; min-height: 56px; padding: 0 22px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+    transition: background-color .15s, color .15s, border-color .15s, transform .12s;
+  }
+  button:active { transform: scale(.97); background: rgba(231,232,226,.1) }
+  button:focus-visible, summary:focus-visible, a:focus-visible, textarea:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px }
+  .primary { background: var(--cream); color: var(--ink); border-color: var(--cream); width: 100%; min-height: 64px; font-size: 1.15rem; font-weight: 700 }
+  .primary:active { background: #cdd0c6 }
+  .ghost { border-color: transparent; color: var(--stone); text-decoration: underline; text-underline-offset: 5px; min-height: 48px }
+  .round { width: 48px; min-height: 48px; height: 48px; padding: 0; flex: none }
+  .ico { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round }
+  .row { display: flex; gap: 10px } .row > * { flex: 1 }
+  .dock { position: sticky; bottom: 0; margin: auto -18px 0; padding: 22px 18px calc(18px + env(safe-area-inset-bottom)); background: linear-gradient(to bottom, rgba(51,60,57,0), var(--deep) 18px); z-index: 2 }
+  .dock > * + * { margin-top: 6px }
+
+  /* Zakładki treningów */
+  .tabs { display: flex; gap: 8px; overflow-x: auto; margin: 12px -18px 4px; padding: 2px 18px 6px; scrollbar-width: none }
+  .tabs button { flex: 1 0 auto; min-height: 48px; padding: 0 14px; color: var(--stone); border-color: var(--line-strong); white-space: nowrap }
+  .tabs button[aria-selected=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
+
+  /* Pasek statusu */
+  .stats { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 22px; margin: 16px 0; overflow: hidden }
+  .stats > div { padding: 12px 12px 13px; box-shadow: -1px 0 0 var(--line); min-width: 0 }
+  .stats small { display: block; font-size: .64rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--stone) }
+  .stats b { display: block; font-size: 1.55rem; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+  .stats i { display: block; font-style: normal; font-size: .8rem; line-height: 1.25; color: var(--stone) }
+  .stats.quad { grid-auto-flow: row; grid-template-columns: 1fr 1fr }
+  .stats.quad > div { padding: 16px; box-shadow: -1px 0 0 var(--line), 0 -1px 0 var(--line) }
+  .stats.quad b { font-size: 2.2rem; font-weight: 500 }
+
+  /* Postać w ogrodzie */
+  .garden { border: 1px solid var(--line); border-radius: 26px; padding: 10px 6px 14px; margin-top: 14px; background: radial-gradient(60% 55% at 50% 42%, rgba(141,163,141,.13), transparent 70%) }
+  .views { display: grid; grid-template-columns: 1fr 1fr; gap: 2px }
+  .views figure { margin: 0; text-align: center }
+  .views figcaption { font-size: .66rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--stone) }
+  .body { width: 100%; height: auto; display: block; overflow: visible }
+  .body path { fill: none; stroke: var(--cream); stroke-opacity: .85; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round }
+  .body .dt { stroke-opacity: .45 }
+  .body .mu.p { fill: var(--red); fill-opacity: .9 }
+  .body .mu.s { fill: url(#rain) }
+  .body .ld { stroke: var(--red); stroke-opacity: .9; stroke-width: 1.3; stroke-dasharray: 2 4 }
+  .body .bl { fill: var(--red); stroke: none }
+  .body .hit { fill: var(--cream); stroke: var(--ink); stroke-width: 1.2 }
+  .body .bt { fill: var(--ink); font: 700 11px var(--font); text-anchor: middle }
+  .plot path:not(.ld):not(.bl):not(.mu) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both }
+  .plot .mu { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both, fillin .9s ease-out 1.9s both }
+  .plot .ld { animation: appear .4s ease-out 2.2s both, flow 1s linear 2.2s 3 }
+  .plot .bl, .plot .bt, .plot .hit { animation: appear .5s ease-out 2s both }
+  @keyframes plot { to { stroke-dashoffset: 0 } }
+  @keyframes fillin { from { fill-opacity: 0 } }
+  @keyframes appear { from { opacity: 0 } }
+  @keyframes flow { to { stroke-dashoffset: -12 } }
+  .legend { list-style: none; margin: 10px 8px 0; padding: 0; columns: 2; column-gap: 20px }
+  .legend li { display: flex; align-items: center; gap: 9px; padding: 6px 0; break-inside: avoid; border-bottom: 1px solid var(--line) }
+  .legend span { flex: 1; font-size: .9rem; line-height: 1.15 }
+  .legend b { font-size: 1.05rem; font-weight: 600 }
+  .bn { flex: none; width: 21px; height: 21px; border-radius: 50%; background: var(--red); color: var(--ink); display: grid; place-items: center; font: 700 .7rem var(--font); font-style: normal }
+  .sw { flex: none; width: 11px; height: 11px; border-radius: 50%; background: var(--red) }
+  .sw.s { background: radial-gradient(circle, var(--red) 1.1px, transparent 1.5px) 0 0 / 3.6px 3.6px; box-shadow: 0 0 0 1px var(--red) }
+
+  /* Lista ćwiczeń */
+  .parts { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; counter-reset: poz }
+  .parts li { counter-increment: poz }
+  .parts li + li { border-top: 1px solid var(--line) }
+  .parts button { width: 100%; border: 0; border-radius: 0; justify-content: flex-start; text-align: left; text-transform: none; padding: 12px 14px; gap: 12px; min-height: 64px; font-weight: 600 }
+  .parts button::before { content: counter(poz); width: 26px; height: 26px; flex: none; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; font-size: .75rem; color: var(--stone) }
+  .parts span { flex: 1 } .parts small { display: block; font-weight: 500; color: var(--stone); font-size: .84rem; line-height: 1.3; margin-top: 2px }
+  .parts .ico { color: var(--stone) }
+
+  /* Menu: arkusze z importem, biblioteką i historią */
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px }
+  .sheet-head h2 { margin: 0; flex: 1 }
+  .pane > * + * { margin-top: 10px }
+  details summary { list-style: none; cursor: pointer }
+  details summary::-webkit-details-marker { display: none }
+  details.how > summary { display: flex; align-items: center; justify-content: space-between; min-height: 58px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; font-size: .78rem }
+  details[open] > summary .ico { transform: rotate(180deg) }
+  details.how { border-top: 1px solid var(--line); margin-top: 6px }
+  .steps { list-style: none; padding: 0; margin: 2px 0 10px; counter-reset: k }
+  .steps li { counter-increment: k; display: flex; gap: 12px; margin: 10px 0 }
+  .steps li::before { content: counter(k); flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--cream); color: var(--ink); display: grid; place-items: center; font-weight: 700; font-size: .78rem }
+  .tips { padding-left: 18px; color: var(--stone); margin: 6px 0 }
+  textarea { width: 100%; min-height: 120px; background: rgba(15,17,19,.18); color: var(--cream); border: 1px solid var(--line-strong); border-radius: 18px; padding: 12px 14px; font: 500 .92rem/1.45 var(--font) }
+  textarea:focus { border-color: var(--blue) }
+  textarea::placeholder { color: var(--stone) }
+  pre { white-space: pre-wrap; font: 500 .85rem/1.5 var(--font); margin: 6px 0 14px; color: var(--stone) }
+  .err { color: var(--red) }
+  .lib button { width: 100%; border: 0; border-radius: 14px; justify-content: flex-start; text-align: left; text-transform: none; padding: 6px 4px; gap: 12px; min-height: 72px }
+  .lib .move { width: 84px; height: 60px; flex: none; margin: 0; border-radius: 12px; aspect-ratio: auto !important }
+  .lib small { display: block; color: var(--stone); font-size: .8rem; font-weight: 500 }
+  .hist summary { min-height: 52px; display: flex; align-items: center; border-bottom: 1px solid var(--line) }
+  .resume { border: 1px solid var(--blue); border-radius: 22px; padding: 14px 16px; margin: 12px 0 0 }
+  .resume p { margin: 0 0 12px }
+
+  .mus { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0; font-size: .92rem }
+  .mus span { display: inline-flex; align-items: center; gap: 7px }
+
+  /* Serie jako kropki: pełna zrobiona, połówka niepełna, przerywana pominięta */
+  .strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 }
+  .strip i { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(205,209,206,.6) }
+  .strip i.first { margin-left: 8px } .strip i:first-child { margin-left: 0 }
+  .strip i.done { background: var(--cream); box-shadow: none }
+  .strip i.part { background: linear-gradient(90deg, var(--cream) 50%, transparent 50%); box-shadow: inset 0 0 0 1.5px var(--cream) }
+  .strip i.skip { box-shadow: none; border: 1.5px dashed var(--stone); background: linear-gradient(135deg, transparent 43%, var(--stone) 43% 57%, transparent 57%) }
+  .strip i.now { width: 16px; height: 16px; background: var(--blue); box-shadow: 0 0 0 3px rgba(106,167,255,.28) }
+
+  /* Trening */
+  .wbar { display: flex; justify-content: space-between; align-items: center; gap: 12px }
+  #wStrip { flex: 1 }
+
+  /* Animacja ćwiczenia: kremowa postać, czerwień = spięty mięsień, mech = sprzęt */
+  .mv { margin: 14px 0 6px }
+  .move { display: block; width: 100%; max-height: 40vh; aspect-ratio: 3/2; margin: 0 auto; border-radius: 22px; border: 1px solid var(--line); background: var(--panel) }
+  .mv .move { width: auto; max-width: 100% }
+  .mv figcaption { display: flex; gap: 18px; justify-content: center; margin-top: 8px; font-size: .8rem; color: var(--stone) }
+  .mv figcaption span { display: inline-flex; align-items: center; gap: 7px }
+  .eq { width: 16px; height: 4px; border-radius: 2px; background: var(--gear) }
+  .move .o { stroke: var(--cream); stroke-linecap: round } .move .f { stroke: var(--panel); stroke-linecap: round }
+  .move .ho { fill: var(--cream) } .move .hf { fill: var(--panel) } .move .mv-far .o { stroke: #8E9892 }
+  .move .mu { stroke: var(--red); stroke-linecap: round } .move .mu-j { fill: var(--red) }
+  .move .gr { stroke: rgba(231,232,226,.3); stroke-width: 1.5 }
+  .move .pb { fill: var(--gear) } .move .pbl { stroke: var(--gear); stroke-width: 4; stroke-linecap: round }
+  .move .pp { stroke: var(--gear); stroke-opacity: .65; stroke-width: 2.5 }
+  .move .px { fill: rgba(157,184,154,.12); stroke: var(--gear); stroke-width: 1.5 }
+  .move .ps { stroke: var(--gear); stroke-width: 2.4; stroke-dasharray: 6 3 }
+  .move .pg { stroke: var(--gear); stroke-width: 3; stroke-linecap: round }
+  .stepper { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center }
+  .stepper button { width: 64px; height: 64px; min-height: 64px; padding: 0 }
+  .stepper output { text-align: center; font-size: 3rem; font-weight: 400; line-height: 1 }
+
+  /* Przerwa pod chmurą */
+  #timer { position: fixed; inset: 0; z-index: 5; overflow-y: auto; background: inherit }
+  #timer .sheet { justify-content: center; text-align: center; padding-bottom: 22px }
+  .cloud { width: 124px; height: 96px; margin: 0 auto }
+  .cloud g { fill: var(--blue) } .cloud line { stroke: var(--blue); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 3 7; animation: fall .8s linear infinite }
+  #timer.work .cloud g { fill: var(--red) } #timer.work .cloud line { stroke: var(--red) }
+  #timer.prep .cloud g { fill: var(--cream) } #timer.prep .cloud line { stroke: var(--cream) }
+  @keyframes fall { to { stroke-dashoffset: -20 } }
+  #tLabel { margin: 4px auto 0; font-size: 1.05rem }
+  #tNum { font-size: min(30vw, 210px); font-weight: 300; line-height: 1; margin: 2px auto 8px; letter-spacing: -.01em }
+  #tNum .d { display: inline-block; width: .6em; text-align: center } #tNum .c { display: inline-block; width: .28em; text-align: center; transform: translateY(-.06em) }
+  #timer.hot #tNum { color: var(--red) }
+  .track { height: 4px; border-radius: 4px; background: rgba(231,232,226,.16); margin: 4px 0 22px; overflow: hidden }
+  .track span { display: block; height: 100%; border-radius: 4px; background: var(--blue); width: var(--p, 0%); transition: width .25s linear }
+  #timer.work .track span { background: var(--red) } #timer.prep .track span { background: var(--cream) }
+  #tNext { text-align: left; margin-top: 22px; border: 1px solid var(--line); border-radius: 22px; padding: 14px 16px }
+  #tNext:empty { display: none }
+  #tNext b { display: block; font-size: 1.45rem; font-weight: 500; text-transform: lowercase; line-height: 1.15 }
+  #tNext .move { max-height: 30vh; margin-inline: auto; width: auto; max-width: 100% }
+
+  /* Wyniki: dziś linią ciągłą, poprzednio przerywaną, w tej samej skali */
+  .cmp { list-style: none; padding: 0; margin: 0 }
+  .cmp li { padding: 10px 0 12px; border-bottom: 1px solid var(--line) }
+  .cmp .t { display: flex; justify-content: space-between; gap: 10px; font-weight: 600 }
+  .cmp .t b { white-space: nowrap; font-weight: 600 }
+  .bar { height: 6px; border-radius: 6px; margin-top: 8px; background: var(--cream); width: var(--w) }
+  .bar.was { height: 0; border-radius: 0; background: none; border-top: 2px dashed var(--stone); margin-top: 7px }
+
+  dialog:focus { outline: none }
+  #sheet { background: #38423E; color: var(--cream); border: 1px solid var(--line); border-radius: 28px; padding: 16px 18px 20px; width: min(560px, 94vw); max-height: 88dvh; overflow-y: auto }
+  #sheet::backdrop { background: rgba(15,17,19,.62) }
+  dialog { background: #38423E; color: var(--cream); border: 1px solid var(--line); border-radius: 28px; padding: 18px; width: min(560px, 94vw); max-height: 90dvh; overflow-y: auto }
+  dialog::backdrop { background: rgba(15,17,19,.62) }
+  dialog h1 { font-size: 1.8rem }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plot *, .float span, .cloud line { animation: none !important }
+  }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><pattern id="rain" width="4.5" height="4.5" patternUnits="userSpaceOnUse"><rect width="4.5" height="4.5" fill="#3F4A46"/><circle cx="2.25" cy="2.25" r="1.1" fill="#FF6B6B"/></pattern></defs>
+</svg>
 
-<main id="home">
-  <h1>Trening</h1>
-  <details id="resume" open hidden><summary>Trening w toku</summary>
+<main id="home" class="sheet">
+  <header class="head">
+    <div><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span><span id="today" class="lbl"></span></div>
+    <nav class="menu" aria-label="Menu">
+      <button data-sheet="imp"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg></i>import</button>
+      <button data-sheet="lib"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg></i>ćwiczenia</button>
+      <button data-sheet="hist"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i>historia</button>
+    </nav>
+  </header>
+  <div id="resume" class="resume" hidden>
     <p id="resumeName"></p>
-    <div class="row"><button id="resumeBtn" class="big">Wznów</button><button id="dropBtn">Porzuć</button></div>
-  </details>
-  <div id="plans"></div>
-  <details><summary>Import rozpiski</summary>
-    <textarea id="imp" placeholder="Wklej JSON z rozpiską od Claude"></textarea>
-    <div class="row"><button id="impBtn">Wczytaj</button><button id="promptBtn">Instrukcja dla Claude</button></div>
-    <p id="impMsg"></p>
-  </details>
-  <details><summary>Ćwiczenia</summary><div id="lib" class="lib"></div></details>
-  <details><summary>Historia</summary><div id="hist"></div></details>
+    <div class="row"><button id="resumeBtn" class="primary">wznów</button><button id="dropBtn">porzuć</button></div>
+  </div>
+  <div id="tabs" class="tabs" role="tablist" aria-label="Treningi tygodnia"></div>
+  <div id="plan">
+    <h1 id="hName" class="float"></h1>
+    <p id="hSub" class="stone"></p>
+    <div id="hBlock" class="stats"></div>
+    <div id="hFig" class="garden"></div>
+    <p id="hNote" class="note"></p>
+    <h2>Spis ćwiczeń</h2>
+    <ol id="hParts" class="parts"></ol>
+  </div>
+  <p id="empty" class="note" hidden>Brak rozpisek. Claude wyśle plan albo wklej JSON w imporcie (ikona chmury u góry).</p>
+  <div class="dock"><button id="startBtn" class="primary"></button></div>
 </main>
 
-<section id="work" hidden>
-  <header><small id="wProg"></small><button id="endBtn" class="link">Zakończ</button></header>
-  <div id="wCard"></div>
-  <div class="bar">
-    <div id="stepper" class="row"><button id="minus" aria-label="Mniej">−</button><output id="val">0</output><button id="plus" aria-label="Więcej">+</button></div>
-    <button id="doneBtn" class="big"></button>
-    <button id="skipEx" class="link">Pomiń ćwiczenie</button>
+<section id="work" class="sheet" hidden>
+  <div class="wbar"><div id="wStrip"></div><button id="endBtn" class="round" aria-label="Zakończ trening"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+  <h1 id="wName" class="float"></h1>
+  <p id="wProg" class="stone"></p>
+  <div id="wBlock" class="stats"></div>
+  <div id="wMove"></div>
+  <div id="wMus" class="mus"></div>
+  <p id="wNote" class="note"></p>
+  <details id="wHow" class="how"></details>
+  <div class="dock">
+    <div id="stepper" class="stepper">
+      <button id="minus" aria-label="Mniej"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+      <output id="val" aria-live="polite">0</output>
+      <button id="plus" aria-label="Więcej"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
+    </div>
+    <button id="doneBtn" class="primary"></button>
+    <button id="skipEx" class="ghost">pomiń ćwiczenie</button>
   </div>
 </section>
 
 <section id="timer" hidden role="timer">
-  <div id="tLabel"></div>
-  <div id="tNum"></div>
-  <div class="row"><button id="tMinus">−15 s</button><button id="tSkip"></button><button id="tPlus">+15 s</button></div>
-  <div id="tNext"></div>
+  <div class="sheet">
+    <div id="tStrip"></div>
+    <svg class="cloud" viewBox="0 0 120 96" aria-hidden="true">
+      <g><circle cx="37" cy="40" r="13"/><circle cx="59" cy="31" r="19"/><circle cx="82" cy="39" r="14"/><rect x="24" y="38" width="72" height="15" rx="7.5"/></g>
+      <line x1="44" y1="62" x2="44" y2="92"/><line x1="60" y1="62" x2="60" y2="92" style="animation-delay:-.3s"/><line x1="76" y1="62" x2="76" y2="92" style="animation-delay:-.55s"/>
+    </svg>
+    <p id="tLabel" class="lbl"></p>
+    <div id="tNum"></div>
+    <div class="track"><span id="tDim"></span></div>
+    <div class="row"><button id="tMinus"><span>−15&nbsp;s</span></button><button id="tSkip"></button><button id="tPlus"><span>+15&nbsp;s</span></button></div>
+    <div id="tNext"></div>
+  </div>
 </section>
 
-<section id="done" hidden>
-  <h2>Koniec treningu 💪</h2>
-  <pre id="sum"></pre>
-  <textarea id="doneNote" placeholder="Uwagi: jak poszło, czy coś bolało, która guma…"></textarea>
-  <button id="shareBtn" class="big">Wyślij do Claude</button>
-  <button id="saveBtn" class="link">Zapisz w historii i wróć</button>
+<section id="done" class="sheet" hidden>
+  <header class="head"><span class="brand">wyniki<i class="dot c"></i></span><span id="dDate" class="lbl"></span></header>
+  <h1 id="dName" class="float"></h1>
+  <div id="dBlock" class="stats quad"></div>
+  <h2>Porównanie z poprzednim</h2>
+  <ul id="dCmp" class="cmp"></ul>
+  <h2>Pracowały dziś</h2>
+  <div id="dFig" class="garden"></div>
+  <h2>Uwagi dla trenera</h2>
+  <textarea id="doneNote" placeholder="Jak poszło, czy coś bolało, która guma…"></textarea>
+  <details class="how"><summary>Tekst dla Claude<svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><pre id="sum"></pre></details>
+  <div class="dock">
+    <button id="shareBtn" class="primary">wyślij do claude<svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+    <button id="saveBtn" class="ghost">zapisz w historii i wróć</button>
+  </div>
 </section>
 
-<dialog id="dlg"><div id="dlgBody"></div><button id="dlgClose" class="big">Zamknij</button></dialog>
+<dialog id="sheet" tabindex="-1">
+  <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" class="round" aria-label="Zamknij"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+  <div id="p-imp" class="pane">
+    <textarea id="imp" placeholder="Wklej odpowiedź Claude z rozpiską (JSON)"></textarea>
+    <div class="row"><button id="impBtn">wczytaj</button><button id="promptBtn">instrukcja dla claude</button></div>
+    <p id="impMsg"></p>
+  </div>
+  <div id="p-lib" class="pane"><div id="lib" class="lib"></div></div>
+  <div id="p-hist" class="pane"><div id="hist" class="hist"></div></div>
+</dialog>
+
+<dialog id="dlg" tabindex="-1"><div id="dlgBody"></div><button id="dlgClose" class="primary" style="margin-top:14px">zamknij</button></dialog>
 
 <script src="exercises.js"></script>
 <script src="logic.js"></script>
+<script src="moves.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
 const load = (k, d) => { try { return JSON.parse(localStorage[k]) ?? d } catch { return d } };
 const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v));
 
-let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null);
-let tInt, lastBeep, ac, wl;
+// past: nowsze wpisy to obiekty {name, t0, t1, text, reps, hold, done, total, per}; najstarsze były samym tekstem.
+let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
+let tInt, tDone, tLen, lastBeep, ac, wl;
 const allPlans = () => [...imported, ...served];
 const save = () => store('cur', cur);
 const S = () => steps(cur.plan);
 const curItem = () => cur.plan.items[S()[cur.i].item];
+const pastText = h => typeof h === 'string' ? h : h.text;
+const prevOf = name => past.find(h => typeof h === 'object' && planKind(h.name) === planKind(name));
+const short = n => n.replace(/^T\d+\s*·\s*/, '').replace(/\s*\(.*\)\s*$/, '');
+const day = t => new Date(t).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+const cells = list => list.filter(Boolean).map(([k, v, d]) => `<div><small>${k}</small><b>${esc(v)}</b>${d ? `<i>${esc(d)}</i>` : ''}</div>`).join('');
+const ICO = { go: '<circle cx="9" cy="15" r="5"/><circle cx="16.5" cy="7.5" r="3.5"/>', done: '<path d="m5 12.5 4.5 4.5L19 7.5"/>', play: '<path d="M8 5.5v13l10.5-6.5z"/>', next: '<circle cx="12" cy="12" r="9"/><path d="M9.5 12h5m-2-2.5 2.5 2.5-2.5 2.5"/>', chev: '<path d="m6 9 6 6 6-6"/>' };
+const ico = n => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[n]}</svg>`;
+// Tytuł na falującej linii bazowej; czytniki dostają zwykły tekst.
+function floatText(el, text, enter) {
+  let k = 0;
+  el.setAttribute('aria-label', text);
+  el.classList.toggle('enter', !!enter);
+  el.innerHTML = text.split(' ').map(w => `<span class="w" aria-hidden="true">${[...w].map(c => `<span style="--k:${k++}">${esc(c)}</span>`).join('')}</span>`).join(' ');
+}
+const plural = (n, one, few, many) => n === 1 ? one : n % 10 > 1 && n % 10 < 5 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 
-// --- wygląd ćwiczenia
-const anim = e => frames(e).length ? `<div class="anim">${frames(e).map(f => `<img src="${f}" alt="">`).join('')}</div>` : '';
+// --- postać: lewa połowa (oś ciała x=80), prawa to lustro; center = rysowane raz
+const BODY = {
+  F: [
+    [null, 'M80,8C71,8 64,18 64,30C64,43 71,52 80,52C89,52 96,43 96,30C96,18 89,8 80,8Z', 1],
+    ['traps', 'M73,52C72,58 70,62 68,64L56,68C62,62 67,58 73,52Z'],
+    ['shoulders', 'M56,68C46,70 38,78 38,92C38,98 39,104 41,109C45,102 49,97 53,93C56,86 58,77 58,70Z'],
+    ['chest', 'M80,70L58,70C58,78 56,86 53,93C58,104 68,110 80,110Z'],
+    ['abs', 'M68,114L92,114L92,170C88,178 84,183 80,185C76,183 72,178 68,170Z', 1],
+    [null, 'M80,114V184M68,129H92M68,143H92M68,157H92', 1],
+    ['obliques', 'M66,113C60,112 56,110 53,106C53,124 55,146 58,166C61,171 64,174 66,175Z'],
+    ['biceps', 'M40,106C36,120 34,134 36,150L48,150C50,136 51,120 52,100C48,104 44,107 40,106Z'],
+    [null, 'M46,154C46,156.2 44.2,158 42,158C39.8,158 38,156.2 38,154C38,151.8 39.8,150 42,150C44.2,150 46,151.8 46,154Z'],
+    ['forearms', 'M36,160L48,160C48,176 46,194 44,208L34,208C33,192 33,176 36,160Z'],
+    [null, 'M34,212L44,212C46,220 45,230 40,234C35,230 32,220 34,212Z'],
+    [null, 'M58,168C62,178 68,186 80,192'],
+    ['quads', 'M56,180C52,202 52,227 57,250L73,254C74,238 72,214 72,197C66,191 60,186 56,180Z'],
+    ['adductors', 'M72,197C74,195 77,194 80,195C80,214 78,233 73,254C74,236 72,214 72,197Z'],
+    [null, 'M72,263C72,266.9 68.9,270 65,270C61.1,270 58,266.9 58,263C58,259.1 61.1,256 65,256C68.9,256 72,259.1 72,263Z'],
+    ['calves', 'M58,274C55,294 56,316 60,334L70,334C73,316 75,294 73,274Z'],
+    [null, 'M58,338L72,338C74,344 76,348 76,352L54,352C54,346 56,342 58,338Z'],
+  ],
+  B: [
+    [null, 'M80,8C71,8 64,18 64,30C64,43 71,52 80,52C89,52 96,43 96,30C96,18 89,8 80,8Z', 1],
+    ['traps', 'M80,52C76,57 69,62 56,68C63,76 71,89 80,112C89,89 97,76 104,68C91,62 84,57 80,52Z', 1],
+    ['shoulders', 'M56,68C46,70 38,78 38,92C38,98 39,104 41,109C45,102 49,97 53,93C56,86 58,77 58,70Z'],
+    ['midback', 'M58,71C64,79 71,91 78,109L71,119C63,111 58,99 56,85Z'],
+    ['lats', 'M54,91C56,105 62,117 71,122L78,129L78,146C72,152 64,158 58,161C56,141 54,117 54,91Z'],
+    ['lowerback', 'M72,133L80,127L88,133L90,172L80,180L70,172Z', 1],
+    [null, 'M80,112V182', 1],
+    ['triceps', 'M40,106C36,120 34,134 36,150L48,150C50,136 51,120 52,100C48,104 44,107 40,106Z'],
+    [null, 'M46,154C46,156.2 44.2,158 42,158C39.8,158 38,156.2 38,154C38,151.8 39.8,150 42,150C44.2,150 46,151.8 46,154Z'],
+    ['forearms', 'M36,160L48,160C48,176 46,194 44,208L34,208C33,192 33,176 36,160Z'],
+    [null, 'M34,212L44,212C46,220 45,230 40,234C35,230 32,220 34,212Z'],
+    ['glutes', 'M58,171C54,187 58,201 70,205C76,205 80,203 80,199L80,179C72,175 64,172 58,171Z'],
+    ['hamstrings', 'M56,209C53,227 54,245 58,255L74,255C76,239 78,223 78,209C70,211 62,211 56,209Z'],
+    [null, 'M58,262H72'],
+    ['calves', 'M58,270C52,287 54,305 60,322L70,322C76,305 76,287 72,270Z'],
+    [null, 'M65,324V336M60,338L70,338C72,344 72,350 70,352L58,352C56,348 57,342 60,338Z'],
+  ],
+};
+// Gdzie spada kropla odnośnika: [widok, x, y] w układzie lewej połowy.
+const ANCHOR = {
+  chest: ['F', 68, 90], shoulders: ['F', 46, 86], biceps: ['F', 43, 128], forearms: ['F', 40, 184], abs: ['F', 80, 150],
+  obliques: ['F', 59, 142], quads: ['F', 63, 222], adductors: ['F', 76, 224], traps: ['B', 76, 82], triceps: ['B', 43, 128],
+  lats: ['B', 62, 134], midback: ['B', 70, 100], lowerback: ['B', 80, 154], glutes: ['B', 68, 190], hamstrings: ['B', 66, 232], calves: ['B', 64, 294],
+};
+
+function figure(load, { plot = false, legend = true } = {}) {
+  const share = muscleShare(load), max = share[0]?.load || 1, top = legend ? share.slice(0, 6) : [];
+  const cls = m => !load[m] ? '' : load[m] > max / 2 ? ' p' : ' s';
+  let k = 0;
+  const view = v => {
+    const half = [], mid = [];
+    for (const [m, d, center] of BODY[v]) (center ? mid : half).push(`<path pathLength="1" style="--i:${k++}" class="${m ? 'mu' + cls(m) : 'dt'}" d="${d}"/>`);
+    const bx = v === 'F' ? 11 : 189;
+    let lastY = -99;
+    // Kropla z numerem przy krawędzi; czerwony deszcz spada z niej łukiem i ląduje na mięśniu (jasny punkt).
+    const drops = top.map((s, n) => ({ n: n + 1, a: ANCHOR[s.m] })).filter(b => b.a[0] === v).sort((a, b) => a.a[2] - b.a[2]).map(b => {
+      const ax = v === 'F' ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(330, Math.max(16, ay - 30, lastY + 30));
+      lastY = y;
+      const drop = `M${bx},${y - 12}C${bx + 5},${y - 5} ${bx + 9},${y - 1} ${bx + 9},${y + 3}A9,9 0 0 1 ${bx - 9},${y + 3}C${bx - 9},${y - 1} ${bx - 5},${y - 5} ${bx},${y - 12}Z`;
+      return `<path class="ld" d="M${bx},${y + 13}Q${bx},${ay} ${ax},${ay}"/><circle class="hit" cx="${ax}" cy="${ay}" r="2.6"/><path class="bl" d="${drop}"/><text class="bt" x="${bx}" y="${y + 7}">${b.n}</text>`;
+    }).join('');
+    return `<svg viewBox="0 0 200 360" class="body${plot ? ' plot' : ''}" aria-hidden="true">
+      <g transform="translate(20 0)">${half.join('')}${mid.join('')}</g><g transform="translate(180 0) scale(-1 1)">${half.join('')}</g>${drops}</svg>`;
+  };
+  const leg = top.length ? `<ol class="legend">${top.map((s, n) => `<li><i class="bn">${n + 1}</i><span>${MUSCLES[s.m]}</span><b>${s.pct}%</b></li>`).join('')}</ol>` : '';
+  return `<div class="views"><figure>${view('F')}<figcaption>przód</figcaption></figure><figure>${view('B')}<figcaption>tył</figcaption></figure></div>${leg}`;
+}
+
+// --- ćwiczenie
+// Animacja ruchu z legendą (ćwiczenie spoza biblioteki nie ma animacji, zostaje opis i wideo).
+const gear = id => { const [k, t] = EX_MOVE[id] || []; return t === 'band' || !!MOVES[k]?.props.some(pr => pr[0] !== 'ground'); };
+const moveBlock = (id, e) => EX_MOVE[id]
+  ? `<figure class="mv">${moveFig(id)}<figcaption><span><i class="sw"></i>spięty mięsień</span>${gear(id) ? '<span><i class="eq"></i>sprzęt</span>' : ''}</figcaption></figure>`
+  : '';
+const musLine = e => e ? [...e.p.map(m => `<span><i class="sw"></i>${MUSCLES[m]}</span>`), ...e.s.map(m => `<span><i class="sw s"></i>${MUSCLES[m]}</span>`)].join('') : '';
 const video = it => `https://www.youtube.com/results?search_query=${encodeURIComponent(exName(it) + ' technika')}`;
-function card(it) {
-  const e = EXERCISES[it.ex];
-  return `${anim(e)}<h2>${esc(exName(it))}</h2>
-    ${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}
-    <details><summary>Jak wykonać</summary>
-      ${e ? `<ol>${e.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol><ul>${e.tips.map(s => `<li class="mut">${esc(s)}</li>`).join('')}</ul>` : ''}
-      <p><a href="${video(it)}" target="_blank" rel="noopener" style="color:var(--acc)">▶ Wideo z techniką</a></p>
-    </details>`;
+const how = (it, e) => `<summary>Jak wykonać${ico('chev')}</summary>
+  ${e ? `<ol class="steps">${e.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol><ul class="tips">${e.tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
+  <p><a href="${video(it)}" target="_blank" rel="noopener">Wideo z techniką na YouTube</a></p>`;
+function showExercise(it) {
+  const e = EXERCISES[it.ex], one = e ? muscleLoad([{ ex: it.ex, sets: 1 }]) : {};
+  $('dlgBody').innerHTML = `<h1 id="dlgName" class="float"></h1>${moveBlock(it.ex, e)}<div class="mus">${musLine(e)}</div>
+    ${e ? `<div class="garden">${figure(one, { legend: false })}</div>` : ''}<details class="how">${how(it, e)}</details>`;
+  floatText($('dlgName'), exName(it).toLowerCase());
+  $('dlg').showModal(); $('dlg').focus();
+  mountMoves($('dlg'));
 }
 
-// --- ekran startowy
-function renderHome() {
-  $('resume').hidden = !cur;
-  if (cur) $('resumeName').textContent = cur.phase === 'done' ? `${cur.plan.name}: niezapisane podsumowanie` : `${cur.plan.name}: seria ${cur.i + 1} z ${S().length}`;
-  $('plans').innerHTML = allPlans().map((p, k) => `<details><summary>${esc(p.name)}<small>${p.items.length} ćwiczeń${k < imported.length ? ' · zaimportowany' : ''}</small></summary>
-    ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
-    <ol>${p.items.map(it => `<li>${esc(exName(it))} <small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}</small></li>`).join('')}</ol>
-    <button class="big" data-start="${k}">Start</button>
-    ${k < imported.length ? `<button class="link" data-del="${k}">Usuń</button>` : ''}</details>`).join('')
-    || '<p class="mut">Brak rozpisek. Wklej JSON od Claude w sekcji Import.</p>';
-  $('hist').innerHTML = past.length
-    ? past.map(h => `<details><summary>${esc(h.split('\n')[0])}</summary><pre>${esc(h)}</pre></details>`).join('') + '<button id="histBtn">Wyślij ostatnie 10</button>'
-    : '<p class="mut">Pusto.</p>';
+// --- start
+function suggested(plans) {
+  const last = past.find(h => typeof h === 'object');
+  if (!last) return 0;
+  const i = plans.findIndex(p => planKind(p.name) === planKind(last.name));
+  return i < 0 ? 0 : (i + 1) % plans.length;
 }
-$('plans').onclick = e => {
-  const b = e.target.closest('button');
-  if (b?.dataset.start) start(allPlans()[b.dataset.start]);
-  if (b?.dataset.del && confirm('Usunąć ten trening?')) { imported.splice(b.dataset.del, 1); store('imported', imported); renderHome(); }
+function renderHome() {
+  const plans = allPlans();
+  $('today').textContent = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+  $('resume').hidden = !cur;
+  if (cur) $('resumeName').textContent = cur.phase === 'done' ? `${cur.plan.name}: niezapisane wyniki` : `W toku: ${cur.plan.name}, seria ${cur.i + 1} z ${S().length}`;
+  $('empty').hidden = !!plans.length;
+  $('plan').hidden = $('tabs').hidden = $('startBtn').parentElement.hidden = !plans.length;
+  $('hist').innerHTML = past.length
+    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : `${day(h.t0)} · ${h.name} · ${h.reps} powt.`)}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + '<button id="histBtn" style="width:100%;margin-top:12px">wyślij ostatnie 10</button>'
+    : '<p class="stone">Pusto. Zapisane treningi pojawią się tutaj.</p>';
+  if (!plans.length) return;
+  sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
+  $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`).join('');
+  const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
+  floatText($('hName'), short(p.name).toLowerCase(), !plotted);
+  $('hSub').textContent = [`${p.items.length} ${plural(p.items.length, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń')}`, p.name.match(/\((.*)\)\s*$/)?.[1], week && `tydzień ${week}`, sel < imported.length && 'zaimportowany'].filter(Boolean).join(' · ');
+  $('hFig').innerHTML = figure(muscleLoad(p.items), { plot: !plotted });
+  plotted = true;
+  $('hBlock').innerHTML = cells([['Serie', steps(p).length], ['Czas', `~${estimate(p)}`, 'minut'], ['Ostatnio', prev ? prev.reps : '—', prev ? `powt. · ${day(prev.t0)}` : 'jeszcze brak']]);
+  $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
+  $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}${it.note ? ' · ' + esc(it.note) : ''}</small></span>${ico('next')}</button></li>`).join('')
+    + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">usuń ten zaimportowany trening</button></li>` : '');
+  $('startBtn').innerHTML = `zacznij · ${esc(short(p.name).toLowerCase())}${ico('go')}`;
+}
+$('tabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { sel = +b.dataset.k; renderHome(); } };
+$('hParts').onclick = e => {
+  const b = e.target.closest('button'), p = allPlans()[sel];
+  if (b?.dataset.j) showExercise(p.items[b.dataset.j]);
+  if (b?.dataset.del && confirm('Usunąć ten trening?')) { imported.splice(b.dataset.del, 1); store('imported', imported); sel = null; renderHome(); }
 };
-$('hist').onclick = e => e.target.id === 'histBtn' && send(past.slice(0, 10).join('\n\n'));
+$('startBtn').onclick = () => start(allPlans()[sel]);
+$('hist').onclick = e => e.target.id === 'histBtn' && send(past.slice(0, 10).map(pastText).join('\n\n'));
 $('lib').innerHTML = Object.entries(EXERCISES).sort((a, b) => a[1].name.localeCompare(b[1].name, 'pl'))
-  .map(([id, e]) => `<button data-ex="${id}">${esc(e.name)}</button>`).join('');
-$('lib').onclick = e => {
-  const id = e.target.closest('button')?.dataset.ex;
-  if (id) { $('dlgBody').innerHTML = card({ ex: id }); $('dlg').showModal(); }
-};
+  .map(([id, e]) => `<button data-ex="${id}">${moveFig(id)}<span>${esc(e.name)}<small>${e.p.map(m => MUSCLES[m]).join(', ')}</small></span></button>`).join('');
+stillMoves($('lib'));
+$('lib').onclick = e => { const id = e.target.closest('button')?.dataset.ex; if (id) showExercise({ ex: id }); };
 $('dlgClose').onclick = () => $('dlg').close();
+
+// Menu w nagłówku otwiera arkusz z jedną sekcją.
+const SHEETS = { imp: 'Import rozpiski', lib: 'Biblioteka ćwiczeń', hist: 'Historia' };
+document.querySelector('.menu').onclick = e => {
+  const k = e.target.closest('[data-sheet]')?.dataset.sheet;
+  if (!k) return;
+  $('sheetTitle').textContent = SHEETS[k];
+  for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
+  $('sheet').showModal(); $('sheet').focus();
+};
+$('sheetClose').onclick = () => $('sheet').close();
 
 $('impBtn').onclick = () => {
   try {
@@ -161,12 +511,12 @@ $('impBtn').onclick = () => {
     const plans = normalize(JSON.parse(json));
     imported = [...plans, ...imported.filter(p => !plans.some(n => n.name === p.name))];
     store('imported', imported);
-    $('imp').value = '';
+    $('imp').value = ''; sel = 0;
     $('impMsg').className = ''; $('impMsg').textContent = `Wczytano: ${plans.map(p => p.name).join(', ')}`;
-    renderHome();
-  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Błąd: ${err.message}`; }
+    renderHome(); $('sheet').close(); scrollTo(0, 0);
+  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Nie da się wczytać: ${err.message}. Sprawdź, czy wkleiłeś całą odpowiedź.`; }
 };
-$('promptBtn').onclick = () => send(claudePrompt(EXERCISES, past));
+$('promptBtn').onclick = () => send(claudePrompt(EXERCISES, past.map(pastText)));
 
 async function send(text) {
   try { if (navigator.share) return await navigator.share({ text }); } catch (e) { if (e.name === 'AbortError') return; }
@@ -175,23 +525,37 @@ async function send(text) {
 
 // --- trening
 function show(id) { for (const s of ['home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
+function strip() {
+  return `<div class="strip" aria-hidden="true">${S().map((s, i) => {
+    const v = cur.log[i], it = cur.plan.items[s.item];
+    const c = i === cur.i && cur.phase !== 'done' ? 'now' : v != null ? (!it.time && parseInt(it.reps) > v ? 'part' : 'done') : i < cur.i ? 'skip' : '';
+    return `<i class="${c}${s.set === 1 ? ' first' : ''}"></i>`;
+  }).join('')}</div>`;
+}
 
 function start(plan) {
   cur = { plan, i: 0, log: {}, phase: 'set', end: 0, t0: Date.now() };
   wake();
   renderSet();
 }
-
 function renderSet() {
   clearInterval(tInt);
   cur.phase = 'set'; save();
-  const st = S()[cur.i], it = curItem();
-  $('wProg').textContent = `Ćwiczenie ${st.item + 1}/${cur.plan.items.length} · Seria ${st.set}/${it.sets} · Cel: ${goal(it)}`;
-  $('wCard').innerHTML = card(it);
+  const st = S()[cur.i], it = curItem(), e = EXERCISES[it.ex], per = String(it.reps).match(/^(\d+)\s*\/\s*(.+)$/);
+  // Cel: duża liczba, jednostka pod spodem („8/noga” → 8, „powt. · noga”).
+  const target = it.time ? [it.time, 'sekund'] : per ? [per[1], `powt. · ${per[2]}`] : /^\d+$/.test(String(it.reps)) ? [it.reps, 'powtórzeń'] : [it.reps, ''];
+  $('wStrip').innerHTML = strip();
+  $('wProg').textContent = `ćwiczenie ${st.item + 1} z ${cur.plan.items.length}`;
+  floatText($('wName'), exName(it).toLowerCase());
+  $('wBlock').innerHTML = cells([['Cel', ...target], ['Seria', `${st.set}/${it.sets}`], ['Przerwa', fmt(it.rest), 'min']]);
+  $('wMove').innerHTML = moveBlock(it.ex, e);
+  $('wMus').innerHTML = musLine(e);
+  $('wNote').hidden = !it.note; $('wNote').textContent = it.note;
+  $('wHow').innerHTML = how(it, e); $('wHow').open = st.set === 1;
   $('stepper').hidden = !!it.time;
   $('val').value = cur.log[cur.i] ?? (parseInt(it.reps) || 0);
-  $('doneBtn').textContent = it.time ? `Start ${it.time} s` : 'Seria zrobiona ✓';
-  show('work');
+  $('doneBtn').innerHTML = it.time ? `<span>start · ${it.time}&nbsp;s</span>${ico('play')}` : `seria zrobiona${ico('done')}`;
+  show('work'); mountMoves($('work'));
 }
 $('minus').onclick = () => $('val').value = Math.max(0, +$('val').value - 1);
 $('plus').onclick = () => $('val').value = +$('val').value + 1;
@@ -216,52 +580,76 @@ function finishSet(v) {
 }
 
 // Odliczanie od znacznika czasu, żeby wstrzymanie strony nie przestawiało licznika. phase: prep | work | rest.
-let tDone;
 function timer(phase, sec, onEnd, end = Date.now() + sec * 1000) {
   clearInterval(tInt);
   Object.assign(cur, { phase, end }); save();
-  tDone = onEnd; lastBeep = null;
-  $('timer').className = phase === 'rest' ? '' : 'work';
-  $('tLabel').textContent = { prep: 'Przygotuj się', work: exName(curItem()), rest: 'Przerwa' }[phase];
-  $('tSkip').textContent = phase === 'work' ? 'Stop' : 'Pomiń';
-  $('tMinus').hidden = $('tPlus').hidden = phase !== 'rest';
+  tDone = onEnd; lastBeep = null; tLen = Math.max(1, (end - Date.now()) / 1000);
   const st = S()[cur.i], it = curItem();
+  $('timer').className = phase;
+  $('tStrip').innerHTML = strip();
+  $('tLabel').textContent = { prep: 'Przygotuj się', work: exName(it), rest: 'Przerwa' }[phase];
+  $('tSkip').textContent = phase === 'work' ? 'stop' : 'pomiń';
+  $('tMinus').hidden = $('tPlus').hidden = phase !== 'rest';
   $('tNext').innerHTML = phase === 'rest'
-    ? `<p class="mut">Następnie: <b>${esc(exName(it))}</b> · seria ${st.set}/${it.sets} · ${esc(goal(it))}</p>${st.set === 1 ? anim(EXERCISES[it.ex]) : ''}` : '';
-  show('timer');
+    ? `<b>${esc(exName(it))}</b><span class="stone">następnie · seria ${st.set}/${it.sets} · ${esc(goal(it))}</span>${st.set === 1 ? moveBlock(it.ex, EXERCISES[it.ex]) : ''}` : '';
+  show('timer'); mountMoves($('timer'));
   tInt = setInterval(tick, 200); tick();
 }
+const digits = t => [...t].map(c => c === ':' ? '<span class="c">:</span>' : `<span class="d">${c}</span>`).join('');
 function tick() {
-  const left = Math.ceil((cur.end - Date.now()) / 1000);
+  const ms = cur.end - Date.now(), left = Math.ceil(ms / 1000);
   if (left <= 0) {
     clearInterval(tInt);
     beep(880, .6); navigator.vibrate?.([300, 120, 300]);
     return tDone();
   }
-  $('tNum').textContent = fmt(left);
+  $('tNum').innerHTML = digits(fmt(left));
+  $('tDim').style.setProperty('--p', `${Math.min(100, (1 - ms / 1000 / tLen) * 100)}%`);
   $('timer').classList.toggle('hot', left <= 3);
   if (left <= 3 && left !== lastBeep) { lastBeep = left; beep(660, .12); }
 }
 $('tMinus').onclick = () => { cur.end -= 15000; save(); tick(); };
-$('tPlus').onclick = () => { cur.end += 15000; save(); tick(); };
+$('tPlus').onclick = () => { cur.end += 15000; tLen += 15; save(); tick(); };
 $('tSkip').onclick = () => {
   clearInterval(tInt);
   if (cur.phase !== 'work') return tDone();
   finishSet(curItem().time - Math.max(0, Math.ceil((cur.end - Date.now()) / 1000)));
 };
 
+// --- wyniki
 function finish() {
   clearInterval(tInt);
   cur.phase = 'done'; cur.t1 ??= Date.now(); save();
-  $('sum').textContent = summaryText(cur.plan, cur.log, '', cur.t0, cur.t1);
+  const s = stats(cur.plan, cur.log), prev = prevOf(cur.plan.name), mins = Math.round((cur.t1 - cur.t0) / 60000);
+  $('dDate').textContent = new Date(cur.t0).toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+  floatText($('dName'), short(cur.plan.name).toLowerCase(), true);
+  $('dBlock').innerHTML = cells([
+    ['Powtórzenia', s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : 'pierwszy raz'],
+    ['Serie', `${s.done}/${s.total}`, `${Math.round(s.done / s.total * 100)}% planu`],
+    ['Czas', mins, 'minut'],
+    s.hold ? ['Napięcie', s.hold, `sekund${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
+  ]);
+  // Dziś i poprzednio w tej samej skali, na wspólnej linii bazowej.
+  $('dCmp').innerHTML = s.per.filter(p => p.vals.length).map(p => {
+    const now = p.vals.reduce((a, b) => a + b, 0), was = prev?.per.find(q => q.ex === p.ex)?.vals.reduce((a, b) => a + b, 0), top = Math.max(now, was || 0) || 1;
+    const u = p.time ? ' s' : '';
+    return `<li><div class="t"><span>${esc(p.name)}</span><b>${now}${u}${was ? ` · ${signed(delta(now, was))}` : ''}</b></div>
+      <div class="bar" style="--w:${now / top * 100}%"></div>${was ? `<div class="bar was" style="--w:${was / top * 100}%" title="poprzednio ${was}${u}"></div>` : ''}</li>`;
+  }).join('') + (prev ? '' : '<li class="stone">To pierwszy zapisany trening tego typu. Porównanie pojawi się następnym razem.</li>');
+  $('dFig').innerHTML = figure(muscleLoad(cur.plan.items, (it, k) => s.per[k].vals.length), { plot: true });
+  $('sum').textContent = finalText();
+  $('dCmp').previousElementSibling.hidden = !s.per.some(p => p.vals.length);
   wl?.release(); wl = null;
   show('done');
 }
-const finalText = () => summaryText(cur.plan, cur.log, $('doneNote').value, cur.t0, cur.t1);
+const finalText = () => summaryText(cur.plan, cur.log, $('doneNote').value, cur.t0, cur.t1, prevOf(cur.plan.name));
+$('doneNote').oninput = () => $('sum').textContent = finalText();
 $('shareBtn').onclick = () => send(finalText());
 $('saveBtn').onclick = () => {
-  past.unshift(finalText()); past = past.slice(0, 100); store('history', past);
-  cur = null; save(); $('doneNote').value = '';
+  const s = stats(cur.plan, cur.log), text = finalText();
+  past.unshift({ name: cur.plan.name, t0: cur.t0, t1: cur.t1, text, reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals })) });
+  past = past.slice(0, 100); store('history', past);
+  cur = null; save(); $('doneNote').value = ''; sel = null;
   renderHome(); show('home');
 };
 
@@ -286,14 +674,26 @@ async function wake() {
   try { ac ??= new AudioContext(); ac.resume(); } catch {}
   try { wl = await navigator.wakeLock?.request('screen'); } catch {}
 }
+
+// Rozpiski: przy starcie i po powrocie aplikacji z tła (nowy tydzień od Claude pojawia się sam).
+let servedJson = '';
+function loadPlans() {
+  fetch('plans.json', { cache: 'no-cache' }).then(r => r.text()).then(t => {
+    if (t === servedJson) return;
+    servedJson = t; served = normalize(JSON.parse(t));
+    if (!$('home').hidden) renderHome();
+  }).catch(console.warn);
+}
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible' || !cur || cur.phase === 'done') return;
+  if (document.visibilityState !== 'visible') return;
+  if (!$('home').hidden) loadPlans();
+  if (!cur || cur.phase === 'done') return;
   if (!wl || wl.released) wake();
   if (!$('timer').hidden) tick();
 });
 
-fetch('plans.json', { cache: 'no-cache' }).then(r => r.json()).then(d => { served = normalize(d); renderHome(); }).catch(console.warn);
-renderHome(); show('home');
+history.scrollRestoration = 'manual';
+renderHome(); show('home'); loadPlans();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>

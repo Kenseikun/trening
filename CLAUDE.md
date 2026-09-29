@@ -15,16 +15,15 @@ Aplikacja treningowa (kalistenika) bez frameworków i bez builda. Repo jest **pu
 Progresja: jedna zmiana na ćwiczenie na tydzień (+1 powtórzenie, +1 seria, słabsza guma albo bardziej stromy kąt TRX). Co 5–6 tygodni lżejszy tydzień.
 
 ## Nowe ćwiczenie
-1. Dodaj wpis w `exercises.js`.
-2. Pobierz zdjęcia z free-exercise-db (Unlicense) do `img/<Id>/0.jpg` i `1.jpg`:
-   `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/<Id>/<n>.jpg`.
-   `img: 'Id/1'` oznacza jedną statyczną klatkę.
-3. Podbij wersję `C` w `sw.js`, żeby nowe zdjęcia od razu trafiły do cache offline.
+1. Dodaj wpis w `exercises.js`, razem z mięśniami: `p` (główne) i `s` (pomocnicze), klucze z `MUSCLES`. Z nich powstają postać z mięśniami i udziały w %.
+2. Dopisz animację w `moves.js`: wpis w `EX_MOVE` (ćwiczenie → ruch z `MOVES`). Nowy ruch to poza A (luz) i B (spięcie); podgląd wszystkich: `.impeccable/moves-grid.html`.
+3. Podbij wersję `C` w `sw.js`, żeby telefon od razu pobrał nową wersję do cache offline.
 
 ## Pliki
 - `index.html`: interfejs.
 - `logic.js`: logika i autotest.
 - `exercises.js`: biblioteka ćwiczeń.
+- `moves.js`: animacje ćwiczeń (postać z boku, mięśnie czerwienieją przy spięciu, sprzęt zielony).
 - `plans.json`: rozpiska na bieżący tydzień.
 - `sw.js`: cache offline.
 - `manifest.webmanifest`: instalacja aplikacji.
