@@ -26,11 +26,11 @@ const MOVES = {
     B: { h: [128, 131], t: -38, H: [200, 72], F: [60, 184], fa: -60 },
   },
   dip: {
-    props: [['ground', 190], ['pbar', 152, 100, 190]],
+    props: [['ground', 232], ['pbar', 152, 100, 232]],
     A: SUPPORT,
     B: { h: [138, 122], t: -70, H: [152, 100], F: [110, 186], fa: 70 },
   },
-  support: { props: [['ground', 190], ['pbar', 152, 100, 190]], A: SUPPORT, B: SUPPORT },
+  support: { props: [['ground', 232], ['pbar', 152, 100, 232]], A: SUPPORT, B: SUPPORT },
   pushup: {
     props: [['ground', 190]],
     A: { h: [131, 149], t: -23, H: [188, 189], F: [52, 182], fa: 40 },
@@ -62,7 +62,7 @@ const MOVES = {
     B: { ...STAND, H: [157, 70], s: [[1, .2], [1, .2]] },
   },
   kneebars: {
-    props: [['ground', 190], ['pbar', 152, 100, 190]],
+    props: [['ground', 232], ['pbar', 152, 100, 232]],
     A: { ...SUPPORT, F: [150, 180] },
     B: { ...SUPPORT, F: [188, 136] },
   },
@@ -195,7 +195,8 @@ function joints(m, p) {
   return J;
 }
 
-function mountMove(svg) {
+// fixed = [szer., wys.] wspólnego kadru (miniatury w tej samej skali); bez niego kadr dopasowany do ruchu.
+function mountMove(svg, fixed) {
   const [key, tempo] = EX_MOVE[svg.dataset.ex] || [], m = MOVES[key];
   if (!m) return false;
   m.nA ??= norm(m.A); m.nB ??= norm(m.B);
@@ -215,8 +216,11 @@ function mountMove(svg) {
   const ground = m.props.find(pr => pr[0] === 'ground');
   if (ground) y1 = Math.max(y1, ground[1] + 8);
   const w = x1 - x0, h = y1 - y0, r = h > w ? 1 : 1.5;
-  if (w / h > r) { const d = w / r - h; y0 -= d / 2; y1 += d / 2; } else { const d = h * r - w; x0 -= d / 2; x1 += d / 2; }
-  svg.style.aspectRatio = r === 1 ? '1' : '3 / 2';
+  if (fixed) { const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; [x0, x1, y0, y1] = [cx - fixed[0] / 2, cx + fixed[0] / 2, cy - fixed[1] / 2, cy + fixed[1] / 2]; }
+  else {
+    if (w / h > r) { const d = w / r - h; y0 -= d / 2; y1 += d / 2; } else { const d = h * r - w; x0 -= d / 2; x1 += d / 2; }
+    svg.style.aspectRatio = r === 1 ? '1' : '3 / 2';
+  }
   svg.setAttribute('viewBox', `${x0} ${y0} ${x1 - x0} ${y1 - y0}`);
 
   // Rekwizyty statyczne i ruchome (taśma TRX, guma).
@@ -236,7 +240,7 @@ function mountMove(svg) {
   const layers = { far: [['ua', 'sh', 'el1'], ['fa', 'el1', 'wr1'], ['th', 'hip', 'kn1'], ['sh', 'kn1', 'an1'], ['ft', 'an1', 'to1']],
     core: [['torso', 'hip', 'sh'], ['neck', 'sh', 'nk']], leg: [['th', 'hip', 'kn0'], ['sh', 'kn0', 'an0'], ['ft', 'an0', 'to0']],
     arm: [['ua', 'sh', 'el0'], ['fa', 'el0', 'wr0']] };
-  const segs = [], mus = [], joint = [];
+  const segs = [], mus = [], joint = [], musG = [];
   let coreMus; // mięśnie tułowia rysowane nad bliższą nogą, żeby unoszone kolano ich nie zasłaniało
   const lvl = mm => e?.p.includes(mm) ? 'p' : e?.s.includes(mm) ? 's' : null;
   for (const [name, list] of Object.entries(layers)) {
@@ -247,13 +251,14 @@ function mountMove(svg) {
     if (name === 'core') joint.push(['hd', mk('circle', { r: SEG.head, class: 'hf' }, g), 0]);
     list.forEach((s, k) => segs.push([outl[k], fill[k], s[1], s[2]]));
     const mg = name === 'core' ? (coreMus = document.createElementNS(NS, 'g')) : g;
+    const grp = { s: mk('g', {}, mg), p: mk('g', {}, mg) };
+    musG.push([grp.p, 'p'], [grp.s, 's']);
     for (const [mm, spec] of Object.entries(MUS_AT)) {
       const l = lvl(mm);
       if (!l) continue;
       const seg = list.find(s => s[0] === spec[0]);
-      if (seg) mus.push([mk('line', { class: 'mu', 'stroke-width': WID[seg[0]] * (spec[3] ? .44 : .5) }, mg), seg, spec, l]);
-      if (name === 'core' && spec[0] === 'hip-joint') mus.push([mk('circle', { r: 8, class: 'mu-j' }, mg), null, spec, l]);
-      if (name === 'arm' && spec[0] === 'sh-joint') mus.push([mk('circle', { r: 6.5, class: 'mu-j' }, g), null, spec, l]);
+      if (seg) mus.push([mk('line', { class: 'mu', 'stroke-width': WID[seg[0]] * (spec[3] ? .44 : .5) }, grp[l]), seg, spec]);
+      if ((name === 'core' && spec[0] === 'hip-joint') || (name === 'arm' && spec[0] === 'sh-joint')) mus.push([mk('circle', { r: spec[0] === 'hip-joint' ? 8 : 6.5, class: 'mu-j' }, grp[l]), null, spec]);
     }
     if (name === 'leg') svg.appendChild(coreMus);
   }
@@ -277,8 +282,8 @@ function mountMove(svg) {
       const A = typeof a === 'string' ? J[a] : a, B = typeof b === 'string' ? J[b] : b;
       el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
     }
-    for (const [el, seg, spec, l] of mus) {
-      el.setAttribute('opacity', (l === 'p' ? .2 + .8 * act : .08 + .42 * act).toFixed(3));
+    for (const [g, l] of musG) g.setAttribute('opacity', (l === 'p' ? .2 + .8 * act : .08 + .42 * act).toFixed(3));
+    for (const [el, seg, spec] of mus) {
       if (!seg) {
         const c = spec[0] === 'sh-joint' ? J.sh : at(J.hip, J.t + (m.sup ? 90 : -90), 6);
         el.setAttribute('cx', c[0]); el.setAttribute('cy', c[1]);
@@ -295,7 +300,7 @@ function mountMove(svg) {
 const moving = new Map();
 function moveFig(id) { return EX_MOVE[id] ? `<svg class="move" data-ex="${id}" role="img" aria-label="Animacja ruchu"></svg>` : ''; }
 // Miniatury: jedna klatka w fazie spięcia, bez pętli animacji.
-function stillMoves(root) { for (const svg of root.querySelectorAll('svg.move:not([data-on])')) { const d = mountMove(svg); svg.dataset.on = 1; d && d(1250); } }
+function stillMoves(root) { for (const svg of root.querySelectorAll('svg.move:not([data-on])')) { const d = mountMove(svg, [350, 250]); svg.dataset.on = 1; d && d(1250); } }
 function mountMoves(root = document) {
   for (const svg of root.querySelectorAll('svg.move:not([data-on])')) { const d = mountMove(svg); svg.dataset.on = 1; if (d) moving.set(svg, d); }
 }
