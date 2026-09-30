@@ -52,7 +52,7 @@
 
   /* Tytuł na falującej linii, litery opadają jak krople przy otwarciu */
   .float .w { white-space: nowrap }
-  .float .w span { display: inline-block; transform: translateY(calc(sin(var(--k) / var(--n) * 360deg) * .1em)) }
+  .float .w span { display: inline-block; transform: translateY(calc(sin(var(--k) / var(--n) * var(--wave, 360deg)) * var(--amp, .1em))) }
   .float.enter .w span { animation: drop .7s var(--ease) calc(var(--k) * 45ms) both }
   @keyframes drop { from { translate: 0 -.45em; opacity: 0 } }
 
@@ -85,20 +85,39 @@
   .stats small { display: block; font-size: .64rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--stone) }
   .stats b { display: block; font-size: 1.35rem; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
   .stats i { display: block; font-style: normal; font-size: .8rem; line-height: 1.25; color: var(--stone) }
-  .stats.quad { grid-auto-flow: row; grid-template-columns: 1fr 1fr }
-  .stats.quad > div { padding: 16px; box-shadow: -1px 0 0 var(--line), 0 -1px 0 var(--line) }
-  .stats.quad b { font-size: 1.9rem; font-weight: 500 }
+  /* Wyniki: duże wiersze (etykieta, liczba, zmiana) na całą pierwszą stronę zamiast siatki kafelków. */
+  .stats.lines { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; border-radius: 26px; margin-bottom: 0 }
+  .stats.lines > div { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr auto; align-content: center; align-items: baseline; column-gap: 12px; padding: 0 20px; box-shadow: 0 -1px 0 var(--line) }
+  .stats.lines small { grid-row: 1 / 3; align-self: center; font-size: .72rem }
+  .stats.lines b { font-size: clamp(2rem, 7dvh, 3.4rem); font-weight: 500; text-align: right; overflow: visible }
+  .stats.lines i { text-align: right; grid-column: 2; font-size: .9rem }
 
   /* Pierwsza strona startu kończy się równo z ekranem: po przewinięciu zaczyna się nowa treść, nic nie jest ucięte. */
   .page1 { min-height: calc(100dvh - 18px - 90px - env(safe-area-inset-bottom)); display: flex; flex-direction: column }
   #planHead { flex: 1; min-height: 0; display: flex; flex-direction: column }
-  .page1 .garden { flex: 1 1 0; min-height: 244px; display: flex; flex-direction: column }
+  .page1 .garden, .figpage .garden { flex: 1 1 0; min-height: 244px; display: flex; flex-direction: column }
   .page1.resuming .legend { display: none }
   .page1.resuming .garden { min-height: 190px }
-  .page1 .views { flex: 1 1 0; min-height: 0 }
-  .page1 .views figure { display: flex; flex-direction: column; min-height: 0 }
-  .page1 .body { flex: 1 1 0; height: 0; min-height: 0; max-height: none }
-  #plan > :first-child { margin-top: 28px }
+  .page1 .views, .figpage .views { flex: 1 1 0; min-height: 0 }
+  .page1 .views figure, .figpage .views figure { display: flex; flex-direction: column; min-height: 0 }
+  .page1 .body, .figpage .body { flex: 1 1 0; height: 0; min-height: 0; max-height: none }
+  /* Druga strona startu i pierwsza strona wyników też mieszczą się na ekranie. Lista przewija się w środku pełnymi wierszami. */
+  #plan, .dpage { display: flex; flex-direction: column }
+  #plan { height: calc(100dvh - 84px - env(safe-area-inset-bottom)); padding-top: 24px }
+  /* Wyniki to cztery strony: liczby, mięśnie, porównanie, uwagi. Każda kończy się równo z ekranem. */
+  #donePage1 { height: calc(100dvh - 18px - 132px - env(safe-area-inset-bottom)); display: flex; flex-direction: column; padding-bottom: 12px }
+  .dpage { height: calc(100dvh - 132px - env(safe-area-inset-bottom)) }
+  #donePage3 { height: auto; min-height: calc(100dvh - 132px - env(safe-area-inset-bottom)) }
+  .dpage > h2:first-child { margin-top: 16px }
+  #donePage3 textarea { flex: 1 0 120px }
+  .figpage { padding-bottom: 12px }
+  #plan > .note { margin: 0 0 4px; flex: none }
+  .fit { flex: 1 1 0; min-height: 0 }
+  .rows { display: grid; grid-auto-rows: var(--row); max-height: 100%; max-height: round(down, 100%, var(--row)); overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none }
+  .rows > * { scroll-snap-align: start; min-height: 0 }
+  /* Znak, że lista ma dalszy ciąg: które wiersze widać i ile jest wszystkich. Dotknięcie przewija o stronę. */
+  .pos { flex: none; align-self: center; border: 0; min-height: 40px; padding: 0 10px; gap: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--stone) }
+  #done h2 { flex: none }
 
   /* Postać w ogrodzie */
   .garden { border: 1px solid var(--line); border-radius: 26px; padding: 8px 6px 10px; margin-top: 12px; background: radial-gradient(60% 55% at 50% 42%, rgba(141,163,141,.13), transparent 70%) }
@@ -113,7 +132,7 @@
   .body .ld { stroke: var(--red); stroke-opacity: .9; stroke-width: 1.3; stroke-dasharray: 2 4 }
   .body .bl { fill: var(--red); stroke: none }
   .body .hit { fill: var(--cream); stroke: var(--ink); stroke-width: 1.2 }
-  .body .bt { fill: var(--ink); font: 700 11px var(--font); text-anchor: middle }
+  .body .bt { fill: var(--ink); font: 700 var(--bt, 11px) var(--font); text-anchor: middle }
   .plot path:not(.ld):not(.bl):not(.mu) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both }
   .plot .mu { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both, fillin .9s ease-out 1.9s both }
   .plot .ld { animation: appear .4s ease-out 2.2s both, flow 1s linear 2.2s 3 }
@@ -126,15 +145,18 @@
   .legend li { display: flex; align-items: center; gap: 9px; padding: 4px 0; break-inside: avoid; border-bottom: 1px solid var(--line) }
   .legend span { flex: 1; font-size: .9rem; line-height: 1.15 }
   .legend b { font-size: 1.05rem; font-weight: 600 }
+  .key { display: flex; justify-content: center; gap: 18px; margin: 8px 0 0; font-size: .78rem; color: var(--stone); flex: none }
+  .key span { display: inline-flex; align-items: center; gap: 7px }
+  .page1.resuming .key { display: none }
   .bn { flex: none; width: 21px; height: 21px; border-radius: 50%; background: var(--red); color: var(--ink); display: grid; place-items: center; font: 700 .7rem var(--font); font-style: normal }
   .sw { flex: none; width: 11px; height: 11px; border-radius: 50%; background: var(--red) }
   .sw.s { background: radial-gradient(circle, var(--red) 1.1px, transparent 1.5px) 0 0 / 3.6px 3.6px; box-shadow: 0 0 0 1px var(--red) }
 
   /* Lista ćwiczeń */
-  .parts { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; counter-reset: poz }
+  .parts { --row: 72px; list-style: none; margin: 0; padding: 0; outline: 1px solid var(--line); outline-offset: -1px; border-radius: 22px; counter-reset: poz }
   .parts li { counter-increment: poz }
   .parts li + li { border-top: 1px solid var(--line) }
-  .parts button { width: 100%; border: 0; border-radius: 0; justify-content: flex-start; text-align: left; text-transform: none; padding: 12px 14px; gap: 12px; min-height: 64px; font-weight: 600 }
+  .parts button { width: 100%; border: 0; border-radius: 0; justify-content: flex-start; text-align: left; text-transform: none; padding: 0 14px; gap: 12px; min-height: 0; height: 100%; font-weight: 600 }
   .parts button::before { content: counter(poz); width: 26px; height: 26px; flex: none; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; font-size: .75rem; color: var(--stone) }
   .parts span { flex: 1 } .parts small { display: block; font-weight: 500; color: var(--stone); font-size: .84rem; line-height: 1.3; margin-top: 2px }
   .parts .ico { color: var(--stone) }
@@ -159,8 +181,9 @@
   pre { white-space: pre-wrap; font: 500 .85rem/1.5 var(--font); margin: 6px 0 14px; color: var(--stone) }
   .err { color: var(--red) }
   /* Biblioteka: lista przewija się pełnymi wierszami (żaden nie jest ucięty), a nagłówek z zamknięciem zostaje na miejscu. */
-  .lib { display: grid; grid-auto-rows: 76px; max-height: calc(88dvh - 96px); max-height: round(down, 88dvh - 96px, 76px); overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none }
-  .lib button { width: 100%; border: 0; border-radius: 14px; justify-content: flex-start; text-align: left; text-transform: none; padding: 0 4px; gap: 12px; min-height: 0; scroll-snap-align: start }
+  #p-lib { display: flex; flex-direction: column }
+  .lib { --row: 76px; max-height: calc(88dvh - 136px); max-height: round(down, 88dvh - 136px, 76px) }
+  .lib button { width: 100%; border: 0; border-radius: 14px; justify-content: flex-start; text-align: left; text-transform: none; padding: 0 4px; gap: 12px; min-height: 0 }
   .lib .move { width: 84px; height: 60px; flex: none; margin: 0; border-radius: 12px; aspect-ratio: auto !important }
   .lib small { display: block; color: var(--stone); font-size: .8rem; font-weight: 500 }
   .hist summary { min-height: 52px; display: flex; align-items: center; border-bottom: 1px solid var(--line) }
@@ -171,9 +194,9 @@
   .mus span { display: inline-flex; align-items: center; gap: 7px }
 
   /* Serie jako kropki: pełna zrobiona, połówka niepełna, przerywana pominięta */
-  .strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 }
+  .strip { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 6px 0 }
+  .strip span { display: inline-flex; align-items: center; gap: 6px }
   .strip i { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(205,209,206,.6) }
-  .strip i.first { margin-left: 8px } .strip i:first-child { margin-left: 0 }
   .strip i.done { background: var(--cream); box-shadow: none }
   .strip i.part { background: linear-gradient(90deg, var(--cream) 50%, transparent 50%); box-shadow: inset 0 0 0 1.5px var(--cream) }
   .strip i.skip { box-shadow: none; border: 1.5px dashed var(--stone); background: linear-gradient(135deg, transparent 43%, var(--stone) 43% 57%, transparent 57%) }
@@ -222,7 +245,9 @@
   #timer.prep .cloud g { fill: var(--cream) } #timer.prep .cloud line { stroke: var(--cream) }
   @keyframes fall { to { stroke-dashoffset: -20 } }
   #tLabel { margin: 2px auto 0; font-size: .9rem }
-  #tNum { font-size: min(22vw, 140px); font-weight: 300; line-height: 1; margin: 0 auto 6px; letter-spacing: -.01em }
+  #tNum { font-size: min(22vw, 140px); font-weight: 500; line-height: 1; margin: 0 auto 6px; letter-spacing: -.01em }
+  #timer:not(:has(.mv)) #tNum { font-size: min(31vw, 200px) }
+  #timer:not(:has(.mv)) .cloud { width: 126px; height: 98px }
   #tNum .d { display: inline-block; width: .6em; text-align: center } #tNum .c { display: inline-block; width: .28em; text-align: center; transform: translateY(-.06em) }
   #timer.hot #tNum { color: var(--red) }
   .track { height: 4px; border-radius: 4px; background: rgba(231,232,226,.16); margin: 4px 0 14px; overflow: hidden; flex: none }
@@ -236,8 +261,9 @@
   #tNext .mv .move { flex: 1 1 0; height: 0; min-height: 110px; max-height: none; width: 100%; aspect-ratio: auto !important; border: 0; background: none }
 
   /* Wyniki: dziś linią ciągłą, poprzednio przerywaną, w tej samej skali */
-  .cmp { list-style: none; padding: 0; margin: 0 }
-  .cmp li { padding: 10px 0 12px; border-bottom: 1px solid var(--line) }
+  .cmp { --row: 76px; list-style: none; padding: 0; margin: 0 }
+  .cmp li { display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--line) }
+  .cmp .t span { line-height: 1.15 }
   .cmp .t { display: flex; justify-content: space-between; gap: 10px; font-weight: 600 }
   .cmp .t b { white-space: nowrap; font-weight: 600 }
   .bar { height: 6px; border-radius: 6px; margin-top: 8px; background: var(--cream); width: var(--w) }
@@ -255,7 +281,9 @@
   #dlgBody { flex: 1; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none }
   .pg { min-height: 100%; scroll-snap-align: start; display: flex; flex-direction: column }
   .pg .mv { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 4px 0 }
-  .pg .mv .move { flex: 1 1 0; height: 0; min-height: 0; max-height: none; width: 100%; aspect-ratio: auto !important }
+  .pg .mv .move { flex: 1 1 0; height: 0; min-height: 0; max-height: none; width: 100%; aspect-ratio: auto !important; border: 0; background: none }
+  .pg .note { margin: 0 0 4px; flex: none; border: 0; padding: 0 }
+  .mus b { font-weight: 600 }
   .more { align-self: center; border: 0; min-height: 44px; color: var(--stone); font-size: .88rem; gap: 6px }
 
   /* Niskie ekrany: ciaśniejsza legenda, żeby pierwsza strona nadal mieściła się w całości. */
@@ -263,6 +291,8 @@
     .legend li { padding: 2px 0 } .legend span { font-size: .84rem } .legend b { font-size: .95rem }
     .stats > div { padding: 6px 12px 7px }
     #work .note { padding: 8px 14px }
+    /* Na niskim ekranie trening pokazuje tylko mięśnie główne (pomocnicze zostają w karcie ćwiczenia), żeby animacja była większa. */
+    #work .mus span:has(.sw.s) { display: none }
   }
   @media (prefers-reduced-motion: reduce) {
     .plot *, .float span, .cloud line { animation: none !important }
@@ -299,9 +329,10 @@
   <div id="plan">
     <p id="hNote" class="note"></p>
     <h2>Spis ćwiczeń</h2>
-    <ol id="hParts" class="parts"></ol>
+    <div class="fit"><ol id="hParts" class="parts rows"></ol></div>
+    <button class="pos" data-for="hParts" hidden></button>
   </div>
-  <p id="empty" class="note" hidden>Brak rozpisek. Claude wyśle plan albo wklej JSON w imporcie (ikona chmury u góry).</p>
+  <p id="empty" class="note" hidden>Brak rozpisek. Trener wyśle plan albo wklej rozpiskę w imporcie (ikona chmury u góry).</p>
   <div class="dock"><button id="startBtn" class="primary"></button></div>
 </main>
 
@@ -339,18 +370,28 @@
 </section>
 
 <section id="done" class="sheet" hidden>
+  <div id="donePage1">
   <header class="head"><span class="brand">wyniki<i class="dot c"></i></span><span id="dDate" class="lbl"></span></header>
   <h1 id="dName" class="float"></h1>
-  <div id="dBlock" class="stats quad"></div>
-  <h2>Porównanie z poprzednim</h2>
-  <ul id="dCmp" class="cmp"></ul>
+  <div id="dBlock" class="stats lines"></div>
+  </div>
+  <div class="dpage figpage">
   <h2>Pracowały dziś</h2>
   <div id="dFig" class="garden"></div>
+  </div>
+  <div id="donePage2" class="dpage">
+  <h2>Porównanie z poprzednim</h2>
+  <div class="fit"><ul id="dCmp" class="cmp rows"></ul></div>
+  <button class="pos" data-for="dCmp" hidden></button>
+  <p id="dFirst" class="stone" hidden>To pierwszy zapisany trening tego typu. Porównanie pojawi się następnym razem.</p>
+  </div>
+  <div id="donePage3" class="dpage">
   <h2>Uwagi dla trenera</h2>
   <textarea id="doneNote" placeholder="Jak poszło, czy coś bolało, która guma…"></textarea>
-  <details class="how"><summary>Tekst dla Claude<svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><pre id="sum"></pre></details>
+  <details class="how"><summary>Tekst dla trenera<svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><pre id="sum"></pre></details>
+  </div>
   <div class="dock">
-    <button id="shareBtn" class="primary">wyślij do claude<svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+    <button id="shareBtn" class="primary">wyślij do trenera<svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
     <button id="saveBtn" class="ghost">zapisz w historii i wróć</button>
   </div>
 </section>
@@ -358,15 +399,15 @@
 <dialog id="sheet" tabindex="-1">
   <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" class="round" aria-label="Zamknij"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <div id="p-imp" class="pane">
-    <textarea id="imp" placeholder="Wklej odpowiedź Claude z rozpiską (JSON)"></textarea>
-    <div class="row"><button id="impBtn">wczytaj</button><button id="promptBtn">instrukcja dla claude</button></div>
+    <textarea id="imp" placeholder="Wklej rozpiskę od trenera"></textarea>
+    <div class="row"><button id="impBtn">wczytaj</button><button id="promptBtn">format rozpiski</button></div>
     <p id="impMsg"></p>
   </div>
   <div id="p-act" class="pane">
     <button id="skipEx">pomiń to ćwiczenie</button>
     <button id="quitBtn">zakończ trening i pokaż wyniki</button>
   </div>
-  <div id="p-lib" class="pane"><div id="lib" class="lib"></div></div>
+  <div id="p-lib" class="pane"><div id="lib" class="lib rows"></div><button class="pos" data-for="lib" hidden></button></div>
   <div id="p-upd" class="pane">
     <p>Jest nowsza wersja aplikacji. Historia i zapisane treningi zostają na miejscu.</p>
     <div class="row"><button id="updBtn" class="primary">zaktualizuj</button><button id="updLater">później</button></div>
@@ -407,7 +448,11 @@ function floatText(el, text, enter) {
   let k = 0;
   el.setAttribute('aria-label', text);
   el.classList.toggle('enter', !!enter);
-  el.style.setProperty('--n', Math.max(4, text.replace(/ /g, '').length));
+  const n = text.replace(/ /g, '').length;
+  el.style.setProperty('--n', Math.max(4, n));
+  // Krótki tytuł: pół fali i mniejsza amplituda, żeby litery układały się w łuk, a nie w schodek.
+  el.style.setProperty('--wave', n < 9 ? '180deg' : '360deg');
+  el.style.setProperty('--amp', n < 9 ? '-.05em' : '.1em');
   el.innerHTML = text.split(' ').map(w => `<span class="w" aria-hidden="true">${[...w].map(c => `<span style="--k:${k++}">${esc(c)}</span>`).join('')}</span>`).join(' ');
 }
 const plural = (n, one, few, many) => n === 1 ? one : n % 10 > 1 && n % 10 < 5 && (n % 100 < 12 || n % 100 > 14) ? few : many;
@@ -459,7 +504,8 @@ const ANCHOR = {
   lats: ['B', 62, 134], midback: ['B', 70, 100], lowerback: ['B', 80, 154], glutes: ['B', 68, 190], hamstrings: ['B', 66, 232], calves: ['B', 64, 294],
 };
 
-function figure(load, { plot = false, legend = true } = {}) {
+// u = skala kropel z numerami: na małej postaci krople rosną, żeby numer dało się przeczytać (patrz fitDrops).
+function figure(load, { plot = false, legend = true, u = 1 } = {}) {
   const share = muscleShare(load), max = share[0]?.load || 1, top = legend ? share.slice(0, 6) : [];
   const cls = m => !load[m] ? '' : load[m] > max / 2 ? ' p' : ' s';
   let k = 0;
@@ -470,16 +516,23 @@ function figure(load, { plot = false, legend = true } = {}) {
     let lastY = -99;
     // Kropla z numerem przy krawędzi; czerwony deszcz spada z niej łukiem i ląduje na mięśniu (jasny punkt).
     const drops = top.map((s, n) => ({ n: n + 1, a: ANCHOR[s.m] })).filter(b => b.a[0] === v).sort((a, b) => a.a[2] - b.a[2]).map(b => {
-      const ax = v === 'F' ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(330, Math.max(16, ay - 30, lastY + 30));
+      const ax = v === 'F' ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(330, Math.max(16 * u, ay - 30, lastY + 26 * u));
       lastY = y;
-      const drop = `M${bx},${y - 12}C${bx + 5},${y - 5} ${bx + 9},${y - 1} ${bx + 9},${y + 3}A9,9 0 0 1 ${bx - 9},${y + 3}C${bx - 9},${y - 1} ${bx - 5},${y - 5} ${bx},${y - 12}Z`;
-      return `<path class="ld" d="M${bx},${y + 13}Q${bx},${ay} ${ax},${ay}"/><circle class="hit" cx="${ax}" cy="${ay}" r="2.6"/><path class="bl" d="${drop}"/><text class="bt" x="${bx}" y="${y + 7}">${b.n}</text>`;
+      const d = k => k * u, drop = `M${bx},${y - d(12)}C${bx + d(5)},${y - d(5)} ${bx + d(9)},${y - d(1)} ${bx + d(9)},${y + d(3)}A${d(9)},${d(9)} 0 0 1 ${bx - d(9)},${y + d(3)}C${bx - d(9)},${y - d(1)} ${bx - d(5)},${y - d(5)} ${bx},${y - d(12)}Z`;
+      return `<path class="ld" d="M${bx},${y + d(13)}Q${bx},${ay} ${ax},${ay}"/><circle class="hit" cx="${ax}" cy="${ay}" r="2.6"/><path class="bl" d="${drop}"/><text class="bt" style="--bt:${d(11)}px" x="${bx}" y="${y + d(7)}">${b.n}</text>`;
     }).join('');
     return `<svg viewBox="0 0 200 360" class="body${plot ? ' plot' : ''}" aria-hidden="true">
       <g transform="translate(20 0)">${half.join('')}${mid.join('')}</g><g transform="translate(180 0) scale(-1 1)">${half.join('')}</g>${drops}</svg>`;
   };
-  const leg = top.length ? `<ol class="legend">${top.map((s, n) => `<li><i class="bn">${n + 1}</i><span>${MUSCLES[s.m]}</span><b>${s.pct}%</b></li>`).join('')}</ol>` : '';
+  const leg = top.length ? `<ol class="legend">${top.map((s, n) => `<li><i class="bn">${n + 1}</i><span>${MUSCLES[s.m]}</span><b>${s.pct}%</b></li>`).join('')}</ol>
+    <p class="key"><span><i class="sw"></i>główna praca</span><span><i class="sw s"></i>pomocniczo</span></p>` : '';
   return `<div class="views"><figure>${view('F')}<figcaption>przód</figcaption></figure><figure>${view('B')}<figcaption>tył</figcaption></figure></div>${leg}`;
+}
+// Rysuje postać, mierzy ją i w razie potrzeby rysuje drugi raz z większymi kroplami: numer ma mieć ok. 10 px na ekranie.
+function drawFigure(box, load, opt = {}) {
+  box.innerHTML = figure(load, opt);
+  const hgt = box.querySelector('.body').getBoundingClientRect().height, u = hgt ? Math.min(3, 10 * 360 / hgt / 11) : 1;
+  if (u > 1.1) box.innerHTML = figure(load, { ...opt, u });
 }
 
 // --- ćwiczenie
@@ -489,7 +542,12 @@ const moveBlock = id => {
   const g = moveGear(id);
   return `<figure class="mv">${moveFig(id)}<figcaption><span><i class="sw"></i>spięty mięsień</span>${g.tool ? '<span><i class="eq"></i>sprzęt</span>' : ''}${g.band ? '<span><i class="eq band"></i>guma</span>' : ''}</figcaption></figure>`;
 };
-const musLine = e => e ? [...e.p.map(m => `<span><i class="sw"></i>${MUSCLES[m]}</span>`), ...e.s.map(m => `<span><i class="sw s"></i>${MUSCLES[m]}</span>`)].join('') : '';
+// pct = dopisz udział mięśnia w ćwiczeniu (główny liczy się podwójnie względem pomocniczego).
+const musLine = (e, pct) => {
+  if (!e) return '';
+  const share = pct ? Object.fromEntries(muscleShare(muscleLoad([{ ex: pct, sets: 1 }])).map(s => [s.m, ` <b>${s.pct}%</b>`])) : {};
+  return [...e.p.map(m => `<span><i class="sw"></i>${MUSCLES[m]}${share[m] || ''}</span>`), ...e.s.map(m => `<span><i class="sw s"></i>${MUSCLES[m]}${share[m] || ''}</span>`)].join('');
+};
 const video = it => `https://www.youtube.com/results?search_query=${encodeURIComponent(exName(it) + ' technika')}`;
 const how = (it, e) => `<h2>Jak wykonać</h2>
   ${e ? `<ol class="steps">${e.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol><ul class="tips">${e.tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
@@ -497,7 +555,7 @@ const how = (it, e) => `<h2>Jak wykonać</h2>
 // steps = otwórz od razu na stronie z instrukcją (z ekranu treningu animacja jest już widoczna).
 function showExercise(it, steps) {
   const e = EXERCISES[it.ex], anim = EX_MOVE[it.ex];
-  $('dlgBody').innerHTML = (anim ? `<section class="pg">${moveBlock(it.ex)}<div class="mus">${musLine(e)}</div><button class="more">jak wykonać${ico('chev')}</button></section>` : '')
+  $('dlgBody').innerHTML = (anim ? `<section class="pg">${moveBlock(it.ex)}<div class="mus">${musLine(e, it.ex)}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}<button class="more">jak wykonać${ico('chev')}</button></section>` : '')
     + `<section class="pg" id="dlgSteps">${how(it, e)}</section>`;
   floatText($('dlgName'), exName(it).toLowerCase());
   $('dlg').showModal(); $('dlg').focus();
@@ -529,11 +587,11 @@ function renderHome() {
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted);
   $('hSub').textContent = [`${p.items.length} ${plural(p.items.length, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń')}`, p.name.match(/\((.*)\)\s*$/)?.[1], week && `tydzień ${week}`, sel < imported.length && 'zaimportowany'].filter(Boolean).join(' · ');
-  $('hFig').innerHTML = figure(muscleLoad(p.items), { plot: !plotted });
+  drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
   plotted = true;
-  $('hBlock').innerHTML = cells([['Serie', steps(p).length], ['Czas', `~${estimate(p)}`, 'minut'], ['Ostatnio', prev ? prev.reps : '—', prev ? `powt. · ${day(prev.t0)}` : 'jeszcze brak']]);
+  $('hBlock').innerHTML = cells([['Serie', steps(p).length], ['Czas', `~${estimate(p)}`, 'minut'], ['Ostatnio', prev ? prev.reps : '—', prev ? `powt. · ${day(prev.t0)}` : 'brak']]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
-  $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}${it.note ? ' · ' + esc(it.note) : ''}</small></span>${ico('next')}</button></li>`).join('')
+  $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}</small></span>${ico('next')}</button></li>`).join('')
     + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">usuń ten zaimportowany trening</button></li>` : '');
   $('startBtn').innerHTML = `zacznij · ${esc(short(p.name).toLowerCase())}${ico('go')}`;
 }
@@ -549,6 +607,20 @@ $('lib').innerHTML = Object.entries(EXERCISES).sort((a, b) => a[1].name.localeCo
   .map(([id, e]) => `<button data-ex="${id}">${moveFig(id)}<span>${esc(e.name)}<small>${e.p.map(m => MUSCLES[m]).join(', ')}</small></span></button>`).join('');
 stillMoves($('lib'));
 $('lib').onclick = e => { const id = e.target.closest('button')?.dataset.ex; if (id) showExercise({ ex: id }); };
+// Pod każdą listą przewijaną wierszami: „1–8 z 36”. Znika, gdy cała lista mieści się na ekranie.
+function pager(btn) {
+  const list = $(btn.dataset.for), row = () => parseFloat(getComputedStyle(list).getPropertyValue('--row'));
+  const show = () => {
+    const n = list.children.length, per = Math.round(list.clientHeight / row()), first = Math.round(list.scrollTop / row()) + 1;
+    btn.hidden = !per || n <= per;
+    btn.innerHTML = `${first}–${Math.min(n, first + per - 1)} z ${n}${first + per > n ? '' : ico('chev')}`;
+  };
+  list.addEventListener('scroll', show, { passive: true });
+  new ResizeObserver(show).observe(list);
+  new MutationObserver(show).observe(list, { childList: true });
+  btn.onclick = () => list.scrollBy({ top: list.scrollTop + list.clientHeight >= list.scrollHeight - 2 ? -list.scrollHeight : list.clientHeight, behavior: 'smooth' });
+}
+document.querySelectorAll('.pos').forEach(pager);
 $('dlgClose').onclick = () => $('dlg').close();
 $('dlgBody').onclick = e => e.target.closest('.more') && $('dlgSteps').scrollIntoView({ behavior: 'smooth' });
 
@@ -564,7 +636,7 @@ $('sheetClose').onclick = () => $('sheet').close();
 
 $('impBtn').onclick = () => {
   try {
-    // Z odpowiedzi czatu bierzemy fragment od pierwszego [ lub { do ostatniego ] lub } (pomija ``` i komentarze).
+    // Z wklejonego tekstu bierzemy fragment od pierwszego [ lub { do ostatniego ] lub } (pomija ``` i komentarze).
     const t = $('imp').value, json = t.slice(t.search(/[[{]/), Math.max(t.lastIndexOf(']'), t.lastIndexOf('}')) + 1);
     const plans = normalize(JSON.parse(json));
     imported = [...plans, ...imported.filter(p => !plans.some(n => n.name === p.name))];
@@ -572,9 +644,9 @@ $('impBtn').onclick = () => {
     $('imp').value = ''; sel = 0;
     $('impMsg').className = ''; $('impMsg').textContent = `Wczytano: ${plans.map(p => p.name).join(', ')}`;
     renderHome(); $('sheet').close(); scrollTo(0, 0);
-  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Nie da się wczytać: ${err.message}. Sprawdź, czy wkleiłeś całą odpowiedź.`; }
+  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Nie da się wczytać: ${err.message}. Sprawdź, czy wkleiłeś całą rozpiskę.`; }
 };
-$('promptBtn').onclick = () => send(claudePrompt(EXERCISES, past.map(pastText)));
+$('promptBtn').onclick = () => send(planFormat(EXERCISES, past.map(pastText)));
 
 async function send(text) {
   try { if (navigator.share) return await navigator.share({ text }); } catch (e) { if (e.name === 'AbortError') return; }
@@ -587,8 +659,8 @@ function strip() {
   return `<div class="strip" aria-hidden="true">${S().map((s, i) => {
     const v = cur.log[i], it = cur.plan.items[s.item];
     const c = i === cur.i && cur.phase !== 'done' ? 'now' : v != null ? (!it.time && parseInt(it.reps) > v ? 'part' : 'done') : i < cur.i ? 'skip' : '';
-    return `<i class="${c}${s.set === 1 ? ' first' : ''}"></i>`;
-  }).join('')}</div>`;
+    return `${s.set === 1 ? (i ? '</span>' : '') + '<span>' : ''}<i class="${c}"></i>`;
+  }).join('')}</span></div>`;
 }
 
 function start(plan) {
@@ -695,10 +767,12 @@ function finish() {
     const u = p.time ? ' s' : '';
     return `<li><div class="t"><span>${esc(p.name)}</span><b>${now}${u}${was ? ` · ${signed(delta(now, was))}` : ''}</b></div>
       <div class="bar" style="--w:${now / top * 100}%"></div>${was ? `<div class="bar was" style="--w:${was / top * 100}%" title="poprzednio ${was}${u}"></div>` : ''}</li>`;
-  }).join('') + (prev ? '' : '<li class="stone">To pierwszy zapisany trening tego typu. Porównanie pojawi się następnym razem.</li>');
-  $('dFig').innerHTML = figure(muscleLoad(cur.plan.items, (it, k) => s.per[k].vals.length), { plot: true });
+  }).join('');
+  $('dFirst').hidden = !!prev;
+  show('done');
+  drawFigure($('dFig'), muscleLoad(cur.plan.items, (it, k) => s.per[k].vals.length), { plot: true });
   $('sum').textContent = finalText();
-  $('dCmp').previousElementSibling.hidden = !s.per.some(p => p.vals.length);
+  $('donePage2').hidden = !s.per.some(p => p.vals.length);
   wl?.release(); wl = null;
   show('done');
 }
@@ -710,7 +784,7 @@ $('saveBtn').onclick = () => {
   past.unshift({ name: cur.plan.name, t0: cur.t0, t1: cur.t1, text, reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals })) });
   past = past.slice(0, 100); store('history', past);
   cur = null; save(); $('doneNote').value = ''; sel = null;
-  renderHome(); show('home');
+  show('home'); renderHome();
 };
 
 // Wznowienie po zamknięciu aplikacji: przerwa liczy się dalej, seria na czas zaczyna się od nowa.
@@ -735,7 +809,7 @@ async function wake() {
   try { wl = await navigator.wakeLock?.request('screen'); } catch {}
 }
 
-// Rozpiski: przy starcie i po powrocie aplikacji z tła (nowy tydzień od Claude pojawia się sam).
+// Rozpiski: przy starcie i po powrocie aplikacji z tła (nowy tydzień od trenera pojawia się sam).
 let servedJson = '';
 function loadPlans() {
   fetch('plans.json', { cache: 'no-cache' }).then(r => r.text()).then(t => {

@@ -1,6 +1,6 @@
 // Czysta logika, bez DOM. Ładowana przez index.html; `node logic.js` uruchamia autotest.
 
-// Rozpiska (jeden trening albo tablica, np. wklejona od Claude) → tablica treningów z domyślnymi wartościami.
+// Rozpiska (jeden trening albo tablica, np. wklejona od trenera) → tablica treningów z domyślnymi wartościami.
 function normalize(data) {
   const plans = Array.isArray(data) ? data : [data];
   if (!plans.length) throw Error('Pusta rozpiska');
@@ -71,7 +71,7 @@ function stats(plan, log) {
 const delta = (now, before) => before > 0 ? Math.round((now - before) / before * 100) : null;
 const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
 
-// Podsumowanie do wklejenia Claude'owi; prev = poprzedni trening tego samego typu (z historii).
+// Podsumowanie dla trenera; prev = poprzedni trening tego samego typu (z historii).
 function summaryText(plan, log, note, t0, t1, prev) {
   const s = stats(plan, log);
   const lines = [`Trening: ${plan.name} (${new Date(t0).toISOString().slice(0, 10)}, ${Math.round((t1 - t0) / 60000)} min)`];
@@ -87,10 +87,10 @@ function summaryText(plan, log, note, t0, t1, prev) {
   return lines.join('\n');
 }
 
-// Instrukcja dla dowolnego czatu z Claude, żeby oddał rozpiskę w formacie aplikacji.
-function claudePrompt(exercises, history) {
+// Opis formatu dla osoby, która układa rozpiskę poza aplikacją.
+function planFormat(exercises, history) {
   return [
-    'Przygotuj rozpiskę treningu do mojej aplikacji. Odpowiedz samym JSON-em: jeden trening albo tablica treningów, w formacie:',
+    'Format rozpiski dla aplikacji (JSON): jeden trening albo tablica treningów:',
     '{"name":"T2 · Góra A","note":"...","items":[{"ex":"podciaganie","sets":5,"reps":2,"rest":120,"note":"..."},{"ex":"plank","sets":3,"time":40,"rest":45}]}',
     'reps: liczba albo tekst (np. "8/noga"); time: sekundy (zamiast reps); rest: przerwa po serii w sekundach.',
     'Dostępne ćwiczenia (ex): ' + Object.entries(exercises).map(([id, e]) => `${id} (${e.name})`).join(', ') + '.',
