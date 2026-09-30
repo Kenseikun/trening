@@ -7,6 +7,7 @@
 <title>Trening</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preload" href="fonts/quicksand-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   @font-face { font-family: 'Quicksand'; font-weight: 300 700; font-display: swap; src: url(fonts/quicksand-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
@@ -143,9 +144,9 @@
   @keyframes fillin { from { fill-opacity: 0 } }
   @keyframes appear { from { opacity: 0 } }
   @keyframes flow { to { stroke-dashoffset: -12 } }
-  .legend { list-style: none; margin: 10px 8px 0; padding: 0; columns: 2; column-gap: 20px }
-  .legend li { display: flex; align-items: center; gap: 9px; padding: 4px 0; break-inside: avoid; border-bottom: 1px solid var(--line) }
-  .legend span { flex: 1; font-size: .9rem; line-height: 1.15 }
+  .legend { list-style: none; margin: 10px 4px 0; padding: 0; columns: 2; column-gap: 16px }
+  .legend li { display: flex; align-items: center; gap: 7px; padding: 4px 0; break-inside: avoid; border-bottom: 1px solid var(--line) }
+  .legend span { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: .9rem; line-height: 1.15 }
   .legend b { font-size: 1.05rem; font-weight: 600 }
   .key { display: flex; justify-content: center; gap: 18px; margin: 8px 0 0; font-size: .78rem; color: var(--stone); flex: none }
   .key span { display: inline-flex; align-items: center; gap: 7px }
