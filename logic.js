@@ -102,9 +102,14 @@ function planFormat(exercises, history) {
 if (typeof module !== 'undefined' && require.main === module) {
   const assert = require('node:assert'), fs = require('node:fs'), path = require('node:path');
   require('./exercises.js');
-  const plans = normalize(JSON.parse(fs.readFileSync(path.join(__dirname, 'plans.json'), 'utf8')));
-  for (const p of plans) for (const it of p.items) assert(EXERCISES[it.ex], `${p.name}: nieznane ćwiczenie "${it.ex}"`);
   const { EX_MOVE, MOVES, joints, norm } = require('./moves.js');
+  // Pliki rozpisek podane jako argumenty (`node logic.js rozpiska.json`): format, ćwiczenia z biblioteki i animacja dla każdego z nich.
+  const files = process.argv.slice(2);
+  const plans = files.flatMap(file => normalize(JSON.parse(fs.readFileSync(path.resolve(file), 'utf8'))));
+  for (const p of plans) for (const it of p.items) {
+    assert(EXERCISES[it.ex], `${p.name}: nieznane ćwiczenie "${it.ex}". Dodaj je do exercises.js razem z animacją w moves.js.`);
+    assert(MOVES[EX_MOVE[it.ex]?.[0]], `${p.name}: ćwiczenie "${it.ex}" nie ma animacji w moves.js`);
+  }
   for (const [id, e] of Object.entries(EXERCISES)) {
     assert(MOVES[EX_MOVE[id]?.[0]], `${id}: brak animacji w moves.js`);
     for (const m of [...e.p, ...e.s]) assert(MUSCLES[m], `${id}: nieznany mięsień "${m}"`);
@@ -140,5 +145,5 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.match(sum, /Pompki \(cel 2×5\): 5, 4/);
   assert.match(sum, /Pominięte: Deska/);
   assert.match(sum, /powtórzenia 8 → 9 \(\+13%\)/);
-  console.log(`OK: ${plans.length} treningi, ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu`);
+  console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (files.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : ''));
 }
