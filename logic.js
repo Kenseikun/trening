@@ -1,4 +1,4 @@
-// Czysta logika, bez DOM. Ładowana przez index.html i sw.js; `node logic.js` uruchamia autotest.
+// Czysta logika, bez DOM. Ładowana przez index.html; `node logic.js` uruchamia autotest.
 
 // Rozpiska (jeden trening albo tablica, np. wklejona od Claude) → tablica treningów z domyślnymi wartościami.
 function normalize(data) {
@@ -104,11 +104,21 @@ if (typeof module !== 'undefined' && require.main === module) {
   require('./exercises.js');
   const plans = normalize(JSON.parse(fs.readFileSync(path.join(__dirname, 'plans.json'), 'utf8')));
   for (const p of plans) for (const it of p.items) assert(EXERCISES[it.ex], `${p.name}: nieznane ćwiczenie "${it.ex}"`);
-  const { EX_MOVE, MOVES } = require('./moves.js');
+  const { EX_MOVE, MOVES, joints, norm } = require('./moves.js');
   for (const [id, e] of Object.entries(EXERCISES)) {
     assert(MOVES[EX_MOVE[id]?.[0]], `${id}: brak animacji w moves.js`);
     for (const m of [...e.p, ...e.s]) assert(MUSCLES[m], `${id}: nieznany mięsień "${m}"`);
     assert(e.p.length, `${id}: brak mięśni głównych`);
+  }
+  // Animacje: każda poza da się policzyć, a taśma TRX ma stałą długość (nie rozciąga się jak guma).
+  for (const [key, m] of Object.entries(MOVES)) {
+    m.nA = norm(m.A, m.front); m.nB = norm(m.B, m.front);
+    const len = [0, .5, 1].map(p => {
+      const J = joints(m, p);
+      for (const k in J) assert(J[k].every(Number.isFinite), `${key}: nie da się policzyć stawu ${k}`);
+      return m.props.filter(pr => pr[0] === 'strap').map(pr => Math.hypot(pr[1] - J[pr[3]][0], pr[2] - J[pr[3]][1]));
+    });
+    len[0].forEach((l, k) => assert(Math.max(...len.map(x => Math.abs(x[k] - l))) / l < .05, `${key}: taśma TRX zmienia długość`));
   }
 
   const p = normalize({ name: 'T2 · Góra A (x)', items: [{ ex: 'pompki', sets: 2, reps: 5, rest: 60 }, { ex: 'plank', sets: 1, time: 30 }] })[0];

@@ -107,7 +107,7 @@ globalThis.EXERCISES = {
   },
   'pompki-trx': {
     name: 'Pompki na TRX', p: ['chest'], s: ['triceps', 'shoulders', 'abs'],
-    steps: ['Chwyć uchwyty, odejdź i pochyl się do przodu z prostymi rękami przed klatką.',
+    steps: ['Chwyć uchwyty, stań tyłem do zaczepienia i pochyl się do przodu z prostymi rękami przed klatką.',
       'Ciało proste. Zginaj łokcie, aż dłonie znajdą się przy klatce.',
       'Wypchnij się do startu, pilnując, żeby uchwyty się nie rozjeżdżały.'],
     tips: ['Im bardziej poziomo, tym trudniej.',
@@ -189,8 +189,8 @@ globalThis.EXERCISES = {
   },
   'trx-rollout': {
     name: 'TRX rollout', p: ['abs'], s: ['lats', 'shoulders'],
-    steps: ['Chwyć uchwyty, stań przodem do zaczepienia z prostymi rękami przed sobą.',
-      'Pochyl się do przodu, unosząc proste ręce nad głowę. Ciało proste jak deska.',
+    steps: ['Chwyć uchwyty i stań tyłem do zaczepienia. Proste ręce trzymaj przed sobą, taśmy napięte.',
+      'Pochylaj się do przodu, unosząc proste ręce nad głowę. Ciało proste jak deska.',
       'Wróć do startu siłą brzucha.'],
     tips: ['Nie wyginaj lędźwi, brzuch i pośladki mocno napięte.',
       'Trudność zależy od kąta. Zacznij bardziej pionowo.'],

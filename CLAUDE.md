@@ -16,13 +16,16 @@ Progresja: jedna zmiana na ćwiczenie na tydzień (+1 powtórzenie, +1 seria, s�
 
 ## Nowe ćwiczenie
 1. Dodaj wpis w `exercises.js`, razem z mięśniami: `p` (główne) i `s` (pomocnicze), klucze z `MUSCLES`. Z nich powstają postać z mięśniami i udziały w %.
-2. Dopisz animację w `moves.js`: wpis w `EX_MOVE` (ćwiczenie → ruch z `MOVES`). Nowy ruch to poza A (luz) i B (spięcie); podgląd wszystkich: `.impeccable/moves-grid.html`.
+2. Dopisz animację w `moves.js`: wpis w `EX_MOVE` (ćwiczenie → ruch z `MOVES`). Nowy ruch to poza A (luz) i B (spięcie). Podgląd wszystkich (start, połowa ruchu, koniec): `.impeccable/audit.html`, z `?ex=id,id` dla wybranych.
    - Priorytet: ma być dokładnie widać, jak wykonać ćwiczenie, także dla osoby, która nigdy nie trenowała.
    - Widok dobieraj tak, żeby ruch leżał w płaszczyźnie obrazu: drążek i gumy od przodu (`front: true`), reszta z boku.
    - Pokazuj pełny zakres i punkty techniki (np. w podciąganiu głowa nad drążkiem do szyi).
    - Guma jest niebieska, pozostały sprzęt zielony.
-   - Każdą nową pozę obejrzyj w podglądzie w pozycji A i B.
-3. Podbij wersję `C` w `sw.js`, żeby telefon od razu pobrał nową wersję do cache offline.
+   - Ciało proste od kostek (deska, pompka, wiosłowanie): pomiń `h`, biodro wyniknie z `F` i `t`. Proste ręce, które nie trzymają nieruchomego sprzętu: `a` (kąt) zamiast `H`.
+   - Taśma TRX się nie rozciąga: dłoń albo stopa w pozie A i B jest w tej samej odległości od zaczepu. Pilnuje tego `node logic.js`.
+   - Liczby w animacji mają zgadzać się z instrukcją (np. dipy do 90° w łokciu, tylne kolano we wykroku nad ziemią).
+   - Każdą nową pozę obejrzyj w podglądzie na starcie, w połowie ruchu i na końcu.
+3. Podbij wersję `C` w `sw.js`. Dotyczy to każdej zmiany w aplikacji, nie tylko nowych ćwiczeń: po zmianie `sw.js` otwarta aplikacja pokazuje komunikat „Nowa wersja” i przeładowuje się po zgodzie.
 
 ## Pliki
 - `index.html`: interfejs.
@@ -32,4 +35,4 @@ Progresja: jedna zmiana na ćwiczenie na tydzień (+1 powtórzenie, +1 seria, s�
 - `plans.json`: rozpiska na bieżący tydzień.
 - `sw.js`: cache offline.
 - `manifest.webmanifest`: instalacja aplikacji.
-- Podgląd lokalny: konfiguracja „trening” w `C:\Claude\Others\.claude\launch.json`.
+- Podgląd lokalny: konfiguracja „trening” (port 8080) albo „trening-2” (port 8081, gdy pierwszy port trzyma inny czat) w `C:\Claude\Others\.claude\launch.json`.
