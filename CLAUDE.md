@@ -1,6 +1,6 @@
 # Trening: PWA na Androida (GitHub Pages)
 
-Aplikacja treningowa (kalistenika) bez frameworków i bez builda. Repo jest **publiczne**: żadnych danych osobowych (wiek, waga, zdrowie) w plikach. Profil i postępy trzymamy w pamięci Claude.
+Aplikacja treningowa (kalistenika) bez frameworków i bez builda. Nic na ekranie telefonu nie może być ucięte: trening, przerwa i pierwsza strona startu dopasowują się do wysokości ekranu, a przewijanie ma zaczynać nową treść. Repo jest **publiczne**: żadnych danych osobowych (wiek, waga, zdrowie) w plikach. Profil i postępy trzymamy w pamięci Claude.
 
 ## Nowa rozpiska (cotygodniowy cykl)
 1. Wyniki przychodzą jako tekst z przycisku „Wyślij do Claude” w aplikacji.
@@ -9,7 +9,7 @@ Aplikacja treningowa (kalistenika) bez frameworków i bez builda. Repo jest **pu
    - `reps`: liczba albo tekst („8/noga”);
    - `time`: sekundy zamiast `reps`;
    - `rest`: przerwa po serii w sekundach, domyślnie 90.
-3. Uruchom `node logic.js`. Musi wypisać `OK`, bo test sprawdza format, id ćwiczeń i pliki zdjęć.
+3. Uruchom `node logic.js`. Musi wypisać `OK`, bo test sprawdza format, id ćwiczeń, mięśnie i animacje.
 4. Zrób `git commit` i `git push`. Telefon pobierze rozpiskę przy następnym otwarciu aplikacji.
 
 Progresja: jedna zmiana na ćwiczenie na tydzień (+1 powtórzenie, +1 seria, słabsza guma albo bardziej stromy kąt TRX). Co 5–6 tygodni lżejszy tydzień.
@@ -17,13 +17,18 @@ Progresja: jedna zmiana na ćwiczenie na tydzień (+1 powtórzenie, +1 seria, s�
 ## Nowe ćwiczenie
 1. Dodaj wpis w `exercises.js`, razem z mięśniami: `p` (główne) i `s` (pomocnicze), klucze z `MUSCLES`. Z nich powstają postać z mięśniami i udziały w %.
 2. Dopisz animację w `moves.js`: wpis w `EX_MOVE` (ćwiczenie → ruch z `MOVES`). Nowy ruch to poza A (luz) i B (spięcie); podgląd wszystkich: `.impeccable/moves-grid.html`.
+   - Priorytet: ma być dokładnie widać, jak wykonać ćwiczenie, także dla osoby, która nigdy nie trenowała.
+   - Widok dobieraj tak, żeby ruch leżał w płaszczyźnie obrazu: drążek i gumy od przodu (`front: true`), reszta z boku.
+   - Pokazuj pełny zakres i punkty techniki (np. w podciąganiu głowa nad drążkiem do szyi).
+   - Guma jest niebieska, pozostały sprzęt zielony.
+   - Każdą nową pozę obejrzyj w podglądzie w pozycji A i B.
 3. Podbij wersję `C` w `sw.js`, żeby telefon od razu pobrał nową wersję do cache offline.
 
 ## Pliki
 - `index.html`: interfejs.
 - `logic.js`: logika i autotest.
 - `exercises.js`: biblioteka ćwiczeń.
-- `moves.js`: animacje ćwiczeń (postać z boku, mięśnie czerwienieją przy spięciu, sprzęt zielony).
+- `moves.js`: animacje ćwiczeń (postać z boku albo od przodu, mięśnie czerwienieją przy spięciu, sprzęt zielony, guma niebieska).
 - `plans.json`: rozpiska na bieżący tydzień.
 - `sw.js`: cache offline.
 - `manifest.webmanifest`: instalacja aplikacji.

@@ -11,7 +11,7 @@ Jeden użytkownik (właściciel repozytorium). Trenuje kalistenikę (drążek, p
 
 ## Product Purpose
 Aplikacja prowadzi przez trening ułożony przez Claude:
-- pokazuje, co i ile teraz zrobić, razem z techniką (zdjęcia start/koniec i instrukcja po polsku);
+- pokazuje, co i ile teraz zrobić, razem z techniką (własna animacja ruchu z pracującymi mięśniami i instrukcja po polsku);
 - odlicza przerwę;
 - zbiera faktyczne wyniki serii;
 - oddaje podsumowanie do Claude, który na jego podstawie układa kolejny tydzień.
@@ -32,7 +32,7 @@ To nie jest katalog treningów ani aplikacja fitness z subskrypcją. Plan pisze 
 - Service worker: offline i cache zdjęć.
 - Publiczne repo na GitHub Pages, więc żadnych danych osobowych w plikach.
 - Interfejs po polsku.
-- Zdjęcia ćwiczeń: free-exercise-db (Unlicense, JPG 3:2, różne tła siłowni), dwie klatki przenikające się jako animacja.
+- Animacje ćwiczeń są własne (`moves.js`): postać z obrysów, mięśnie czerwienieją przy spięciu, sprzęt zielony, guma niebieska. Zdjęcia z free-exercise-db usunięto na życzenie użytkownika (2026-09-29).
 - **Funkcje:**
   - lista treningów tygodnia;
   - trening seria po serii (licznik powtórzeń, serie na czas z przygotowaniem 5 s);
@@ -54,15 +54,15 @@ Brak wiążących. Nazwa „Trening” i obecna ikona mogą się zmienić.
 
 ## Evidence on Hand
 - Prawdziwe treści: `plans.json` (tydzień 1, 4 treningi) i `exercises.js` (36 ćwiczeń z instrukcjami).
-- Zdjęcia w `img/`.
 - Brak statystyk, wykresów i historii poza tym, co użytkownik sam zapisze.
 
 ## Product Principles
 - Czytelność w słońcu i dla zmęczonego człowieka jest ważniejsza od efektu. Duży tekst, duże cele dotyku.
 - Na każdym ekranie jedna oczywista następna czynność.
+- Animacje ćwiczeń mają dokładnie pokazywać wykonanie: pełny zakres ruchu i szczegóły techniki, zrozumiałe dla osoby początkującej.
 - Żadnej grywalizacji ani motywacyjnego szumu. Aplikacja jest narzędziem trenera, nie rozrywką.
 - Nie wyglądać jak typowa aplikacja fitness (gradienty, neon, generyczne kafelki).
 - Dane treningu nie mogą przepaść: wznawianie i zapis mają pierwszeństwo przed wygodą.
 
 ## Accessibility & Inclusion
-Użycie w pełnym słońcu i spoconymi rękami: wysoki kontrast, minimum ok. 56 px wysokości głównych przycisków, tekst treningowy czytelny bez zbliżania telefonu.
+Użycie w pełnym słońcu i spoconymi rękami: wysoki kontrast, cele dotyku co najmniej 44–48 px (główny przycisk ok. 54 px), tekst treningowy czytelny bez zbliżania telefonu. Na życzenie użytkownika (2026-09-30) przyciski i zegar są mniejsze, żeby ekrany mieściły się bez uciętych obrazów i tekstu.
