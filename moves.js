@@ -51,8 +51,8 @@ const MOVES = {
   support: { props: [['ground', 232], ['pbar', 152, 100, 232]], A: SUPPORT, B: SUPPORT },
   pushup: {
     props: [['ground', 190]],
-    A: { t: -23, H: [188, 189], F: [52, 182], fa: 40 },
-    B: { t: -8, H: [188, 189], F: [52, 182], fa: 40 },
+    A: { t: -25.5, H: [188, 184], F: [52, 182], fa: 40 },
+    B: { t: -10, H: [188, 184], F: [52, 182], fa: 40 },
   },
   // Pompki na TRX: tyłem do zaczepu, taśmy biegną zza pleców do dłoni.
   trxpush: {
@@ -62,23 +62,23 @@ const MOVES = {
   },
   declpush: {
     props: [['ground', 190], ['box', 18, 150, 56, 40]],
-    A: { t: -9, H: [192, 189], F: [50, 146], fa: 60 },
-    B: { t: 5, H: [192, 189], F: [50, 146], fa: 60 },
+    A: { t: -10.5, H: [192, 184], F: [50, 146], fa: 60 },
+    B: { t: 4, H: [192, 184], F: [50, 146], fa: 60 },
   },
   inclpush: {
     props: [['ground', 190], ['box', 176, 152, 56, 38]],
-    A: { t: -39, H: [198, 152], F: [70, 182], fa: 40 },
-    B: { t: -30, H: [198, 152], F: [70, 182], fa: 40 },
+    A: { t: -41, H: [198, 147], F: [70, 182], fa: 40 },
+    B: { t: -31, H: [198, 147], F: [70, 182], fa: 40 },
   },
   // Guma od przodu: proste ręce z pozycji przed sobą (skrót perspektywiczny) rozchodzą się szeroko na boki, guma się napina.
   pullapart: {
-    front: true, props: [['ground', 190], ['band2', 'wr1', 'wr0']],
+    front: true, props: [['ground', 199], ['band2', 'wr1', 'wr0']],
     A: { ...FSTAND, a: [0, 180], s: [[.3, .3], [.3, .3]] },
     B: { ...FSTAND, a: [0, 180] },
   },
   // Rotacja zewnętrzna od przodu: łokieć przy boku, przedramię obraca się na zewnątrz, guma zaczepiona do słupka z drugiej strony.
   extrot: {
-    front: true, props: [['ground', 190], ['post', 64, 36, 190], ['band', 64, 70, 'wr0']],
+    front: true, props: [['ground', 199], ['post', 64, 36, 199], ['band', 64, 70, 'wr0']],
     A: { ...FSTAND, H: [[166, 74], [124, 104]], s: [[1, .3], [1, 1]] },
     B: { ...FSTAND, H: [[205, 70], [124, 104]] },
   },
@@ -104,8 +104,8 @@ const MOVES = {
   // Kolana na TRX: stopy w pętlach pod zaczepem, podpór na prostych rękach; kolana idą pod klatkę, biodra lekko w górę.
   trxknees: {
     props: [['ground', 190], ['strap', 58, -150, 'an0']],
-    A: { h: [143, 135], t: -10, H: [200, 189], F: [58, 150], fa: 30 },
-    B: { h: [143, 112], t: 13, H: [200, 189], F: [130, 141], fa: 30 },
+    A: { h: [142, 132], t: -12, H: [200, 184], F: [58, 150], fa: 30 },
+    B: { h: [143.5, 107], t: 13, H: [200, 184], F: [130, 141], fa: 30 },
   },
   // Dead bug: prosta ręka opada za głowę, przeciwna noga prostuje się nisko nad ziemią.
   deadbug: {
@@ -359,7 +359,7 @@ function mountMove(svg, fixed) {
       const A = typeof a === 'string' ? J[a] : a, B = typeof b === 'string' ? J[b] : b;
       el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
     }
-    for (const [g, l] of musG) g.setAttribute('opacity', (l === 'p' ? .2 + .8 * act : .08 + .42 * act).toFixed(3));
+    for (const [g, l] of musG) g.setAttribute('opacity', (l === 'p' ? .38 + .62 * act : .18 + .4 * act).toFixed(3));
     for (const [el, seg, spec] of mus) {
       if (typeof seg === 'string') { el.setAttribute('cx', J[seg][0]); el.setAttribute('cy', J[seg][1]); continue; }
       const A = J[seg[1]], B = J[seg[2]], n = at([0, 0], ang(A, B) + rot(seg), spec[3] * W[seg[0]]);
