@@ -158,7 +158,9 @@
   textarea::placeholder { color: var(--stone) }
   pre { white-space: pre-wrap; font: 500 .85rem/1.5 var(--font); margin: 6px 0 14px; color: var(--stone) }
   .err { color: var(--red) }
-  .lib button { width: 100%; border: 0; border-radius: 14px; justify-content: flex-start; text-align: left; text-transform: none; padding: 6px 4px; gap: 12px; min-height: 72px }
+  /* Biblioteka: lista przewija się pełnymi wierszami (żaden nie jest ucięty), a nagłówek z zamknięciem zostaje na miejscu. */
+  .lib { display: grid; grid-auto-rows: 76px; max-height: calc(88dvh - 96px); max-height: round(down, 88dvh - 96px, 76px); overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none }
+  .lib button { width: 100%; border: 0; border-radius: 14px; justify-content: flex-start; text-align: left; text-transform: none; padding: 0 4px; gap: 12px; min-height: 0; scroll-snap-align: start }
   .lib .move { width: 84px; height: 60px; flex: none; margin: 0; border-radius: 12px; aspect-ratio: auto !important }
   .lib small { display: block; color: var(--stone); font-size: .8rem; font-weight: 500 }
   .hist summary { min-height: 52px; display: flex; align-items: center; border-bottom: 1px solid var(--line) }
@@ -184,7 +186,9 @@
   #work .mus, #work .note { margin: 6px 0 }
   /* Animacja zajmuje całe wolne miejsce i zawsze mieści się w całości (nic nie jest ucięte przez przyciski). */
   .grow { flex: 1 1 0; min-height: 150px; display: flex; flex-direction: column; position: relative }
-  .chip { position: absolute; top: 16px; right: 9px; min-height: 40px; padding: 0 14px; font-size: .85rem; background: var(--panel); border-color: var(--line-strong) }
+  /* Przycisk instrukcji stoi obok licznika ćwiczeń, żeby nie zasłaniał animacji (np. taśmy TRX). */
+  .wsub { display: flex; align-items: center; justify-content: space-between; gap: 12px }
+  .chip { flex: none; min-height: 44px; padding: 0 14px; font-size: .85rem }
   .grow .mv { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 8px 0 4px }
   .grow .mv .move { flex: 1 1 0; height: 0; min-height: 0; max-height: none; width: 100%; aspect-ratio: auto !important }
 
@@ -258,6 +262,7 @@
   @media (max-height: 780px) {
     .legend li { padding: 2px 0 } .legend span { font-size: .84rem } .legend b { font-size: .95rem }
     .stats > div { padding: 6px 12px 7px }
+    #work .note { padding: 8px 14px }
   }
   @media (prefers-reduced-motion: reduce) {
     .plot *, .float span, .cloud line { animation: none !important }
@@ -303,7 +308,7 @@
 <section id="work" class="sheet" hidden>
   <div class="wbar"><div id="wStrip"></div><button id="endBtn" class="round" aria-label="Menu treningu: pomiń ćwiczenie albo zakończ"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <h1 id="wName" class="float"></h1>
-  <p id="wProg" class="stone"></p>
+  <div class="wsub"><p id="wProg" class="stone"></p><button id="howBtn" class="chip">jak wykonać</button></div>
   <div id="wBlock" class="stats"></div>
   <div id="wMove" class="grow"></div>
   <div id="wMus" class="mus"></div>
@@ -362,6 +367,10 @@
     <button id="quitBtn">zakończ trening i pokaż wyniki</button>
   </div>
   <div id="p-lib" class="pane"><div id="lib" class="lib"></div></div>
+  <div id="p-upd" class="pane">
+    <p>Jest nowsza wersja aplikacji. Historia i zapisane treningi zostają na miejscu.</p>
+    <div class="row"><button id="updBtn" class="primary">zaktualizuj</button><button id="updLater">później</button></div>
+  </div>
   <div id="p-hist" class="pane"><div id="hist" class="hist"></div></div>
 </dialog>
 
@@ -544,7 +553,7 @@ $('dlgClose').onclick = () => $('dlg').close();
 $('dlgBody').onclick = e => e.target.closest('.more') && $('dlgSteps').scrollIntoView({ behavior: 'smooth' });
 
 // Menu w nagłówku otwiera arkusz z jedną sekcją.
-const SHEETS = { imp: 'Import rozpiski', lib: 'Biblioteka ćwiczeń', hist: 'Historia', act: 'Trening' };
+const SHEETS = { imp: 'Import rozpiski', lib: 'Biblioteka ćwiczeń', hist: 'Historia', act: 'Trening', upd: 'Nowa wersja' };
 function openSheet(k) {
   $('sheetTitle').textContent = SHEETS[k];
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
@@ -597,7 +606,7 @@ function renderSet() {
   $('wProg').textContent = `ćwiczenie ${st.item + 1} z ${cur.plan.items.length}`;
   floatText($('wName'), exName(it).toLowerCase());
   $('wBlock').innerHTML = cells([['Cel', ...target], ['Seria', `${st.set}/${it.sets}`], ['Przerwa', fmt(it.rest), 'min']]);
-  $('wMove').innerHTML = moveBlock(it.ex) + '<button id="howBtn" class="chip">jak wykonać</button>';
+  $('wMove').innerHTML = moveBlock(it.ex);
   $('wMus').innerHTML = musLine(e);
   $('wNote').hidden = !it.note; $('wNote').textContent = it.note;
   $('stepper').hidden = !!it.time;
@@ -612,7 +621,7 @@ $('doneBtn').onclick = () => {
   if (!it.time) return finishSet(+$('val').value);
   timer('prep', 5, () => timer('work', it.time, () => finishSet(it.time)));
 };
-$('wMove').onclick = e => e.target.closest('#howBtn') && showExercise(curItem(), true);
+$('howBtn').onclick = () => showExercise(curItem(), true);
 $('endBtn').onclick = () => openSheet('act');
 $('skipEx').onclick = () => {
   $('sheet').close();
@@ -735,9 +744,21 @@ function loadPlans() {
     if (!$('home').hidden) renderHome();
   }).catch(console.warn);
 }
+// Nowa wersja: sw.js zmienia się przy każdej aktualizacji aplikacji. Po powrocie z tła porównujemy go z tym, z którym aplikacja wystartowała.
+// Pytamy tylko na ekranie startowym i nigdy w trakcie treningu.
+let swText;
+const swNow = () => fetch('sw.js', { cache: 'no-cache' }).then(r => r.ok ? r.text() : swText).catch(() => swText);
+swNow().then(t => swText = t);
+function checkUpdate() {
+  if (cur || $('sheet').open || $('dlg').open) return;
+  swNow().then(t => { if (swText && t !== swText && !cur && !$('sheet').open) { swText = t; openSheet('upd'); } });
+}
+$('updBtn').onclick = () => location.reload();
+$('updLater').onclick = () => $('sheet').close();
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
-  if (!$('home').hidden) loadPlans();
+  if (!$('home').hidden) { loadPlans(); checkUpdate(); }
   if (!cur || cur.phase === 'done') return;
   if (!wl || wl.released) wake();
   if (!$('timer').hidden) tick();
