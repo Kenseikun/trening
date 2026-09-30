@@ -177,6 +177,12 @@
   .tips { padding-left: 18px; color: var(--stone); margin: 6px 0 }
   textarea { width: 100%; min-height: 120px; background: rgba(15,17,19,.18); color: var(--cream); border: 1px solid var(--line-strong); border-radius: 18px; padding: 12px 14px; font: 500 .92rem/1.45 var(--font) }
   textarea:focus { border-color: var(--blue) }
+  /* Ekran kodu dostępu */
+  .gate { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding-bottom: 8dvh }
+  .gate input { width: 100%; min-height: 60px; text-align: center; text-transform: uppercase; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 600 1.35rem var(--font); letter-spacing: .12em }
+  .gate input:focus { outline: none; border-color: var(--blue) }
+  .gate input::placeholder { color: var(--stone); opacity: .5 }
+  .gate .err { min-height: 1.5em; margin: 0; text-align: center }
   textarea::placeholder { color: var(--stone) }
   pre { white-space: pre-wrap; font: 500 .85rem/1.5 var(--font); margin: 6px 0 14px; color: var(--stone) }
   .err { color: var(--red) }
@@ -304,7 +310,18 @@
   <defs><pattern id="rain" width="4.5" height="4.5" patternUnits="userSpaceOnUse"><rect width="4.5" height="4.5" fill="#3F4A46"/><circle cx="2.25" cy="2.25" r="1.1" fill="#FF6B6B"/></pattern></defs>
 </svg>
 
-<main id="home" class="sheet">
+<section id="gate" class="sheet" hidden>
+  <header class="head"><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span></header>
+  <div class="gate">
+    <h1 class="float" id="gTitle"></h1>
+    <p class="stone">Wpisz kod, który dostałeś od trenera. Wystarczy raz, potem aplikacja działa też bez zasięgu.</p>
+    <input id="gCode" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX-XXXX-XXXX" aria-label="Kod dostępu">
+    <p id="gMsg" class="err" role="alert"></p>
+  </div>
+  <div class="dock"><button id="gBtn" class="primary">wejdź</button></div>
+</section>
+
+<main id="home" class="sheet" hidden>
   <div id="page1" class="page1">
   <header class="head">
     <div><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span><span id="today" class="lbl"></span></div>
@@ -430,6 +447,10 @@ const load = (k, d) => { try { return JSON.parse(localStorage[k]) ?? d } catch {
 const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v));
 
 // past: nowsze wpisy to obiekty {name, t0, t1, text, reps, hold, done, total, per}; najstarsze były samym tekstem.
+// Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiska z pliku plans.json.
+const API = localStorage.api || '';
+// auth = { token, nazwa, until }; outbox = wyniki czekające na wysłanie do trenera.
+let auth = load('auth', null), outbox = load('outbox', []);
 let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
 let tInt, tDone, tLen, lastBeep, ac, wl;
 const allPlans = () => [...imported, ...served];
@@ -654,7 +675,7 @@ async function send(text) {
 }
 
 // --- trening
-function show(id) { for (const s of ['home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
+function show(id) { for (const s of ['gate', 'home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
 function strip() {
   return `<div class="strip" aria-hidden="true">${S().map((s, i) => {
     const v = cur.log[i], it = cur.plan.items[s.item];
@@ -778,8 +799,34 @@ function finish() {
 }
 const finalText = () => summaryText(cur.plan, cur.log, $('doneNote').value, cur.t0, cur.t1, prevOf(cur.plan.name));
 $('doneNote').oninput = () => $('sum').textContent = finalText();
-$('shareBtn').onclick = () => send(finalText());
+// Z serwisem: wynik trafia do kolejki i od razu próbujemy go wysłać. Bez zasięgu zostaje w kolejce do następnego połączenia.
+function queueResult() {
+  const s = stats(cur.plan, cur.log);
+  outbox = [...outbox.filter(w => w.poczatek !== cur.t0), { trening: cur.plan.name, poczatek: cur.t0, koniec: cur.t1, tekst: finalText(),
+    dane: { reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals })) } }];
+  store('outbox', outbox);
+  return flushOutbox();
+}
+async function flushOutbox() {
+  for (const w of [...outbox]) {
+    try {
+      const r = await fetch(API + '/api/wyniki', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify(w) });
+      if (r.status === 401) return false; // kod przestał działać; wynik czeka na ponowne wejście
+      if (!r.ok) continue;
+      outbox = outbox.filter(x => x.poczatek !== w.poczatek); store('outbox', outbox);
+    } catch { return false; }
+  }
+  return !outbox.length;
+}
+$('shareBtn').onclick = async () => {
+  if (!API) return send(finalText());
+  const b = $('shareBtn'), label = b.innerHTML;
+  b.disabled = true; b.textContent = 'wysyłam…';
+  b.textContent = await queueResult() ? 'wysłano' : 'zapisano, wyślę przy połączeniu';
+  setTimeout(() => { b.disabled = false; b.innerHTML = label; }, 2500);
+};
 $('saveBtn').onclick = () => {
+  if (API) queueResult(); // zapis w historii zawsze oddaje wynik trenerowi
   const s = stats(cur.plan, cur.log), text = finalText();
   past.unshift({ name: cur.plan.name, t0: cur.t0, t1: cur.t1, text, reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals })) });
   past = past.slice(0, 100); store('history', past);
@@ -811,13 +858,52 @@ async function wake() {
 
 // Rozpiski: przy starcie i po powrocie aplikacji z tła (nowy tydzień od trenera pojawia się sam).
 let servedJson = '';
-function loadPlans() {
-  fetch('plans.json', { cache: 'no-cache' }).then(r => r.text()).then(t => {
+const setPlans = list => { try { served = list.length ? normalize(list) : []; } catch { served = []; } };
+async function loadPlans() {
+  if (!API) return fetch('plans.json', { cache: 'no-cache' }).then(r => r.text()).then(t => {
     if (t === servedJson) return;
     servedJson = t; served = normalize(JSON.parse(t));
     if (!$('home').hidden) renderHome();
   }).catch(console.warn);
+  if (!auth) return;
+  try {
+    const r = await fetch(API + '/api/rozpiska', { headers: { Authorization: 'Bearer ' + auth.token } });
+    if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
+    if (!r.ok) throw Error(r.status);
+    const d = await r.json(), t = JSON.stringify(d.plans);
+    auth.until = Date.parse(d.wazny_do); store('auth', auth);
+    flushOutbox();
+    if (t === servedJson) return;
+    servedJson = t; store('plans', d.plans); setPlans(d.plans);
+    if (!$('home').hidden) renderHome();
+  } catch {
+    // Bez zasięgu zostaje ostatnia pobrana rozpiska, dopóki przepustka jest ważna (30 dni od ostatniego połączenia).
+    if (Date.now() > auth.until) lock('Przepustka wygasła. Połącz się z internetem i wpisz kod ponownie.');
+  }
 }
+// Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
+function lock(msg) {
+  auth = null; store('auth', null); store('plans', null); served = []; servedJson = '';
+  floatText($('gTitle'), 'kod dostępu'); $('gMsg').textContent = msg || '';
+  show('gate');
+}
+async function activate(kod) {
+  if (!kod.trim()) return;
+  $('gBtn').disabled = true; $('gMsg').textContent = '';
+  try {
+    const r = await fetch(API + '/api/aktywacja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kod }) });
+    if (!r.ok) { $('gMsg').textContent = r.status === 429 ? 'Za dużo prób. Spróbuj za kilka minut.' : 'Ten kod nie działa. Sprawdź go albo napisz do trenera.'; return; }
+    const d = await r.json();
+    auth = { token: d.token, nazwa: d.nazwa, until: Date.parse(d.wazny_do) }; store('auth', auth);
+    // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
+    store('plans', null); served = []; servedJson = ''; sel = null;
+    $('gCode').value = '';
+    show('home'); renderHome(); loadPlans();
+  } catch { $('gMsg').textContent = 'Brak połączenia. Kod trzeba wpisać z dostępem do internetu.'; }
+  finally { $('gBtn').disabled = false; }
+}
+$('gBtn').onclick = () => activate($('gCode').value);
+$('gCode').onkeydown = e => e.key === 'Enter' && activate($('gCode').value);
 // Nowa wersja: sw.js zmienia się przy każdej aktualizacji aplikacji. Po powrocie z tła porównujemy go z tym, z którym aplikacja wystartowała.
 // Pytamy tylko na ekranie startowym i nigdy w trakcie treningu.
 let swText;
@@ -839,7 +925,26 @@ document.addEventListener('visibilitychange', () => {
 });
 
 history.scrollRestoration = 'manual';
-renderHome(); show('home'); loadPlans();
+if (API) {
+  document.querySelector('[data-sheet=imp]').hidden = true; // rozpiski przychodzą z serwisu
+  $('empty').textContent = 'Trener nie wysłał jeszcze rozpiski. Pojawi się tutaj sama.';
+  setPlans(load('plans', []) || []);
+  // Link aktywacyjny od trenera: adres aplikacji z dopiskiem #kod=XXXX-XXXX-XXXX. Kod znika z adresu od razu po odczytaniu.
+  // Działa też w już otwartej aplikacji (hashchange). Ważna przepustka zostaje, dopóki serwis nie potwierdzi nowego kodu.
+  const linkCode = () => {
+    const kod = new URLSearchParams(location.hash.slice(1)).get('kod');
+    if (!kod) return false;
+    history.replaceState(null, '', location.pathname);
+    if (cur && cur.phase !== 'done') return false; // w trakcie treningu link nic nie zmienia
+    if (!auth) lock();
+    $('gCode').value = kod; activate(kod);
+    return true;
+  };
+  addEventListener('hashchange', linkCode);
+  const activating = linkCode();
+  if (auth) { show('home'); renderHome(); loadPlans(); }
+  else if (!activating) lock();
+} else { show('home'); renderHome(); loadPlans(); }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
