@@ -101,6 +101,8 @@
   .page1 .views, .figpage .views { flex: 1 1 0; min-height: 0 }
   .page1 .views figure, .figpage .views figure { display: flex; flex-direction: column; min-height: 0 }
   .page1 .body, .figpage .body { flex: 1 1 0; height: 0; min-height: 0; max-height: none }
+  /* Bez rozpiski pierwsza strona nie rezerwuje wysokości, a zachęta do importu stoi na środku. */
+  .noplan .page1 { min-height: 0 }
   /* Druga strona startu i pierwsza strona wyników też mieszczą się na ekranie. Lista przewija się w środku pełnymi wierszami. */
   #plan, .dpage { display: flex; flex-direction: column }
   #plan { height: calc(100dvh - 84px - env(safe-area-inset-bottom)); padding-top: 24px }
@@ -179,6 +181,7 @@
   textarea:focus { border-color: var(--blue) }
   /* Ekran kodu dostępu */
   .gate { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding-bottom: 8dvh }
+  .gate label { margin-top: 6px }
   .gate input { width: 100%; min-height: 60px; text-align: center; text-transform: uppercase; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 600 1.35rem var(--font); letter-spacing: .12em }
   .gate input:focus { outline: none; border-color: var(--blue) }
   .gate input::placeholder { color: var(--stone); opacity: .5 }
@@ -314,8 +317,11 @@
   <header class="head"><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span></header>
   <div class="gate">
     <h1 class="float" id="gTitle"></h1>
-    <p class="stone">Wpisz kod, który dostałeś od trenera. Wystarczy raz, potem aplikacja działa też bez zasięgu.</p>
-    <input id="gCode" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX-XXXX-XXXX" aria-label="Kod dostępu">
+    <p class="stone">Wpisz swoje inicjały i kod od trenera. Wystarczy raz, potem aplikacja działa też bez zasięgu.</p>
+    <label class="lbl" for="gIni">Inicjały</label>
+    <input id="gIni" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="np. JK">
+    <label class="lbl" for="gCode">Kod</label>
+    <input id="gCode" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX-XXXX-XXXX">
     <p id="gMsg" class="err" role="alert"></p>
   </div>
   <div class="dock"><button id="gBtn" class="primary">wejdź</button></div>
@@ -349,7 +355,7 @@
     <div class="fit"><ol id="hParts" class="parts rows"></ol></div>
     <button class="pos" data-for="hParts" hidden></button>
   </div>
-  <p id="empty" class="note" hidden>Brak rozpisek. Trener wyśle plan albo wklej rozpiskę w imporcie (ikona chmury u góry).</p>
+  <div id="empty" class="gate" hidden><h1 class="float" id="eTitle"></h1><p class="stone" id="eText"></p></div>
   <div class="dock"><button id="startBtn" class="primary"></button></div>
 </main>
 
@@ -416,9 +422,11 @@
 <dialog id="sheet" tabindex="-1">
   <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" class="round" aria-label="Zamknij"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <div id="p-imp" class="pane">
-    <textarea id="imp" placeholder="Wklej rozpiskę od trenera"></textarea>
-    <div class="row"><button id="impBtn">wczytaj</button><button id="promptBtn">format rozpiski</button></div>
+    <textarea id="imp" placeholder="Wklej rozpiskę od trenera. Nowa rozpiska zastępuje poprzednią, historia treningów zostaje."></textarea>
+    <div class="row"><button id="impBtn">wczytaj</button><button id="fileBtn">z pliku</button></div>
+    <input id="impFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
     <p id="impMsg"></p>
+    <button id="promptBtn" class="ghost">format rozpiski</button>
   </div>
   <div id="p-act" class="pane">
     <button id="skipEx">pomiń to ćwiczenie</button>
@@ -447,9 +455,9 @@ const load = (k, d) => { try { return JSON.parse(localStorage[k]) ?? d } catch {
 const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v));
 
 // past: nowsze wpisy to obiekty {name, t0, t1, text, reps, hold, done, total, per}; najstarsze były samym tekstem.
-// Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiska z pliku plans.json.
+// Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiski tylko z importu.
 const API = localStorage.api || '';
-// auth = { token, nazwa, until }; outbox = wyniki czekające na wysłanie do trenera.
+// auth = { token, nazwa }; outbox = wyniki czekające na wysłanie do trenera.
 let auth = load('auth', null), outbox = load('outbox', []);
 let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
 let tInt, tDone, tLen, lastBeep, ac, wl;
@@ -597,8 +605,15 @@ function renderHome() {
   $('resume').hidden = !cur;
   $('page1').classList.toggle('resuming', !!cur); // z banerem „w toku” legenda się chowa, żeby pierwsza strona się mieściła
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? `${cur.plan.name}: niezapisane wyniki` : `W toku: ${cur.plan.name}, seria ${cur.i + 1} z ${S().length}`;
-  $('empty').hidden = !!plans.length;
-  $('plan').hidden = $('planHead').hidden = $('tabs').hidden = $('startBtn').parentElement.hidden = !plans.length;
+  $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
+  $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
+  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma.
+  $('startBtn').parentElement.hidden = !plans.length && !!API;
+  if (!plans.length) {
+    floatText($('eTitle'), 'brak rozpiski');
+    $('eText').textContent = API ? 'Trener nie wysłał jeszcze rozpiski. Pojawi się tutaj sama.' : 'Wczytaj rozpiskę od trenera: wklej jej tekst albo wybierz plik.';
+    $('startBtn').innerHTML = `wczytaj rozpiskę${ico('next')}`;
+  }
   $('hist').innerHTML = past.length
     ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : `${day(h.t0)} · ${h.name} · ${h.reps} powt.`)}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + '<button id="histBtn" style="width:100%;margin-top:12px">wyślij ostatnie 10</button>'
     : '<p class="stone">Pusto. Zapisane treningi pojawią się tutaj.</p>';
@@ -607,13 +622,13 @@ function renderHome() {
   $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`).join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted);
-  $('hSub').textContent = [`${p.items.length} ${plural(p.items.length, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń')}`, p.name.match(/\((.*)\)\s*$/)?.[1], week && `tydzień ${week}`, sel < imported.length && 'zaimportowany'].filter(Boolean).join(' · ');
+  $('hSub').textContent = [`${p.items.length} ${plural(p.items.length, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń')}`, p.name.match(/\((.*)\)\s*$/)?.[1], week && `tydzień ${week}`].filter(Boolean).join(' · ');
   drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
   plotted = true;
   $('hBlock').innerHTML = cells([['Serie', steps(p).length], ['Czas', `~${estimate(p)}`, 'minut'], ['Ostatnio', prev ? prev.reps : '—', prev ? `powt. · ${day(prev.t0)}` : 'brak']]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
   $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}</small></span>${ico('next')}</button></li>`).join('')
-    + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">usuń ten zaimportowany trening</button></li>` : '');
+    + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">usuń ten trening</button></li>` : '');
   $('startBtn').innerHTML = `zacznij · ${esc(short(p.name).toLowerCase())}${ico('go')}`;
 }
 $('tabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { sel = +b.dataset.k; renderHome(); } };
@@ -622,7 +637,7 @@ $('hParts').onclick = e => {
   if (b?.dataset.j) showExercise(p.items[b.dataset.j]);
   if (b?.dataset.del && confirm('Usunąć ten trening?')) { imported.splice(b.dataset.del, 1); store('imported', imported); sel = null; renderHome(); }
 };
-$('startBtn').onclick = () => start(allPlans()[sel]);
+$('startBtn').onclick = () => allPlans().length ? start(allPlans()[sel]) : openSheet('imp');
 $('hist').onclick = e => e.target.id === 'histBtn' && send(past.slice(0, 10).map(pastText).join('\n\n'));
 $('lib').innerHTML = Object.entries(EXERCISES).sort((a, b) => a[1].name.localeCompare(b[1].name, 'pl'))
   .map(([id, e]) => `<button data-ex="${id}">${moveFig(id)}<span>${esc(e.name)}<small>${e.p.map(m => MUSCLES[m]).join(', ')}</small></span></button>`).join('');
@@ -655,18 +670,22 @@ function openSheet(k) {
 document.querySelector('.menu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); };
 $('sheetClose').onclick = () => $('sheet').close();
 
-$('impBtn').onclick = () => {
+function importText(t) {
   try {
-    // Z wklejonego tekstu bierzemy fragment od pierwszego [ lub { do ostatniego ] lub } (pomija ``` i komentarze).
-    const t = $('imp').value, json = t.slice(t.search(/[[{]/), Math.max(t.lastIndexOf(']'), t.lastIndexOf('}')) + 1);
-    const plans = normalize(JSON.parse(json));
-    imported = [...plans, ...imported.filter(p => !plans.some(n => n.name === p.name))];
+    // Z tekstu bierzemy fragment od pierwszego [ lub { do ostatniego ] lub } (pomija ``` i komentarze).
+    const json = t.slice(t.search(/[[{]/), Math.max(t.lastIndexOf(']'), t.lastIndexOf('}')) + 1);
+    let data; try { data = JSON.parse(json); } catch { throw Error('to nie jest rozpiska w formacie aplikacji'); }
+    // Rozpiska to cały bieżący tydzień, więc nowa zastępuje poprzednią. Historia i trening w toku zostają.
+    const plans = imported = normalize(data);
     store('imported', imported);
     $('imp').value = ''; sel = 0;
     $('impMsg').className = ''; $('impMsg').textContent = `Wczytano: ${plans.map(p => p.name).join(', ')}`;
     renderHome(); $('sheet').close(); scrollTo(0, 0);
-  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Nie da się wczytać: ${err.message}. Sprawdź, czy wkleiłeś całą rozpiskę.`; }
-};
+  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Nie da się wczytać: ${err.message}. Sprawdź, czy to cała rozpiska.`; }
+}
+$('impBtn').onclick = () => importText($('imp').value);
+$('fileBtn').onclick = () => $('impFile').click();
+$('impFile').onchange = async e => { const file = e.target.files[0]; e.target.value = ''; if (file) importText(await file.text()); };
 $('promptBtn').onclick = () => send(planFormat(EXERCISES, past.map(pastText)));
 
 async function send(text) {
@@ -856,30 +875,22 @@ async function wake() {
   try { wl = await navigator.wakeLock?.request('screen'); } catch {}
 }
 
-// Rozpiski: przy starcie i po powrocie aplikacji z tła (nowy tydzień od trenera pojawia się sam).
+// Rozpiski z serwisu: przy starcie i po powrocie aplikacji z tła (nowy tydzień od trenera pojawia się sam).
+// Bez serwisu rozpiski pochodzą tylko z importu.
 let servedJson = '';
 const setPlans = list => { try { served = list.length ? normalize(list) : []; } catch { served = []; } };
 async function loadPlans() {
-  if (!API) return fetch('plans.json', { cache: 'no-cache' }).then(r => r.text()).then(t => {
-    if (t === servedJson) return;
-    servedJson = t; served = normalize(JSON.parse(t));
-    if (!$('home').hidden) renderHome();
-  }).catch(console.warn);
-  if (!auth) return;
+  if (!API || !auth) return;
   try {
     const r = await fetch(API + '/api/rozpiska', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) throw Error(r.status);
     const d = await r.json(), t = JSON.stringify(d.plans);
-    auth.until = Date.parse(d.wazny_do); store('auth', auth);
     flushOutbox();
     if (t === servedJson) return;
     servedJson = t; store('plans', d.plans); setPlans(d.plans);
     if (!$('home').hidden) renderHome();
-  } catch {
-    // Bez zasięgu zostaje ostatnia pobrana rozpiska, dopóki przepustka jest ważna (30 dni od ostatniego połączenia).
-    if (Date.now() > auth.until) lock('Przepustka wygasła. Połącz się z internetem i wpisz kod ponownie.');
-  }
+  } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska; kod nie ma terminu ważności */ }
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
@@ -887,23 +898,23 @@ function lock(msg) {
   floatText($('gTitle'), 'kod dostępu'); $('gMsg').textContent = msg || '';
   show('gate');
 }
-async function activate(kod) {
-  if (!kod.trim()) return;
+async function activate(inicjaly, kod) {
+  if (!inicjaly.trim() || !kod.trim()) { $('gMsg').textContent = 'Wpisz inicjały i kod.'; return; }
   $('gBtn').disabled = true; $('gMsg').textContent = '';
   try {
-    const r = await fetch(API + '/api/aktywacja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kod }) });
-    if (!r.ok) { $('gMsg').textContent = r.status === 429 ? 'Za dużo prób. Spróbuj za kilka minut.' : 'Ten kod nie działa. Sprawdź go albo napisz do trenera.'; return; }
+    const r = await fetch(API + '/api/aktywacja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inicjaly, kod }) });
+    if (!r.ok) { $('gMsg').textContent = r.status === 429 ? 'Za dużo prób. Spróbuj za kilka minut.' : 'Inicjały albo kod się nie zgadzają. Sprawdź je albo napisz do trenera.'; return; }
     const d = await r.json();
-    auth = { token: d.token, nazwa: d.nazwa, until: Date.parse(d.wazny_do) }; store('auth', auth);
+    auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); served = []; servedJson = ''; sel = null;
-    $('gCode').value = '';
+    $('gCode').value = $('gIni').value = '';
     show('home'); renderHome(); loadPlans();
   } catch { $('gMsg').textContent = 'Brak połączenia. Kod trzeba wpisać z dostępem do internetu.'; }
   finally { $('gBtn').disabled = false; }
 }
-$('gBtn').onclick = () => activate($('gCode').value);
-$('gCode').onkeydown = e => e.key === 'Enter' && activate($('gCode').value);
+$('gBtn').onclick = () => activate($('gIni').value, $('gCode').value);
+$('gCode').onkeydown = $('gIni').onkeydown = e => e.key === 'Enter' && $('gBtn').click();
 // Nowa wersja: sw.js zmienia się przy każdej aktualizacji aplikacji. Po powrocie z tła porównujemy go z tym, z którym aplikacja wystartowała.
 // Pytamy tylko na ekranie startowym i nigdy w trakcie treningu.
 let swText;
@@ -927,17 +938,16 @@ document.addEventListener('visibilitychange', () => {
 history.scrollRestoration = 'manual';
 if (API) {
   document.querySelector('[data-sheet=imp]').hidden = true; // rozpiski przychodzą z serwisu
-  $('empty').textContent = 'Trener nie wysłał jeszcze rozpiski. Pojawi się tutaj sama.';
   setPlans(load('plans', []) || []);
-  // Link aktywacyjny od trenera: adres aplikacji z dopiskiem #kod=XXXX-XXXX-XXXX. Kod znika z adresu od razu po odczytaniu.
+  // Link aktywacyjny od trenera: adres aplikacji z dopiskiem #kod=XXXX-XXXX-XXXX&inicjaly=JK. Dopisek znika z adresu od razu po odczytaniu.
   // Działa też w już otwartej aplikacji (hashchange). Ważna przepustka zostaje, dopóki serwis nie potwierdzi nowego kodu.
   const linkCode = () => {
-    const kod = new URLSearchParams(location.hash.slice(1)).get('kod');
+    const link = new URLSearchParams(location.hash.slice(1)), kod = link.get('kod'), inicjaly = link.get('inicjaly') || '';
     if (!kod) return false;
     history.replaceState(null, '', location.pathname);
     if (cur && cur.phase !== 'done') return false; // w trakcie treningu link nic nie zmienia
     if (!auth) lock();
-    $('gCode').value = kod; activate(kod);
+    $('gCode').value = kod; $('gIni').value = inicjaly; activate(inicjaly, kod);
     return true;
   };
   addEventListener('hashchange', linkCode);
