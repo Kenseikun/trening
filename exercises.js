@@ -1,10 +1,11 @@
 // Biblioteka ćwiczeń; animacje ruchu są w moves.js.
 // p = mięśnie główne, s = pomocnicze (klucze z MUSCLES).
+// \u00AD to miejsce, w którym długa nazwa może się złamać (z łącznikiem) w wąskiej kolumnie legendy; bez niego procent wychodzi poza kolumnę.
 globalThis.MUSCLES = {
-  chest: 'klatka piersiowa', shoulders: 'barki', biceps: 'bicepsy', triceps: 'tricepsy', forearms: 'przedramiona',
-  abs: 'brzuch', obliques: 'skośne brzucha', traps: 'czworoboczne', lats: 'najszersze grzbietu', midback: 'środek pleców',
-  lowerback: 'prostowniki grzbietu', glutes: 'pośladki', quads: 'czworogłowe ud', hamstrings: 'dwugłowe ud',
-  adductors: 'przywodziciele', calves: 'łydki',
+  chest: 'klatka piersiowa', shoulders: 'barki', biceps: 'bicepsy', triceps: 'tricepsy', forearms: 'przed\u00ADramiona',
+  abs: 'brzuch', obliques: 'skośne brzucha', traps: 'czworo\u00ADboczne', lats: 'naj\u00ADszersze grzbietu', midback: 'środek pleców',
+  lowerback: 'pro\u00ADstow\u00ADniki grzbietu', glutes: 'pośladki', quads: 'czworo\u00ADgłowe ud', hamstrings: 'dwu\u00ADgłowe ud',
+  adductors: 'przy\u00ADwodzi\u00ADciele', calves: 'łydki',
 };
 
 globalThis.EXERCISES = {
