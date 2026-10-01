@@ -12,7 +12,7 @@ Otwórz: https://kenseikun.github.io/trening/
 
 ## Co potrafi
 
-- **Plan tygodnia od trenera.** Wczytujesz rozpiskę i widzisz treningi tygodnia: ile serii, ile czasu i które mięśnie popracują.
+- **Plan tygodnia od trenera.** Rozpiska sama pojawia się w aplikacji, a od razu widać treningi tygodnia: ile serii, ile czasu i które mięśnie popracują.
 - **Technika pod ręką.** Każde ćwiczenie ma animację z podświetlonymi mięśniami i instrukcję krok po kroku.
 - **Przerwy bez zegarka.** Aplikacja odlicza przerwę, daje sygnał na koniec i pokazuje, co będzie następne.
 - **Wyniki dla trenera.** Po treningu widzisz liczby i porównanie z poprzednim razem, a podsumowanie wysyłasz trenerowi jednym przyciskiem.
@@ -46,7 +46,9 @@ Ikona „Trening” pojawi się na ekranie początkowym, a aplikacja otworzy si�
 
 ## Pierwsze uruchomienie
 
-Aplikacja startuje pusta. Dotknij „wczytaj rozpiskę” i wklej tekst albo wybierz plik od trenera. Nowa rozpiska zastępuje poprzednią, a historia treningów zostaje.
+Na pierwszym ekranie wpisz inicjały i kod od trenera albo otwórz link aktywacyjny od trenera. Wystarczy raz: potem aplikacja działa też bez zasięgu, a każda nowa rozpiska pojawia się sama.
+
+Na iPhonie link otworzy się w Safari, a nie w aplikacji z ekranu początkowego, więc tam kod najlepiej wpisać ręcznie.
 
 ## Aktualizacje
 

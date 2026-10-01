@@ -456,8 +456,8 @@ const load = (k, d) => { try { return JSON.parse(localStorage[k]) ?? d } catch {
 const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v));
 
 // past: nowsze wpisy to obiekty {name, t0, t1, text, reps, hold, done, total, per}; najstarsze były samym tekstem.
-// Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiski tylko z importu.
-const API = localStorage.api || '';
+// Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiski tylko z importu. localStorage.api podmienia go do prób lokalnych.
+const API = localStorage.api || 'https://trening.tail847b94.ts.net';
 // auth = { token, nazwa }; outbox = wyniki czekające na wysłanie do trenera.
 let auth = load('auth', null), outbox = load('outbox', []);
 let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
