@@ -980,12 +980,18 @@ function renderSurvey() {
   $('fQs').innerHTML = html.join(''); $('fMsg').textContent = '';
 }
 // Wybór odpowiedzi: „jeden” zastępuje poprzednią, „wiele” przełącza, a odpowiedź „sam” (np. „nic z tego”) wyklucza pozostałe.
+// Przy limicie (max) nowy wybór zastępuje najwcześniejszy.
 $('fQs').onclick = e => {
   const b = e.target.closest('button[data-k]'); if (!b) return;
   const box = b.closest('[data-q]'), p = survey.pytania.find(q => q.id === box.dataset.q), v = p.opcje[b.dataset.k][0], odp = survey.odp;
   if (p.typ === 'wiele') {
     const set = new Set(odp[p.id]);
-    if (set.has(v)) set.delete(v); else { if (v === p.sam) set.clear(); else set.delete(p.sam); set.add(v); }
+    if (set.has(v)) set.delete(v);
+    else {
+      if (v === p.sam) set.clear(); else set.delete(p.sam);
+      if (p.max && set.size >= p.max) set.delete(set.values().next().value);
+      set.add(v);
+    }
     odp[p.id] = set.size ? [...set] : undefined;
   } else odp[p.id] = v;
   box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', [].concat(odp[p.id]).includes(p.opcje[x.dataset.k][0])));
