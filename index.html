@@ -250,15 +250,18 @@
   .mv figcaption span { display: inline-flex; align-items: center; gap: 7px }
   .eq { width: 16px; height: 4px; border-radius: 2px; background: var(--gear) }
   .eq.band { background: var(--blue) }
-  .move .o { stroke: var(--cream); stroke-linecap: round } .move .f { stroke: var(--panel); stroke-linecap: round }
-  .move .ho { fill: var(--cream) } .move .hf { fill: var(--panel) } .move .mv-far .o { stroke: #8E9892 }
-  .move .mu { stroke: var(--red); stroke-linecap: round } .move .mu-j { fill: var(--red) }
+  .move .ao { fill: var(--cream); stroke: var(--cream); stroke-width: 3; stroke-linejoin: round } .move .af { fill: var(--panel) }
+  .move .aho { fill: var(--cream) } .move .ahf { fill: var(--panel) } .move .an-far .ao, .move .an-far .aho { fill: #8E9892; stroke: #8E9892 }
+  .move .am { fill: var(--red) } .move .ad { fill: none; stroke: rgba(231,232,226,.32); stroke-width: 1; stroke-linecap: round }
+  .move .ae { fill: none; stroke: var(--cream); stroke-width: 1.5; stroke-linecap: round }
   .move .gr { stroke: rgba(231,232,226,.3); stroke-width: 1.5 }
   .move .pb { fill: var(--gear) } .move .pbl { stroke: var(--gear); stroke-width: 4; stroke-linecap: round }
   .move .pp { stroke: var(--gear); stroke-opacity: .65; stroke-width: 2.5 }
   .move .px { fill: rgba(157,184,154,.12); stroke: var(--gear); stroke-width: 1.5 }
   .move .ps { stroke: var(--gear); stroke-width: 2.4; stroke-dasharray: 6 3 }
   .move .pg { stroke: var(--blue); stroke-width: 3.4; stroke-linecap: round }
+  .move .pq { stroke: var(--gear); stroke-width: 2.6; stroke-linecap: round; fill: none } .move .pw { fill: rgba(157,184,154,.14); stroke: var(--gear); stroke-width: 1.4 }
+  .move .pt { fill: rgba(157,184,154,.22); stroke: var(--gear); stroke-width: 1 } .move .pc { stroke: var(--gear); stroke-width: 1.2; fill: none }
   .stepper { display: grid; grid-template-columns: 50px 1fr 50px; align-items: center }
   .stepper button { width: 50px; height: 50px; min-height: 50px; padding: 0 }
   .stepper output { text-align: center; font-size: 2.1rem; font-weight: 500; line-height: 1 }
@@ -487,6 +490,7 @@ const API = localStorage.api || 'https://trening.tail847b94.ts.net';
 // auth = { token, nazwa }; outbox = wyniki czekające na wysłanie do trenera.
 let auth = load('auth', null), outbox = load('outbox', []);
 // Z kodem dostępu liczy się tylko rozpiska z serwisu. Rozpiska wczytana kiedyś importem zostaje w pamięci telefonu, ale się nie pokazuje.
+setSex(load('plec', 'M')); // postać w animacjach: kobieta albo mężczyzna, według ankiety
 let served = [], imported = API ? [] : load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
 let tInt, tDone, tLen, lastBeep, ac, wl;
 const allPlans = () => [...imported, ...served];
@@ -926,7 +930,7 @@ async function loadPlans() {
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
-  auth = null; store('auth', null); store('plans', null); store('ankieta', null); served = []; servedJson = '';
+  auth = null; store('auth', null); store('plans', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
   floatText($('gTitle'), 'kod dostępu'); $('gMsg').textContent = msg || '';
   show('gate');
 }
@@ -939,7 +943,7 @@ async function activate(inicjaly, kod) {
     const d = await r.json();
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
-    store('plans', null); store('ankieta', null); served = []; servedJson = ''; sel = null;
+    store('plans', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
     // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
     const who = inicjaly.replace(/\s/g, '').toUpperCase();
     if (load('who', null) !== who) { past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
@@ -959,13 +963,13 @@ $('gCode').oninput = e => e.target.value = e.target.value.toUpperCase().replace(
 // Serwis bez ankiety (404) albo brak zasięgu: aplikacja działa dalej, a ankieta pojawi się przy następnym połączeniu.
 let survey;
 async function checkSurvey() {
-  if (!API || !auth || load('ankieta', 0) || (cur && cur.phase !== 'done') || !$('form').hidden) return;
+  if (!API || !auth || (load('ankieta', 0) && load('plec', 0)) || (cur && cur.phase !== 'done') || !$('form').hidden) return;
   try {
     const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) return;
     const d = await r.json();
-    if (d.odpowiedzi) return store('ankieta', 1);
+    if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); return setSex(d.odpowiedzi.plec); }
     if ($('home').hidden) return; // tylko z ekranu startowego, nigdy w trakcie treningu
     survey = { pytania: d.pytania, odp: {} };
     renderSurvey(); show('form');
@@ -1031,7 +1035,7 @@ $('fBtn').onclick = async () => {
     const r = await fetch(API + '/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) throw Error(r.status);
-    store('ankieta', 1); show('home'); renderHome();
+    store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
   } catch { $('fMsg').textContent = 'Nie udało się zapisać. Sprawdź połączenie i spróbuj jeszcze raz.'; }
   finally { $('fBtn').disabled = false; }
 };
