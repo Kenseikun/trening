@@ -308,6 +308,14 @@
   dialog h2 { margin: 6px 0 8px }
   /* Karta ćwiczenia: dwie pełne strony z przyciąganiem przewijania (animacja, potem instrukcja), żeby nic nie było ucięte w połowie. */
   #dlg[open] { display: flex; flex-direction: column; height: 90dvh; overflow: hidden }
+  #dlg.small[open] { height: fit-content }
+  .hello { display: block; margin: 2px 0 0; padding: 0; min-height: 44px; border: 0; border-radius: 0; text-align: left; text-transform: none; font-size: 1.25rem; font-weight: 600; color: var(--cream); background: none }
+  .cheer { margin: 2px 0 12px; color: var(--cream); line-height: 1.4; text-wrap: pretty }
+  .ask-name { display: flex; flex-direction: column; gap: 12px; padding-top: 4px }
+  .ask-name p { margin: 0 }
+  .ask-name input { width: 100%; min-height: 56px; text-align: center; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 600 1.25rem var(--font) }
+  .ask-name input:focus { outline: none; border-color: var(--blue) }
+  .ask-name input::placeholder { color: var(--stone); opacity: .5 }
   #dlgBody { flex: 1; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none }
   .pg { min-height: 100%; scroll-snap-align: start; display: flex; flex-direction: column }
   .pg .mv { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 4px 0 }
@@ -367,6 +375,7 @@
       <button data-sheet="hist"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i>historia</button>
     </nav>
   </header>
+  <button id="hello" class="hello" hidden aria-label="Zmień imię"></button>
   <div id="resume" class="resume" hidden>
     <p id="resumeName"></p>
     <div class="row"><button id="resumeBtn" class="primary">wznów</button><button id="dropBtn">porzuć</button></div>
@@ -426,6 +435,7 @@
   <div id="donePage1">
   <header class="head"><span class="brand">wyniki<i class="dot c"></i></span><span id="dDate" class="lbl"></span></header>
   <h1 id="dName" class="float"></h1>
+  <p id="dCheer" class="cheer"></p>
   <div id="dBlock" class="stats lines"></div>
   </div>
   <div class="dpage figpage">
@@ -613,6 +623,24 @@ const video = it => `https://www.youtube.com/results?search_query=${encodeURICom
 const how = (it, e) => `<h2>Jak wykonać</h2>
   ${e ? `<ol class="steps">${e.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol><ul class="tips">${e.tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
   <p><a href="${video(it)}" target="_blank" rel="noopener">Wideo z techniką na YouTube</a></p>`;
+// Imię zostaje tylko na tym telefonie (nie trafia do serwisu ani do trenera): powitanie na starcie i słowo po treningu.
+const myName = () => load('imie', '') || '';
+function hello() { const n = myName(); $('hello').hidden = !n; $('hello').textContent = n ? `Hej, ${n}!` : ''; }
+function askName() {
+  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">Aplikacja będzie się tak do Ciebie zwracać. Imię zostaje tylko na tym telefonie.</p>
+    <input id="nameIn" maxlength="20" autocomplete="given-name" autocapitalize="words" spellcheck="false" placeholder="np. Ania" value="${esc(myName())}">
+    <button id="nameOk" class="primary">zapisz</button><button id="nameNo" class="ghost">wolę bez imienia</button></div>`;
+  floatText($('dlgName'), 'jak masz na imię?');
+  $('dlg').classList.add('small'); $('dlg').showModal();
+  const done = v => { store('imie', v); $('dlg').close(); hello(); };
+  $('nameOk').onclick = () => { const v = $('nameIn').value.replace(/[^\p{L}\- ]/gu, '').trim().slice(0, 20); done(v && v[0].toLocaleUpperCase('pl') + v.slice(1)); };
+  $('nameNo').onclick = () => done('');
+  $('nameIn').onkeydown = e => { if (e.key === 'Enter') $('nameOk').click(); };
+}
+// Pytamy raz, po ankiecie, na ekranie startowym; „wolę bez imienia” też jest odpowiedzią.
+function maybeAskName() { if (auth && load('imie', null) === null && !$('home').hidden && !$('sheet').open && !$('dlg').open) askName(); }
+$('hello').onclick = () => askName();
+$('dlg').addEventListener('close', () => $('dlg').classList.remove('small'));
 // steps = otwórz od razu na stronie z instrukcją (z ekranu treningu animacja jest już widoczna).
 function showExercise(it, steps) {
   const e = EXERCISES[it.ex], anim = EX_MOVE[it.ex];
@@ -634,6 +662,7 @@ function suggested(plans) {
 function renderHome() {
   const plans = allPlans();
   $('today').textContent = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+  hello();
   $('resume').hidden = !cur;
   $('page1').classList.toggle('resuming', !!cur); // z banerem „w toku” legenda się chowa, żeby pierwsza strona się mieściła
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? `${cur.plan.name}: niezapisane wyniki` : `W toku: ${cur.plan.name}, seria ${cur.i + 1} z ${S().length}`;
@@ -831,6 +860,7 @@ function finish() {
   const s = stats(cur.plan, cur.log), prev = prevOf(cur.plan.name), mins = Math.round((cur.t1 - cur.t0) / 60000);
   $('dDate').textContent = new Date(cur.t0).toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
   floatText($('dName'), short(cur.plan.name).toLowerCase(), true);
+  $('dCheer').textContent = cheer(s, prev, myName(), load('plec', null));
   $('dBlock').innerHTML = cells([
     ['Powtórzenia', s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : 'pierwszy raz'],
     ['Serie', `${s.done}/${s.total}`, `${Math.round(s.done / s.total * 100)}% planu`],
@@ -944,9 +974,9 @@ async function activate(inicjaly, kod) {
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
-    // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
+    // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą imię, historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
     const who = inicjaly.replace(/\s/g, '').toUpperCase();
-    if (load('who', null) !== who) { past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
+    if (load('who', null) !== who) { store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
     $('gCode').value = $('gIni').value = '';
     show('home'); renderHome(); loadPlans(); checkSurvey();
   } catch { $('gMsg').textContent = 'Brak połączenia. Kod trzeba wpisać z dostępem do internetu.'; }
@@ -963,13 +993,14 @@ $('gCode').oninput = e => e.target.value = e.target.value.toUpperCase().replace(
 // Serwis bez ankiety (404) albo brak zasięgu: aplikacja działa dalej, a ankieta pojawi się przy następnym połączeniu.
 let survey;
 async function checkSurvey() {
-  if (!API || !auth || (load('ankieta', 0) && load('plec', 0)) || (cur && cur.phase !== 'done') || !$('form').hidden) return;
+  if (!API || !auth || (cur && cur.phase !== 'done') || !$('form').hidden) return;
+  if (load('ankieta', 0) && load('plec', 0)) return maybeAskName();
   try {
     const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) return;
     const d = await r.json();
-    if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); return setSex(d.odpowiedzi.plec); }
+    if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); setSex(d.odpowiedzi.plec); return maybeAskName(); }
     if ($('home').hidden) return; // tylko z ekranu startowego, nigdy w trakcie treningu
     survey = { pytania: d.pytania, odp: {} };
     renderSurvey(); show('form');
@@ -1035,7 +1066,7 @@ $('fBtn').onclick = async () => {
     const r = await fetch(API + '/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) throw Error(r.status);
-    store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
+    store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome(); maybeAskName();
   } catch { $('fMsg').textContent = 'Nie udało się zapisać. Sprawdź połączenie i spróbuj jeszcze raz.'; }
   finally { $('fBtn').disabled = false; }
 };

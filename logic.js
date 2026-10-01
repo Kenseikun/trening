@@ -71,6 +71,27 @@ function stats(plan, log) {
 const delta = (now, before) => before > 0 ? Math.round((now - before) / before * 100) : null;
 const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
 
+// Słowo od trenera po treningu: z liczb, nie ogólnik. name = imię z telefonu (może być puste), sex = płeć z ankiety ('K', 'M' albo brak: forma bezosobowa).
+function cheer(s, prev, name, sex) {
+  const n = name ? `, ${name}` : '', tot = v => v.reduce((a, b) => a + b, 0);
+  const pl = (k, w) => `${k} ${k === 1 ? w[0] : k % 10 > 1 && k % 10 < 5 && (k % 100 < 12 || k % 100 > 14) ? w[1] : w[2]}`;
+  if (s.total && s.done / s.total < .8) return `Trening zaliczony${n}. Następnym razem spróbuj dokończyć wszystkie serie.`;
+  if (!prev) return `Udało się${n}! Pierwszy taki trening za Tobą.`;
+  const byReps = s.reps || prev.reps, w = byReps ? ['powtórzenie', 'powtórzenia', 'powtórzeń'] : ['sekundę', 'sekundy', 'sekund'];
+  const d = byReps ? s.reps - prev.reps : s.hold - prev.hold, did = sex === 'K' ? 'Zrobiłaś' : sex === 'M' ? 'Zrobiłeś' : 'Wyszło';
+  // Ćwiczenie z największym postępem względem poprzedniego razu.
+  let best;
+  for (const p of s.per) {
+    const q = prev.per?.find(x => x.ex === p.ex);
+    const g = q && p.vals.length ? tot(p.vals) - tot(q.vals) : 0;
+    if (g > 0 && (!best || g > best.g)) best = { name: p.name.toLowerCase(), g, u: p.time ? ' s' : '' };
+  }
+  const plus = best ? ` Największy postęp: ${best.name} (+${best.g}${best.u}).` : '';
+  if (d > 0) return `Udało się${n}! ${did} o ${pl(d, w)} więcej niż ostatnio. Tak trzymaj!${plus}`;
+  if (d === 0) return `Udało się${n}! Tyle samo co ostatnio, solidna robota.${plus}`;
+  return `Dobra robota${n}. Dziś o ${pl(-d, w)} mniej niż ostatnio, to normalne. Liczy się regularność.${best ? ` Za to ${best.name}: +${best.g}${best.u}.` : ''}`;
+}
+
 // Podsumowanie dla trenera; prev = poprzedni trening tego samego typu (z historii).
 function summaryText(plan, log, note, t0, t1, prev) {
   const s = stats(plan, log);
@@ -145,5 +166,11 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.match(sum, /Pompki \(cel 2×5\): 5, 4/);
   assert.match(sum, /Pominięte: Deska/);
   assert.match(sum, /powtórzenia 8 → 9 \(\+13%\)/);
+  const was = { reps: 8, hold: 30, per: [{ ex: 'pompki', vals: [4, 4] }, { ex: 'plank', vals: [30] }] };
+  assert.strictEqual(cheer(s, was, 'Adrian', 'M'), 'Udało się, Adrian! Zrobiłeś o 1 powtórzenie więcej niż ostatnio. Tak trzymaj! Największy postęp: pompki (+1).');
+  assert.strictEqual(cheer(s, { ...was, reps: 12, per: [] }, '', 'K'), 'Dobra robota. Dziś o 3 powtórzenia mniej niż ostatnio, to normalne. Liczy się regularność.');
+  assert.match(cheer(s, { ...was, reps: 4 }, 'Ola', 'K'), /^Udało się, Ola! Zrobiłaś o 5 powtórzeń więcej/);
+  assert.match(cheer(s, null, 'Ola', 'K'), /Pierwszy taki trening za Tobą/);
+  assert.match(cheer({ ...s, done: 1 }, was, '', null), /^Trening zaliczony\. /);
   console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (files.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : ''));
 }
