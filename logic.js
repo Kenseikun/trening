@@ -32,8 +32,11 @@ function steps(plan) {
 }
 
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-const exName = it => it.name || globalThis.EXERCISES?.[it.ex]?.name || it.ex;
-const goal = it => it.time ? `${it.time} s` : /^\d+$/.test(String(it.reps)) ? `${it.reps} powt.` : String(it.reps);
+// Ćwiczenie i mięsień w języku aplikacji (LANG ze strings.js; bez niego po polsku). Czego nie ma po angielsku, zostaje po polsku.
+const exLoc = (e, lang = globalThis.LANG) => lang === 'en' && e?.en ? { ...e, ...e.en } : e;
+const exName = (it, lang) => it.name || exLoc(globalThis.EXERCISES?.[it.ex], lang)?.name || it.ex;
+const muscleName = (m, lang = globalThis.LANG) => (lang === 'en' && globalThis.MUSCLES_EN?.[m]) || globalThis.MUSCLES?.[m] || m;
+const goal = (it, lang = globalThis.LANG) => it.time ? `${it.time} s` : /^\d+$/.test(String(it.reps)) ? `${it.reps} ${lang === 'en' ? 'reps' : 'powt.'}` : String(it.reps);
 // Typ treningu bez numeru tygodnia: „T2 · Góra A (…)” i „T1 · Góra A (…)” to ten sam typ.
 const planKind = name => String(name).replace(/^T\d+\s*·\s*/, '').replace(/\s*\(.*\)\s*$/, '').trim().toLowerCase();
 
@@ -59,10 +62,11 @@ function muscleShare(load) {
 }
 
 // Wyniki treningu: per ćwiczenie + sumy. log: {indeks serii: wynik}, kg: {indeks serii: ciężar} (tylko ćwiczenia z obciążeniem).
-function stats(plan, log, kg = {}) {
+// lang = język nazw ćwiczeń (tekst dla trenera zawsze po polsku).
+function stats(plan, log, kg = {}, lang) {
   const st = steps(plan);
   const per = plan.items.map((it, item) => ({
-    ex: it.ex, name: exName(it), time: !!it.time, sets: it.sets, reps: it.reps,
+    ex: it.ex, name: exName(it, lang), time: !!it.time, sets: it.sets, reps: it.reps,
     vals: st.flatMap((s, i) => s.item === item && log[i] != null ? [log[i]] : []),
     kgs: st.flatMap((s, i) => s.item === item && log[i] != null ? [kg[i] ?? null] : []),
   }));
@@ -73,8 +77,8 @@ function stats(plan, log, kg = {}) {
 const delta = (now, before) => before > 0 ? Math.round((now - before) / before * 100) : null;
 const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
 
-// Ciężar po polsku (przecinek), np. 42,5. Największy ciężar w serii ćwiczenia (0, gdy bez obciążenia).
-const kgTxt = k => String(Math.round(k * 10) / 10).replace('.', ',');
+// Ciężar po polsku z przecinkiem (42,5), po angielsku z kropką (42.5). Największy ciężar w serii ćwiczenia (0, gdy bez obciążenia).
+const kgTxt = (k, lang = globalThis.LANG) => { const s = String(Math.round(k * 10) / 10); return lang === 'en' ? s : s.replace('.', ','); };
 const topKg = p => Math.max(0, ...(p?.kgs || []).filter(k => k > 0));
 // Ostatni ciężar ćwiczenia z historii (najnowszy trening pierwszy): { kg, t0 } albo null. kind = tylko ten typ treningu (planKind).
 function lastKg(history, ex, kind) {
@@ -99,41 +103,49 @@ const OCENA = { LEKKO: 'za lekko', OK: 'w sam raz', CIEZKO: 'za ciężko' };
 const BOL = { BARKI: 'barki', LOKCIE: 'łokcie', NADGARSTKI: 'nadgarstki', PLECY: 'plecy', KOLANA: 'kolana', BIODRA: 'biodra', INNE: 'coś innego' };
 
 // Słowo od trenera po treningu: z liczb, nie ogólnik. name = imię z telefonu (może być puste), sex = płeć z ankiety ('K', 'M' albo brak: forma bezosobowa).
-function cheer(s, prev, name, sex) {
-  const n = name ? `, ${name}` : '', tot = v => v.reduce((a, b) => a + b, 0);
+// Po angielsku bez form zależnych od płci; nazwy ćwiczeń przychodzą w s.per już w języku aplikacji.
+function cheer(s, prev, name, sex, lang = globalThis.LANG) {
+  const en = lang === 'en', n = name ? `, ${name}` : '', tot = v => v.reduce((a, b) => a + b, 0), lc = x => x[0].toLowerCase() + x.slice(1);
   const pl = (k, w) => `${k} ${k === 1 ? w[0] : k % 10 > 1 && k % 10 < 5 && (k % 100 < 12 || k % 100 > 14) ? w[1] : w[2]}`;
-  if (s.total && s.done / s.total < .8) return `Trening zaliczony${n}. Następnym razem spróbuj dokończyć wszystkie serie.`;
-  if (!prev) return `Udało się${n}! Pierwszy taki trening za Tobą.`;
+  if (s.total && s.done / s.total < .8) return en ? `Workout done${n}. Next time try to finish all the sets.` : `Trening zaliczony${n}. Następnym razem spróbuj dokończyć wszystkie serie.`;
+  if (!prev) return en ? `You did it${n}! Your first workout of this kind is done.` : `Udało się${n}! Pierwszy taki trening za Tobą.`;
   const byReps = s.reps || prev.reps, w = byReps ? ['powtórzenie', 'powtórzenia', 'powtórzeń'] : ['sekundę', 'sekundy', 'sekund'];
+  const many = k => en ? `${k} ${byReps ? 'rep' : 'second'}${k === 1 ? '' : 's'}` : pl(k, w);
   const d = byReps ? s.reps - prev.reps : s.hold - prev.hold, did = sex === 'K' ? 'Zrobiłaś' : sex === 'M' ? 'Zrobiłeś' : 'Wyszło';
   // Ćwiczenie z największym postępem względem poprzedniego razu.
   let best;
   for (const p of s.per) {
     const q = prev.per?.find(x => x.ex === p.ex);
     const g = q && p.vals.length ? tot(p.vals) - tot(q.vals) : 0;
-    if (g > 0 && (!best || g > best.g)) best = { name: p.name.toLowerCase(), g, u: p.time ? ' s' : '' };
+    if (g > 0 && (!best || g > best.g)) best = { name: lc(p.name), g, u: p.time ? ' s' : '' };
   }
   // Ćwiczenie, w którym najbardziej urósł ciężar (największy ciężar serii dziś i poprzednio).
   let up;
   for (const p of s.per) {
     const g = topKg(p) - topKg(prev.per?.find(x => x.ex === p.ex));
-    if (topKg(p) && topKg(prev.per?.find(x => x.ex === p.ex)) && g > 0 && (!up || g > up.g)) up = { name: p.name.toLowerCase(), g };
+    if (topKg(p) && topKg(prev.per?.find(x => x.ex === p.ex)) && g > 0 && (!up || g > up.g)) up = { name: lc(p.name), g };
   }
-  const plus = best ? ` Największy postęp: ${best.name} (+${best.g}${best.u}).` : '', heavier = up ? ` Ciężar w górę: ${up.name} (+${kgTxt(up.g)} kg).` : '';
+  if (en) {
+    const plus = best ? ` Biggest progress: ${best.name} (+${best.g}${best.u}).` : '', heavier = up ? ` Weight up: ${up.name} (+${kgTxt(up.g, lang)} kg).` : '';
+    if (d > 0) return `You did it${n}! ${many(d)} more than last time. Keep it up!${plus}${heavier}`;
+    if (d === 0) return `You did it${n}! Same as last time, solid work.${plus}${heavier}`;
+    return `Good job${n}. Today ${many(-d)} fewer than last time, and that's normal. Consistency is what counts.${best ? ` And ${best.name} went up: +${best.g}${best.u}.` : ''}${heavier}`;
+  }
+  const plus = best ? ` Największy postęp: ${best.name} (+${best.g}${best.u}).` : '', heavier = up ? ` Ciężar w górę: ${up.name} (+${kgTxt(up.g, lang)} kg).` : '';
   if (d > 0) return `Udało się${n}! ${did} o ${pl(d, w)} więcej niż ostatnio. Tak trzymaj!${plus}${heavier}`;
   if (d === 0) return `Udało się${n}! Tyle samo co ostatnio, solidna robota.${plus}${heavier}`;
   return `Dobra robota${n}. Dziś o ${pl(-d, w)} mniej niż ostatnio, to normalne. Liczy się regularność.${best ? ` Za to ${best.name}: +${best.g}${best.u}.` : ''}${heavier}`;
 }
 
-// Serie ćwiczenia jako tekst: „6, 6, 5 × 40 kg”, przy różnych ciężarach „6×40, 5×42,5 kg”; perKg = dopisek, np. „na hantel”.
+// Serie ćwiczenia jako tekst dla trenera (po polsku): „6, 6, 5 × 40 kg”, przy różnych ciężarach „6×40, 5×42,5 kg”; perKg = dopisek, np. „na hantel”.
 function setsText(p, perKg) {
   if (!topKg(p)) return p.vals.map(v => v + (p.time ? ' s' : '')).join(', ');
   const tail = ` kg${perKg ? ' ' + perKg : ''}`;
-  return new Set(p.kgs).size === 1 ? `${p.vals.join(', ')} × ${kgTxt(p.kgs[0])}${tail}` : p.vals.map((v, i) => p.kgs[i] ? `${v}×${kgTxt(p.kgs[i])}` : v).join(', ') + tail;
+  return new Set(p.kgs).size === 1 ? `${p.vals.join(', ')} × ${kgTxt(p.kgs[0], 'pl')}${tail}` : p.vals.map((v, i) => p.kgs[i] ? `${v}×${kgTxt(p.kgs[i], 'pl')}` : v).join(', ') + tail;
 }
-// Podsumowanie dla trenera; prev = poprzedni trening tego samego typu (z historii); extra = { kg, ocena, bol } z ekranu treningu i wyników.
+// Podsumowanie dla trenera, zawsze po polsku; prev = poprzedni trening tego samego typu (z historii); extra = { kg, ocena, bol } z ekranu treningu i wyników.
 function summaryText(plan, log, note, t0, t1, prev, extra = {}) {
-  const s = stats(plan, log, extra.kg);
+  const s = stats(plan, log, extra.kg, 'pl');
   const lines = [`Trening: ${plan.name} (${new Date(t0).toISOString().slice(0, 10)}, ${Math.round((t1 - t0) / 60000)} min)`];
   const skipped = [];
   for (const p of s.per) {
@@ -163,8 +175,16 @@ function planFormat(exercises, history) {
 
 if (typeof module !== 'undefined' && require.main === module) {
   const assert = require('node:assert'), fs = require('node:fs'), path = require('node:path');
-  require('./exercises.js');
+  require('./exercises.js'); require('./strings.js');
   const { EX_MOVE, MOVES, joints, norm } = require('./moves.js');
+  // Angielski: każdy napis istnieje w obu językach (funkcja w obu albo w żadnym), każde ćwiczenie i mięsień ma tłumaczenie.
+  assert.deepStrictEqual(Object.keys(STR.en).sort(), Object.keys(STR.pl).sort(), 'strings.js: różne klucze po polsku i po angielsku');
+  for (const k in STR.pl) assert.strictEqual(typeof STR.en[k], typeof STR.pl[k], `strings.js: „${k}” ma inny typ po angielsku`);
+  assert.deepStrictEqual(Object.keys(MUSCLES_EN).sort(), Object.keys(MUSCLES).sort(), 'exercises.js: MUSCLES_EN nie zgadza się z MUSCLES');
+  for (const [id, e] of Object.entries(EXERCISES)) {
+    assert(e.en?.name && e.en.steps?.length === e.steps.length && e.en.tips?.length === e.tips.length, `${id}: brak albo niepełna wersja angielska (en)`);
+    assert.strictEqual(!!e.en.kgOpis, !!e.kgOpis, `${id}: kgOpis bez angielskiego odpowiednika`);
+  }
   // Pliki rozpisek podane jako argumenty (`node logic.js rozpiska.json`): format, ćwiczenia z biblioteki i animacja dla każdego z nich.
   const files = process.argv.slice(2);
   const plans = files.flatMap(file => normalize(JSON.parse(fs.readFileSync(path.resolve(file), 'utf8'))));
@@ -240,5 +260,18 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.equal(startKg({ setKg: 47.5, prevSetKg: 50, planKg: 40 }), 47.5);
   assert.equal(startKg({ prevSetKg: 50, planKg: 40, same, plansAt: 1000 }), 50);
   assert.equal(startKg({}), 0);
+  // Po angielsku: nazwy, cel, ciężar z kropką i słowo po treningu; tekst dla trenera nadal po polsku.
+  assert.strictEqual(exName({ ex: 'pompki' }, 'en'), 'Push-up');
+  assert.strictEqual(exName({ ex: 'pompki', name: 'Own name' }, 'en'), 'Own name');
+  assert.strictEqual(goal({ reps: 8 }, 'en'), '8 reps');
+  assert.strictEqual(muscleName('chest', 'en'), 'chest');
+  assert.deepStrictEqual([kgTxt(42.5, 'en'), kgTxt(42.5, 'pl')], ['42.5', '42,5']);
+  const se = stats(p, { 0: 5, 1: 4, 2: 30 }, {}, 'en');
+  assert.strictEqual(cheer(se, was, 'Adrian', 'M', 'en'), 'You did it, Adrian! 1 rep more than last time. Keep it up! Biggest progress: push-up (+1).');
+  assert.strictEqual(cheer(se, { ...was, reps: 12, per: [] }, '', 'K', 'en'), "Good job. Today 3 reps fewer than last time, and that's normal. Consistency is what counts.");
+  assert.match(cheer(stats(g, { 0: 6, 1: 6, 2: 5, 3: 8, 4: 8 }, { 0: 40, 1: 40, 2: 42.5, 3: 8, 4: 8 }, 'en'), gw, '', 'M', 'en'), /Weight up: barbell back squat \(\+5 kg\)\.$/);
+  globalThis.LANG = 'en';
+  assert.match(summaryText(g, { 0: 6, 1: 6, 2: 5 }, '', 0, 60000, null, { kg: { 0: 40, 1: 40, 2: 42.5 } }), /Przysiad ze sztangą \(cel 3×6\): 6×40, 6×40, 5×42,5 kg/);
+  globalThis.LANG = 'pl';
   console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (files.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : ''));
 }

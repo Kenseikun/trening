@@ -50,6 +50,10 @@
   .menu button:active { background: none; transform: none }
   .menu .ring { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--cream); transition: background-color .15s }
   .menu button:active .ring { background: rgba(231,232,226,.14) }
+  /* Wybór języka: na ekranie kodu (PL / EN) i w ustawieniach. */
+  .langs { display: flex; gap: 6px }
+  .langs button { min-height: 44px; min-width: 48px; padding: 0 12px; font-size: .9rem; text-transform: none; color: var(--stone) }
+  .langs button[aria-pressed=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
 
   /* Tytuł na falującej linii, litery opadają jak krople przy otwarciu */
   .float .w { white-space: nowrap }
@@ -203,6 +207,7 @@
   .num input:focus { outline: none; border-color: var(--blue) }
   .ask.bad legend, .num.bad .lbl { color: var(--red) }
   .ask.bad legend::after { content: ' (uzupełnij)'; font-weight: 500 }
+  html[lang=en] .ask.bad legend::after { content: ' (required)' }
   .num.bad input { border-color: var(--red) }
   .fine { margin: 22px 0 8px; font-size: .84rem; line-height: 1.4 }
   #fMsg { margin: 0 0 8px; text-align: center }
@@ -355,45 +360,46 @@
 </svg>
 
 <section id="gate" class="sheet" hidden>
-  <header class="head"><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span></header>
+  <header class="head"><span class="brand"><span data-t="brand">trening</span><i class="dot b"></i><i class="dot r"></i></span>
+    <div class="langs"><button data-lang="pl" aria-label="polski">PL</button><button data-lang="en" aria-label="English">EN</button></div></header>
   <div class="gate">
     <h1 class="float" id="gTitle"></h1>
-    <p class="stone">Wpisz swoje inicjały i kod od trenera. Wystarczy raz, potem aplikacja działa też bez zasięgu.</p>
-    <label class="lbl" for="gIni">Inicjały</label>
-    <input id="gIni" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="np. JK">
-    <label class="lbl" for="gCode">Kod</label>
+    <p class="stone" data-t="gateIntro">Wpisz swoje inicjały i kod od trenera. Wystarczy raz, potem aplikacja działa też bez zasięgu.</p>
+    <label class="lbl" for="gIni" data-t="initials">Inicjały</label>
+    <input id="gIni" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="np. JK" data-tp="initialsPh">
+    <label class="lbl" for="gCode" data-t="code">Kod</label>
     <input id="gCode" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX-XXXX-XXXX">
     <p id="gMsg" class="err" role="alert"></p>
   </div>
-  <div class="dock"><button id="gBtn" class="primary">wejdź</button></div>
+  <div class="dock"><button id="gBtn" class="primary" data-t="enter">wejdź</button></div>
 </section>
 
 <section id="form" class="sheet" hidden>
-  <header class="head"><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span></header>
+  <header class="head"><span class="brand"><span data-t="brand">trening</span><i class="dot b"></i><i class="dot r"></i></span></header>
   <h1 class="float" id="fTitle"></h1>
-  <p class="stone">Z tych odpowiedzi trener ułoży Twój plan. Zaznacz to, co do Ciebie pasuje.</p>
+  <p class="stone" data-t="surveyIntro">Z tych odpowiedzi trener ułoży Twój plan. Zaznacz to, co do Ciebie pasuje.</p>
   <div id="fQs"></div>
-  <p class="stone fine">Odpowiedzi służą tylko do układania Twojego planu. Jeśli zechcesz je usunąć, napisz do trenera: z bazy znikną od razu, a z kopii zapasowych najpóźniej po 5 tygodniach.</p>
-  <div class="dock"><p id="fMsg" class="err" role="alert"></p><button id="fBtn" class="primary">zapisz i przejdź dalej</button><button id="fCancel" class="ghost" hidden>wróć bez zmian</button></div>
+  <p class="stone fine" data-t="surveyFine">Odpowiedzi służą tylko do układania Twojego planu. Jeśli zechcesz je usunąć, napisz do trenera: z bazy znikną od razu, a z kopii zapasowych najpóźniej po 5 tygodniach.</p>
+  <div class="dock"><p id="fMsg" class="err" role="alert"></p><button id="fBtn" class="primary" data-t="surveySave">zapisz i przejdź dalej</button><button id="fCancel" class="ghost" hidden data-t="surveyBack">wróć bez zmian</button></div>
 </section>
 
 <main id="home" class="sheet" hidden>
   <div id="page1" class="page1">
   <header class="head">
-    <div><span class="brand">trening<i class="dot b"></i><i class="dot r"></i></span><span id="today" class="lbl"></span></div>
+    <div><span class="brand"><span data-t="brand">trening</span><i class="dot b"></i><i class="dot r"></i></span><span id="today" class="lbl"></span></div>
     <nav class="menu" aria-label="Menu">
-      <button data-sheet="imp"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg></i>import</button>
-      <button data-sheet="lib"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg></i>ćwiczenia</button>
-      <button data-sheet="hist"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i>historia</button>
-      <button data-sheet="set" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></i>ustawienia</button>
+      <button data-sheet="imp"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg></i><span data-t="menuImport">import</span></button>
+      <button data-sheet="lib"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg></i><span data-t="menuLib">ćwiczenia</span></button>
+      <button data-sheet="hist"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i><span data-t="menuHist">historia</span></button>
+      <button data-sheet="set" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></i><span data-t="menuSet">ustawienia</span></button>
     </nav>
   </header>
-  <button id="hello" class="hello" hidden aria-label="Zmień imię"></button>
+  <button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button>
   <div id="resume" class="resume" hidden>
     <p id="resumeName"></p>
-    <div class="row"><button id="resumeBtn" class="primary">wznów</button><button id="dropBtn">porzuć</button></div>
+    <div class="row"><button id="resumeBtn" class="primary" data-t="resume">wznów</button><button id="dropBtn" data-t="discard">porzuć</button></div>
   </div>
-  <div id="tabs" class="tabs" role="tablist" aria-label="Treningi tygodnia"></div>
+  <div id="tabs" class="tabs" role="tablist" aria-label="Treningi tygodnia" data-ta="weekTabs"></div>
   <div id="planHead">
     <h1 id="hName" class="float"></h1>
     <p id="hSub" class="stone"></p>
@@ -403,7 +409,7 @@
   </div>
   <div id="plan">
     <p id="hNote" class="note"></p>
-    <h2>Spis ćwiczeń</h2>
+    <h2 data-t="exerciseList">Spis ćwiczeń</h2>
     <div class="fit"><ol id="hParts" class="parts rows"></ol></div>
     <button class="pos" data-for="hParts" hidden></button>
   </div>
@@ -412,23 +418,23 @@
 </main>
 
 <section id="work" class="sheet" hidden>
-  <div class="wbar"><div id="wStrip"></div><button id="endBtn" class="round" aria-label="Menu treningu: pomiń ćwiczenie albo zakończ"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+  <div class="wbar"><div id="wStrip"></div><button id="endBtn" class="round" aria-label="Menu treningu: pomiń ćwiczenie albo zakończ" data-ta="workMenu"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <h1 id="wName" class="float"></h1>
-  <div class="wsub"><p id="wProg" class="stone"></p><button id="howBtn" class="chip">jak wykonać</button></div>
+  <div class="wsub"><p id="wProg" class="stone"></p><button id="howBtn" class="chip" data-t="how">jak wykonać</button></div>
   <div id="wBlock" class="stats"></div>
   <div id="wMove" class="grow"></div>
   <div id="wMus" class="mus"></div>
   <p id="wNote" class="note"></p>
   <div class="dock">
     <div id="stepper" class="stepper">
-      <button id="minus" aria-label="Mniej"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+      <button id="minus" aria-label="Mniej" data-ta="less"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
       <output id="val" aria-live="polite">0</output>
-      <button id="plus" aria-label="Więcej"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
+      <button id="plus" aria-label="Więcej" data-ta="more"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
     </div>
     <div id="kgBox" class="stepper kg" hidden>
-      <button id="kgMinus" aria-label="Mniejszy ciężar"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+      <button id="kgMinus" aria-label="Mniejszy ciężar" data-ta="lessKg"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
       <output id="kgVal" aria-live="polite"></output>
-      <button id="kgPlus" aria-label="Większy ciężar"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
+      <button id="kgPlus" aria-label="Większy ciężar" data-ta="moreKg"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
     </div>
     <button id="doneBtn" class="primary"></button>
   </div>
@@ -451,73 +457,76 @@
 
 <section id="done" class="sheet" hidden>
   <div id="donePage1">
-  <header class="head"><span class="brand">wyniki<i class="dot c"></i></span><span id="dDate" class="lbl"></span></header>
+  <header class="head"><span class="brand"><span data-t="brandResults">wyniki</span><i class="dot c"></i></span><span id="dDate" class="lbl"></span></header>
   <h1 id="dName" class="float"></h1>
   <p id="dCheer" class="cheer"></p>
   <div id="dRate" class="rate">
-    <p class="lbl">jak było?</p>
-    <div class="opts" id="rEase"><button data-v="LEKKO">za lekko</button><button data-v="OK">w sam raz</button><button data-v="CIEZKO">za ciężko</button></div>
-    <p class="lbl">coś bolało?</p>
-    <div class="opts" id="rPain"><button data-v="NIE">nie</button><button data-v="TAK">tak</button><span id="rWhere"></span></div>
+    <p class="lbl" data-t="howWas">jak było?</p>
+    <div class="opts" id="rEase"><button data-v="LEKKO" data-t="rate_LEKKO">za lekko</button><button data-v="OK" data-t="rate_OK">w sam raz</button><button data-v="CIEZKO" data-t="rate_CIEZKO">za ciężko</button></div>
+    <p class="lbl" data-t="anyPain">coś bolało?</p>
+    <div class="opts" id="rPain"><button data-v="NIE" data-t="no">nie</button><button data-v="TAK" data-t="yes">tak</button><span id="rWhere"></span></div>
   </div>
   <div id="dBlock" class="stats lines"></div>
   </div>
   <div class="dpage figpage">
-  <h2>Pracowały dziś</h2>
+  <h2 data-t="worked">Pracowały dziś</h2>
   <div id="dFig" class="garden"></div>
   </div>
   <div id="donePage2" class="dpage">
-  <h2>Porównanie z poprzednim</h2>
+  <h2 data-t="cmp">Porównanie z poprzednim</h2>
   <div class="fit"><ul id="dCmp" class="cmp rows"></ul></div>
   <button class="pos" data-for="dCmp" hidden></button>
-  <p id="dFirst" class="stone" hidden>To pierwszy zapisany trening tego typu. Porównanie pojawi się następnym razem.</p>
+  <p id="dFirst" class="stone" hidden data-t="firstCmp">To pierwszy zapisany trening tego typu. Porównanie pojawi się następnym razem.</p>
   </div>
   <div id="donePage3" class="dpage">
-  <h2>Uwagi dla trenera</h2>
-  <textarea id="doneNote" placeholder="Jak poszło, czy coś bolało, która guma…"></textarea>
-  <details class="how"><summary>Tekst dla trenera<svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><pre id="sum"></pre></details>
+  <h2 data-t="notes">Uwagi dla trenera</h2>
+  <textarea id="doneNote" placeholder="Jak poszło, czy coś bolało, która guma…" data-tp="notesPh"></textarea>
+  <details class="how"><summary><span data-t="textForTrainer">Tekst dla trenera</span><svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><pre id="sum"></pre></details>
   </div>
   <div class="dock">
-    <button id="shareBtn" class="primary">wyślij do trenera<svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-    <button id="saveBtn" class="ghost">zapisz w historii i wróć</button>
+    <button id="shareBtn" class="primary"><span data-t="send">wyślij do trenera</span><svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+    <button id="saveBtn" class="ghost" data-t="saveHist">zapisz w historii i wróć</button>
   </div>
 </section>
 
 <dialog id="sheet" tabindex="-1">
-  <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" class="round" aria-label="Zamknij"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+  <div class="sheet-head"><h2 id="sheetTitle"></h2><button id="sheetClose" class="round" aria-label="Zamknij" data-ta="close"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <div id="p-imp" class="pane">
-    <textarea id="imp" placeholder="Wklej rozpiskę od trenera. Nowa rozpiska zastępuje poprzednią, historia treningów zostaje."></textarea>
-    <div class="row"><button id="impBtn">wczytaj</button><button id="fileBtn">z pliku</button></div>
+    <textarea id="imp" placeholder="Wklej rozpiskę od trenera. Nowa rozpiska zastępuje poprzednią, historia treningów zostaje." data-tp="impPh"></textarea>
+    <div class="row"><button id="impBtn" data-t="impLoad">wczytaj</button><button id="fileBtn" data-t="impFile">z pliku</button></div>
     <input id="impFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
     <p id="impMsg"></p>
-    <button id="promptBtn" class="ghost">format rozpiski</button>
+    <button id="promptBtn" class="ghost" data-t="impFormat">format rozpiski</button>
   </div>
   <div id="p-act" class="pane">
-    <button id="skipEx">pomiń to ćwiczenie</button>
-    <button id="quitBtn">zakończ trening i pokaż wyniki</button>
+    <button id="skipEx" data-t="skipEx">pomiń to ćwiczenie</button>
+    <button id="quitBtn" data-t="quit">zakończ trening i pokaż wyniki</button>
   </div>
   <div id="p-lib" class="pane"><div id="lib" class="lib rows"></div><button class="pos" data-for="lib" hidden></button></div>
   <div id="p-upd" class="pane">
-    <p>Jest nowsza wersja aplikacji. Historia i zapisane treningi zostają na miejscu.</p>
-    <div class="row"><button id="updBtn" class="primary">zaktualizuj</button><button id="updLater">później</button></div>
+    <p data-t="updText">Jest nowsza wersja aplikacji. Historia i zapisane treningi zostają na miejscu.</p>
+    <div class="row"><button id="updBtn" class="primary" data-t="update">zaktualizuj</button><button id="updLater" data-t="later">później</button></div>
   </div>
   <div id="p-hist" class="pane"><div id="hist" class="hist"></div></div>
   <div id="p-set" class="pane">
     <p id="setWho" class="stone"></p>
-    <button id="surveyBtn">zaktualizuj ankietę</button>
-    <p class="stone fine">Zmieniła się waga, cel albo coś boli? Popraw odpowiedzi, trener zobaczy nową ankietę.</p>
-    <button id="logoutBtn">wyloguj się</button>
-    <p class="stone fine">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska i wyniki zostają u trenera.</p>
+    <p class="lbl" data-t="langTitle">język</p>
+    <div class="langs"><button data-lang="pl">polski</button><button data-lang="en">english</button></div>
+    <button id="surveyBtn" data-t="surveyUpdate">zaktualizuj ankietę</button>
+    <p class="stone fine" data-t="surveyUpdateHint">Zmieniła się waga, cel albo coś boli? Popraw odpowiedzi, trener zobaczy nową ankietę.</p>
+    <button id="logoutBtn" data-t="logout">wyloguj się</button>
+    <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska i wyniki zostają u trenera.</p>
   </div>
 </dialog>
 
 <dialog id="ask" tabindex="-1"><p id="askText"></p><div class="row"><button id="askYes" class="primary"></button><button id="askNo"></button></div></dialog>
 
 <dialog id="dlg" tabindex="-1">
-  <div class="sheet-head"><h1 id="dlgName" class="float"></h1><button id="dlgClose" class="round" aria-label="Zamknij"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+  <div class="sheet-head"><h1 id="dlgName" class="float"></h1><button id="dlgClose" class="round" aria-label="Zamknij" data-ta="close"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <div id="dlgBody"></div>
 </dialog>
 
+<script src="strings.js"></script>
 <script src="exercises.js"></script>
 <script src="logic.js"></script>
 <script src="moves.js"></script>
@@ -543,7 +552,18 @@ const curItem = () => cur.plan.items[S()[cur.i].item];
 const pastText = h => typeof h === 'string' ? h : h.text;
 const prevOf = name => past.find(h => typeof h === 'object' && planKind(h.name) === planKind(name));
 const short = n => n.replace(/^T\d+\s*·\s*/, '').replace(/\s*\(.*\)\s*$/, '');
-const day = t => new Date(t).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+const locale = () => LANG === 'en' ? 'en-GB' : 'pl-PL';
+const day = t => new Date(t).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
+// Język: polski domyślnie, angielski do wyboru na ekranie kodu i w ustawieniach. Napisy w strings.js; w HTML data-t (tekst),
+// data-tp (podpowiedź w polu) i data-ta (etykieta dla czytnika). Rozpiska, tekst dla trenera i panel trenera zostają, jak są.
+function setLang(l) {
+  LANG = l === 'en' ? 'en' : 'pl'; store('jezyk', LANG); document.documentElement.lang = LANG;
+  for (const el of document.querySelectorAll('[data-t]')) el.textContent = t(el.dataset.t);
+  for (const el of document.querySelectorAll('[data-tp]')) el.placeholder = t(el.dataset.tp);
+  for (const el of document.querySelectorAll('[data-ta]')) el.setAttribute('aria-label', t(el.dataset.ta));
+  for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === LANG);
+}
+setLang(load('jezyk', 'pl'));
 const cells = list => list.filter(Boolean).map(([k, v, d]) => `<div><small>${k}</small><b>${esc(v)}</b>${d ? `<i>${esc(d)}</i>` : ''}</div>`).join('');
 const ICO = { go: '<circle cx="9" cy="15" r="5"/><circle cx="16.5" cy="7.5" r="3.5"/>', done: '<path d="m5 12.5 4.5 4.5L19 7.5"/>', play: '<path d="M8 5.5v13l10.5-6.5z"/>', next: '<circle cx="12" cy="12" r="9"/><path d="M9.5 12h5m-2-2.5 2.5 2.5-2.5 2.5"/>', chev: '<path d="m6 9 6 6 6-6"/>' };
 const ico = n => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICO[n]}</svg>`;
@@ -559,7 +579,6 @@ function floatText(el, text, enter) {
   el.style.setProperty('--amp', n < 9 ? '-.05em' : '.1em');
   el.innerHTML = text.split(' ').map(w => `<span class="w" aria-hidden="true">${[...w].map(c => `<span style="--k:${k++}">${esc(c)}</span>`).join('')}</span>`).join(' ');
 }
-const plural = (n, one, few, many) => n === 1 ? one : n % 10 > 1 && n % 10 < 5 && (n % 100 < 12 || n % 100 > 14) ? few : many;
 
 // --- postać: lewa połowa (oś ciała x=80), prawa to lustro; center = rysowane raz
 const BODY = {
@@ -648,9 +667,9 @@ function figure(load, { plot = false, legend = true, u = 1 } = {}) {
     return `<svg viewBox="0 0 200 360" class="body${plot ? ' plot' : ''}" aria-hidden="true">
       <g transform="translate(20 0)">${half.join('')}${mid.join('')}</g><g transform="translate(180 0) scale(-1 1)">${half.join('')}</g>${drops}</svg>`;
   };
-  const leg = top.length ? `<ol class="legend">${top.map((s, n) => `<li><i class="bn">${n + 1}</i><span>${MUSCLES[s.m]}</span><b>${s.pct}%</b></li>`).join('')}</ol>
-    <p class="key"><span><i class="sw"></i>główna praca</span><span><i class="sw s"></i>pomocniczo</span></p>` : '';
-  return `<div class="views"><figure>${view('F')}<figcaption>przód</figcaption></figure><figure>${view('B')}<figcaption>tył</figcaption></figure></div>${leg}`;
+  const leg = top.length ? `<ol class="legend">${top.map((s, n) => `<li><i class="bn">${n + 1}</i><span>${muscleName(s.m)}</span><b>${s.pct}%</b></li>`).join('')}</ol>
+    <p class="key"><span><i class="sw"></i>${t('mainWork')}</span><span><i class="sw s"></i>${t('assist')}</span></p>` : '';
+  return `<div class="views"><figure>${view('F')}<figcaption>${t('front')}</figcaption></figure><figure>${view('B')}<figcaption>${t('back')}</figcaption></figure></div>${leg}`;
 }
 // Rysuje postać, mierzy ją i w razie potrzeby rysuje drugi raz z większymi kroplami: numer ma mieć ok. 10 px na ekranie.
 function drawFigure(box, load, opt = {}) {
@@ -664,26 +683,26 @@ function drawFigure(box, load, opt = {}) {
 const moveBlock = id => {
   if (!EX_MOVE[id]) return '';
   const g = moveGear(id);
-  return `<figure class="mv">${moveFig(id)}<figcaption><span><i class="sw"></i>spięty mięsień</span>${g.tool ? '<span><i class="eq"></i>sprzęt</span>' : ''}${g.band ? '<span><i class="eq band"></i>guma</span>' : ''}</figcaption></figure>`;
+  return `<figure class="mv">${moveFig(id)}<figcaption><span><i class="sw"></i>${t('legWork')}</span>${g.tool ? `<span><i class="eq"></i>${t('legGear')}</span>` : ''}${g.band ? `<span><i class="eq band"></i>${t('legBand')}</span>` : ''}</figcaption></figure>`;
 };
 // pct = dopisz udział mięśnia w ćwiczeniu (główny liczy się podwójnie względem pomocniczego).
 const musLine = (e, pct) => {
   if (!e) return '';
   const share = pct ? Object.fromEntries(muscleShare(muscleLoad([{ ex: pct, sets: 1 }])).map(s => [s.m, ` <b>${s.pct}%</b>`])) : {};
-  return [...e.p.map(m => `<span><i class="sw"></i>${MUSCLES[m]}${share[m] || ''}</span>`), ...e.s.map(m => `<span><i class="sw s"></i>${MUSCLES[m]}${share[m] || ''}</span>`)].join('');
+  return [...e.p.map(m => `<span><i class="sw"></i>${muscleName(m)}${share[m] || ''}</span>`), ...e.s.map(m => `<span><i class="sw s"></i>${muscleName(m)}${share[m] || ''}</span>`)].join('');
 };
-const video = it => `https://www.youtube.com/results?search_query=${encodeURIComponent(exName(it) + ' technika')}`;
-const how = (it, e) => `<h2>Jak wykonać</h2>
+const video = it => `https://www.youtube.com/results?search_query=${encodeURIComponent(exName(it) + ' ' + t('videoQ'))}`;
+const how = (it, e) => `<h2>${t('howTitle')}</h2>
   ${e ? `<ol class="steps">${e.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol><ul class="tips">${e.tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}
-  <p><a href="${video(it)}" target="_blank" rel="noopener">Wideo z techniką na YouTube</a></p>`;
+  <p><a href="${video(it)}" target="_blank" rel="noopener">${t('video')}</a></p>`;
 // Imię zostaje tylko na tym telefonie (nie trafia do serwisu ani do trenera): powitanie na starcie i słowo po treningu.
 const myName = () => load('imie', '') || '';
-function hello() { const n = myName(); $('hello').hidden = !n; $('hello').textContent = n ? `Hej, ${n}!` : ''; }
+function hello() { const n = myName(); $('hello').hidden = !n; $('hello').textContent = n ? t('hello', n) : ''; }
 function askName() {
-  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">Aplikacja będzie się tak do Ciebie zwracać. Imię zostaje tylko na tym telefonie.</p>
-    <input id="nameIn" maxlength="20" autocomplete="given-name" autocapitalize="words" spellcheck="false" placeholder="np. Ania" value="${esc(myName())}">
-    <button id="nameOk" class="primary">zapisz</button><button id="nameNo" class="ghost">wolę bez imienia</button></div>`;
-  floatText($('dlgName'), 'jak masz na imię?');
+  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">${t('nameText')}</p>
+    <input id="nameIn" maxlength="20" autocomplete="given-name" autocapitalize="words" spellcheck="false" placeholder="${t('namePh')}" value="${esc(myName())}">
+    <button id="nameOk" class="primary">${t('save')}</button><button id="nameNo" class="ghost">${t('noName')}</button></div>`;
+  floatText($('dlgName'), t('nameTitle'));
   $('dlg').classList.add('small'); $('dlg').showModal();
   const done = v => { store('imie', v); $('dlg').close(); hello(); };
   $('nameOk').onclick = () => { const v = $('nameIn').value.replace(/[^\p{L}\- ]/gu, '').trim().slice(0, 20); done(v && v[0].toLocaleUpperCase('pl') + v.slice(1)); };
@@ -696,7 +715,7 @@ $('hello').onclick = () => askName();
 $('dlg').addEventListener('close', () => $('dlg').classList.remove('small'));
 // Pytanie i komunikat w stylu aplikacji (zamiast systemowego okienka przeglądarki z adresem strony).
 // ask(tekst, tak, nie) → Promise<boolean>; nie = null: tylko jeden przycisk (komunikat).
-function ask(text, yes = 'tak', no = 'anuluj') {
+function ask(text, yes = t('yes'), no = t('cancel')) {
   $('askText').textContent = text; $('askYes').textContent = yes;
   $('askNo').textContent = no || ''; $('askNo').hidden = !no;
   $('ask').showModal(); $('askYes').focus();
@@ -707,8 +726,8 @@ function ask(text, yes = 'tak', no = 'anuluj') {
 }
 // steps = otwórz od razu na stronie z instrukcją (z ekranu treningu animacja jest już widoczna).
 function showExercise(it, steps) {
-  const e = EXERCISES[it.ex], anim = EX_MOVE[it.ex];
-  $('dlgBody').innerHTML = (anim ? `<section class="pg">${moveBlock(it.ex)}<div class="mus">${musLine(e, it.ex)}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}<button class="more">jak wykonać${ico('chev')}</button></section>` : '')
+  const e = exLoc(EXERCISES[it.ex]), anim = EX_MOVE[it.ex];
+  $('dlgBody').innerHTML = (anim ? `<section class="pg">${moveBlock(it.ex)}<div class="mus">${musLine(e, it.ex)}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}<button class="more">${t('how')}${ico('chev')}</button></section>` : '')
     + `<section class="pg" id="dlgSteps">${how(it, e)}</section>`;
   floatText($('dlgName'), exName(it).toLowerCase());
   $('dlg').showModal(); $('dlg').focus();
@@ -725,52 +744,55 @@ function suggested(plans) {
 }
 function renderHome() {
   const plans = allPlans();
-  $('today').textContent = new Date().toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+  $('today').textContent = new Date().toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
   hello();
   $('resume').hidden = !cur;
   $('page1').classList.toggle('resuming', !!cur); // z banerem „w toku” legenda się chowa, żeby pierwsza strona się mieściła
-  if (cur) $('resumeName').textContent = cur.phase === 'done' ? `${cur.plan.name}: niezapisane wyniki` : `W toku: ${cur.plan.name}, seria ${cur.i + 1} z ${S().length}`;
+  if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
   $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
   $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
   // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma.
   $('startBtn').parentElement.hidden = !plans.length && !!API;
   if (!plans.length) {
-    floatText($('eTitle'), 'brak rozpiski');
-    $('eText').textContent = API ? 'Trener nie wysłał jeszcze rozpiski. Pojawi się tutaj sama.' : 'Wczytaj rozpiskę od trenera: wklej jej tekst albo wybierz plik.';
-    $('startBtn').innerHTML = `wczytaj rozpiskę${ico('next')}`;
+    floatText($('eTitle'), t('noPlanTitle'));
+    $('eText').textContent = API ? t('noPlanApi') : t('noPlanLocal');
+    $('startBtn').innerHTML = `${t('loadPlan')}${ico('next')}`;
   }
   $('hist').innerHTML = past.length
-    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : `${day(h.t0)} · ${h.name} · ${h.reps} powt.`)}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + '<button id="histBtn" style="width:100%;margin-top:12px">wyślij ostatnie 10</button><button id="histClr" class="ghost" style="width:100%;margin-top:6px">wyczyść historię</button>'
-    : '<p class="stone">Pusto. Zapisane treningi pojawią się tutaj.</p>';
+    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : t('histRow', day(h.t0), h.name, h.reps))}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + `<button id="histBtn" style="width:100%;margin-top:12px">${t('histSend')}</button><button id="histClr" class="ghost" style="width:100%;margin-top:6px">${t('histClear')}</button>`
+    : `<p class="stone">${t('histEmpty')}</p>`;
   if (!plans.length) return;
   sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
   $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`).join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted);
-  $('hSub').textContent = [`${p.items.length} ${plural(p.items.length, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń')}`, p.name.match(/\((.*)\)\s*$/)?.[1], week && `tydzień ${week}`].filter(Boolean).join(' · ');
+  $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · ');
   drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
   plotted = true;
-  $('hBlock').innerHTML = cells([['Serie', steps(p).length], ['Czas', `~${estimate(p)}`, 'minut'], ['Ostatnio', prev ? prev.reps : '—', prev ? `powt. · ${day(prev.t0)}` : 'brak']]);
+  $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes')], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
-  $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${it.sets} × ${esc(goal(it))} · przerwa ${fmt(it.rest)}</small></span>${ico('next')}</button></li>`).join('')
-    + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">usuń ten trening</button></li>` : '');
-  $('startBtn').innerHTML = `zacznij · ${esc(short(p.name).toLowerCase())}${ico('go')}`;
+  $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${t('partLine', it.sets, esc(goal(it)), fmt(it.rest))}</small></span>${ico('next')}</button></li>`).join('')
+    + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">${t('delWorkout')}</button></li>` : '');
+  $('startBtn').innerHTML = `${t('startN', esc(short(p.name).toLowerCase()))}${ico('go')}`;
 }
 $('tabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { sel = +b.dataset.k; renderHome(); } };
 $('hParts').onclick = e => {
   const b = e.target.closest('button'), p = allPlans()[sel];
   if (b?.dataset.j) showExercise(p.items[b.dataset.j]);
-  if (b?.dataset.del) ask('Usunąć ten trening?', 'usuń').then(ok => { if (ok) { imported.splice(b.dataset.del, 1); store('imported', imported); sel = null; renderHome(); } });
+  if (b?.dataset.del) ask(t('askDelWorkout'), t('del')).then(ok => { if (ok) { imported.splice(b.dataset.del, 1); store('imported', imported); sel = null; renderHome(); } });
 };
 $('startBtn').onclick = () => allPlans().length ? start(allPlans()[sel]) : openSheet('imp');
 // Bez zwracanej wartości: „false” z onclick anulowałby kliknięcie i wpisy historii (details) by się nie rozwijały.
 $('hist').onclick = e => {
   if (e.target.id === 'histBtn') send(past.slice(0, 10).map(pastText).join('\n\n'));
-  if (e.target.id === 'histClr') ask('Wyczyścić historię na tym telefonie? Wyniki, które poszły do trenera, zostają u niego.', 'wyczyść').then(ok => { if (ok) { past = []; store('history', past); renderHome(); } });
+  if (e.target.id === 'histClr') ask(t('askClearHist'), t('clear')).then(ok => { if (ok) { past = []; store('history', past); renderHome(); } });
 };
-$('lib').innerHTML = Object.entries(EXERCISES).sort((a, b) => a[1].name.localeCompare(b[1].name, 'pl'))
-  .map(([id, e]) => `<button data-ex="${id}">${moveFig(id)}<span>${esc(e.name)}<small>${e.p.map(m => MUSCLES[m]).join(', ')}</small></span></button>`).join('');
-stillMoves($('lib'));
+function renderLib() {
+  $('lib').innerHTML = Object.entries(EXERCISES).map(([id, e]) => [id, exLoc(e)]).sort((a, b) => a[1].name.localeCompare(b[1].name, LANG))
+    .map(([id, e]) => `<button data-ex="${id}">${moveFig(id)}<span>${esc(e.name)}<small>${e.p.map(m => muscleName(m)).join(', ')}</small></span></button>`).join('');
+  stillMoves($('lib'));
+}
+renderLib();
 $('lib').onclick = e => { const id = e.target.closest('button')?.dataset.ex; if (id) showExercise({ ex: id }); };
 // Pod każdą listą przewijaną wierszami: „1–8 z 36”. Znika, gdy cała lista mieści się na ekranie.
 function pager(btn) {
@@ -778,7 +800,7 @@ function pager(btn) {
   const show = () => {
     const n = list.children.length, per = Math.round(list.clientHeight / row()), first = Math.round(list.scrollTop / row()) + 1;
     btn.hidden = !per || n <= per;
-    btn.innerHTML = `${first}–${Math.min(n, first + per - 1)} z ${n}${first + per > n ? '' : ico('chev')}`;
+    btn.innerHTML = `${t('pager', first, Math.min(n, first + per - 1), n)}${first + per > n ? '' : ico('chev')}`;
   };
   list.addEventListener('scroll', show, { passive: true });
   new ResizeObserver(show).observe(list);
@@ -790,47 +812,58 @@ $('dlgClose').onclick = () => $('dlg').close();
 $('dlgBody').onclick = e => e.target.closest('.more') && $('dlgSteps').scrollIntoView({ behavior: 'smooth' });
 
 // Menu w nagłówku otwiera arkusz z jedną sekcją.
-const SHEETS = { imp: 'Import rozpiski', lib: 'Biblioteka ćwiczeń', hist: 'Historia', act: 'Trening', upd: 'Nowa wersja', set: 'Ustawienia' };
+const SHEETS = { imp: 'sheetImp', lib: 'sheetLib', hist: 'sheetHist', act: 'sheetAct', upd: 'sheetUpd', set: 'sheetSet' };
+let sheetNow;
+// Tytuł arkusza i „zalogowano jako” w ustawieniach; po zmianie języka piszą się od nowa.
+function sheetText() { const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : ''; }
 function openSheet(k) {
-  $('sheetTitle').textContent = SHEETS[k];
+  sheetNow = k; sheetText();
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
 }
 document.querySelector('.menu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); };
 $('sheetClose').onclick = () => $('sheet').close();
-// Ustawienia: na razie tylko wylogowanie. Przepustka znika z telefonu; niewysłane wyniki czekają na ponowne wejście tym samym kodem.
-document.querySelector('[data-sheet=set]').addEventListener('click', () => { const w = load('who', ''); $('setWho').textContent = w ? `Zalogowano jako ${w}.` : ''; });
+// Zmiana języka (ekran kodu albo ustawienia): napisy z data-t od razu, a to, co składa skrypt, rysuje się od nowa.
+document.addEventListener('click', e => {
+  const l = e.target.closest('[data-lang]')?.dataset.lang;
+  if (!l || l === LANG) return;
+  setLang(l); renderLib();
+  if (!$('gate').hidden) { floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = ''; }
+  if (!$('home').hidden) renderHome();
+  if ($('sheet').open) sheetText();
+});
+// Ustawienia: język, ankieta i wylogowanie. Przy wylogowaniu przepustka znika z telefonu; niewysłane wyniki czekają na ponowne wejście tym samym kodem.
 $('surveyBtn').onclick = async () => {
   try {
     const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
-    if (r.status === 401) { $('sheet').close(); return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.'); }
+    if (r.status === 401) { $('sheet').close(); return lock(t('codeExpired')); }
     if (!r.ok) throw Error(r.status);
     const d = await r.json();
     survey = { pytania: d.pytania, odp: { ...(d.odpowiedzi || {}) }, edit: !!d.odpowiedzi };
     $('sheet').close(); renderSurvey(); show('form');
-  } catch { ask('Ankietę można zmienić tylko z dostępem do internetu.', 'ok', null); }
+  } catch { ask(t('surveyOffline'), t('ok'), null); }
 };
 $('fCancel').onclick = () => { show('home'); renderHome(); };
 $('logoutBtn').onclick = async () => {
   const busy = cur && cur.phase !== 'done', n = outbox.length;
-  const msg = ['Wylogować się z tego telefonu?', busy && 'Trening w toku zostanie porzucony.', n && `Niewysłane wyniki (${n}) wyślą się po ponownym wejściu tym samym kodem.`].filter(Boolean).join(' ');
-  if (!await ask(msg, 'wyloguj się')) return;
+  const msg = [t('logoutQ'), busy && t('logoutBusy'), n && t('logoutQueued', n)].filter(Boolean).join(' ');
+  if (!await ask(msg, t('logout'))) return;
   if (busy) { cur = null; save(); }
   $('sheet').close(); lock('');
 };
 
-function importText(t) {
+function importText(text) {
   try {
     // Z tekstu bierzemy fragment od pierwszego [ lub { do ostatniego ] lub } (pomija ``` i komentarze).
-    const json = t.slice(t.search(/[[{]/), Math.max(t.lastIndexOf(']'), t.lastIndexOf('}')) + 1);
-    let data; try { data = JSON.parse(json); } catch { throw Error('to nie jest rozpiska w formacie aplikacji'); }
+    const json = text.slice(text.search(/[[{]/), Math.max(text.lastIndexOf(']'), text.lastIndexOf('}')) + 1);
+    let data; try { data = JSON.parse(json); } catch { throw Error(t('impBad')); }
     // Rozpiska to cały bieżący tydzień, więc nowa zastępuje poprzednią. Historia i trening w toku zostają.
     const plans = imported = normalize(data);
     store('imported', imported);
     $('imp').value = ''; sel = 0;
-    $('impMsg').className = ''; $('impMsg').textContent = `Wczytano: ${plans.map(p => p.name).join(', ')}`;
+    $('impMsg').className = ''; $('impMsg').textContent = t('impOk', plans.map(p => p.name).join(', '));
     renderHome(); $('sheet').close(); scrollTo(0, 0);
-  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = `Nie da się wczytać: ${err.message}. Sprawdź, czy to cała rozpiska.`; }
+  } catch (err) { $('impMsg').className = 'err'; $('impMsg').textContent = t('impErr', err.message); }
 }
 $('impBtn').onclick = () => importText($('imp').value);
 $('fileBtn').onclick = () => $('impFile').click();
@@ -839,7 +872,7 @@ $('promptBtn').onclick = () => send(planFormat(EXERCISES, past.map(pastText)));
 
 async function send(text) {
   try { if (navigator.share) return await navigator.share({ text }); } catch (e) { if (e.name === 'AbortError') return; }
-  try { await navigator.clipboard.writeText(text); ask('Skopiowano do schowka.', 'ok', null); } catch { prompt('Skopiuj:', text); }
+  try { await navigator.clipboard.writeText(text); ask(t('copied'), t('ok'), null); } catch { prompt(t('copyPrompt'), text); }
 }
 
 // --- trening
@@ -862,11 +895,11 @@ function renderSet() {
   cur.phase = 'set'; save();
   const st = S()[cur.i], it = curItem(), e = EXERCISES[it.ex], per = String(it.reps).match(/^(\d+)\s*\/\s*(.+)$/);
   // Cel: duża liczba, jednostka pod spodem („8/noga” → 8, „powt. · noga”).
-  const target = it.time ? [it.time, 'sekund'] : per ? [per[1], `powt. · ${per[2]}`] : /^\d+$/.test(String(it.reps)) ? [it.reps, 'powtórzeń'] : [it.reps, ''];
+  const target = it.time ? [it.time, t('seconds')] : per ? [per[1], t('repsPer', per[2])] : /^\d+$/.test(String(it.reps)) ? [it.reps, t('reps')] : [it.reps, ''];
   $('wStrip').innerHTML = strip();
-  $('wProg').textContent = `ćwiczenie ${st.item + 1} z ${cur.plan.items.length}`;
+  $('wProg').textContent = t('exOf', st.item + 1, cur.plan.items.length);
   floatText($('wName'), exName(it).toLowerCase());
-  $('wBlock').innerHTML = cells([['Cel', ...target], ['Seria', `${st.set}/${it.sets}`], ['Przerwa', fmt(it.rest), 'min']]);
+  $('wBlock').innerHTML = cells([[t('target'), ...target], [t('set'), `${st.set}/${it.sets}`], [t('rest'), fmt(it.rest), t('min')]]);
   $('wMove').innerHTML = moveBlock(it.ex);
   $('wMus').innerHTML = musLine(e);
   $('wNote').hidden = !it.note; $('wNote').textContent = it.note;
@@ -880,11 +913,11 @@ function renderSet() {
       same: lastKg(past, it.ex, planKind(cur.plan.name)), any: lastKg(past, it.ex), plansAt: load('plansAt', 0) });
     showKg();
   }
-  $('doneBtn').innerHTML = it.time ? `<span>start · ${it.time}&nbsp;s</span>${ico('play')}` : `seria zrobiona${ico('done')}`;
+  $('doneBtn').innerHTML = it.time ? `<span>${t('startTime', it.time)}</span>${ico('play')}` : `${t('setDone')}${ico('done')}`;
   show('work'); mountMoves($('work'));
 }
 let kgNow = 0;
-const showKg = () => { const e = EXERCISES[curItem().ex]; $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<small>ciężar${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
+const showKg = () => { const e = exLoc(EXERCISES[curItem().ex]); $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<small>${t('weight')}${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
 $('kgMinus').onclick = () => { kgNow = Math.max(0, Math.round((kgNow - EXERCISES[curItem().ex].kg) * 10) / 10); showKg(); };
 $('kgPlus').onclick = () => { kgNow = Math.round((kgNow + EXERCISES[curItem().ex].kg) * 10) / 10; showKg(); };
 $('minus').onclick = () => $('val').value = Math.max(0, +$('val').value - 1);
@@ -921,11 +954,11 @@ function timer(phase, sec, onEnd, end = Date.now() + sec * 1000) {
   const st = S()[cur.i], it = curItem();
   $('timer').className = phase;
   $('tStrip').innerHTML = strip();
-  $('tLabel').textContent = { prep: 'Przygotuj się', work: exName(it), rest: 'Przerwa' }[phase];
-  $('tSkip').textContent = phase === 'work' ? 'stop' : 'pomiń';
+  $('tLabel').textContent = { prep: t('getReady'), work: exName(it), rest: t('rest') }[phase];
+  $('tSkip').textContent = phase === 'work' ? t('stop') : t('skip');
   $('tMinus').hidden = $('tPlus').hidden = phase !== 'rest';
   $('tNext').innerHTML = phase === 'rest'
-    ? `<b>${esc(exName(it))}</b><span class="stone">następnie · seria ${st.set}/${it.sets} · ${esc(goal(it))}</span>${st.set === 1 ? moveBlock(it.ex) : ''}` : '';
+    ? `<b>${esc(exName(it))}</b><span class="stone">${t('nextLine', st.set, it.sets, esc(goal(it)))}</span>${st.set === 1 ? moveBlock(it.ex) : ''}` : '';
   show('timer'); mountMoves($('timer'));
   tInt = setInterval(tick, 200); tick();
 }
@@ -956,14 +989,14 @@ function finish() {
   cur.phase = 'done'; cur.t1 ??= Date.now(); save();
   const s = stats(cur.plan, cur.log, cur.kg), prev = prevOf(cur.plan.name), mins = Math.round((cur.t1 - cur.t0) / 60000);
   cur.rate ??= {}; showRate();
-  $('dDate').textContent = new Date(cur.t0).toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+  $('dDate').textContent = new Date(cur.t0).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
   floatText($('dName'), short(cur.plan.name).toLowerCase(), true);
   $('dCheer').textContent = cheer(s, prev, myName(), load('plec', null));
   $('dBlock').innerHTML = cells([
-    ['Powtórzenia', s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : 'pierwszy raz'],
-    ['Serie', `${s.done}/${s.total}`, `${Math.round(s.done / s.total * 100)}% planu`],
-    ['Czas', mins, 'minut'],
-    s.hold ? ['Napięcie', s.hold, `sekund${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
+    [t('repsT'), s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : t('firstTime')],
+    [t('sets'), `${s.done}/${s.total}`, t('ofPlan', Math.round(s.done / s.total * 100))],
+    [t('time'), mins, t('minutes')],
+    s.hold ? [t('hold'), s.hold, `${t('seconds')}${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
   ]);
   $('dBlock').style.setProperty('--rows', $('dBlock').children.length);
   // Dziś i poprzednio w tej samej skali, na wspólnej linii bazowej.
@@ -971,7 +1004,7 @@ function finish() {
     const now = p.vals.reduce((a, b) => a + b, 0), was = prev?.per.find(q => q.ex === p.ex)?.vals.reduce((a, b) => a + b, 0), top = Math.max(now, was || 0) || 1;
     const u = p.time ? ' s' : '';
     return `<li><div class="t"><span>${esc(p.name)}${topKg(p) ? ` · ${kgTxt(topKg(p))} kg` : ''}</span><b>${now}${u}${was ? ` · ${signed(delta(now, was))}` : ''}</b></div>
-      <div class="bar" style="--w:${now / top * 100}%"></div>${was ? `<div class="bar was" style="--w:${was / top * 100}%" title="poprzednio ${was}${u}"></div>` : ''}</li>`;
+      <div class="bar" style="--w:${now / top * 100}%"></div>${was ? `<div class="bar was" style="--w:${was / top * 100}%" title="${t('prevVal', was + u)}"></div>` : ''}</li>`;
   }).join('');
   $('dFirst').hidden = !!prev;
   show('done');
@@ -988,7 +1021,7 @@ function showRate() {
   for (const b of $('rEase').querySelectorAll('button')) b.setAttribute('aria-pressed', b.dataset.v === cur.rate.ocena);
   const bol = cur.rate.bol;
   for (const b of $('rPain').querySelectorAll('button')) b.setAttribute('aria-pressed', bol ? (b.dataset.v === 'TAK') === bol.length > 0 : false);
-  $('rWhere').textContent = bol?.length ? bol.map(b => BOL[b]).join(', ') : '';
+  $('rWhere').textContent = bol?.length ? bol.map(b => t('pain_' + b)).join(', ') : '';
   $('sum').textContent = finalText();
 }
 $('rEase').onclick = e => { const v = e.target.closest('button')?.dataset.v; if (v) { cur.rate.ocena = v; save(); showRate(); } };
@@ -999,10 +1032,10 @@ $('rPain').onclick = e => {
 };
 function painAsk() {
   const chosen = new Set(cur.rate.bol || []);
-  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">Zaznacz, co bolało. Trener zobaczy to razem z wynikami.</p>
-    <div class="opts" id="painOpts">${Object.entries(BOL).map(([k, t]) => `<button data-v="${k}" aria-pressed="${chosen.has(k)}">${t}</button>`).join('')}</div>
-    <button id="painOk" class="primary">gotowe</button></div>`;
-  floatText($('dlgName'), 'co bolało?');
+  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">${t('painText')}</p>
+    <div class="opts" id="painOpts">${Object.keys(BOL).map(k => `<button data-v="${k}" aria-pressed="${chosen.has(k)}">${t('pain_' + k)}</button>`).join('')}</div>
+    <button id="painOk" class="primary">${t('done')}</button></div>`;
+  floatText($('dlgName'), t('painTitle'));
   $('dlg').classList.add('small'); $('dlg').showModal();
   $('painOpts').onclick = e => { const b = e.target.closest('button'); if (!b) return; chosen.has(b.dataset.v) ? chosen.delete(b.dataset.v) : chosen.add(b.dataset.v); b.setAttribute('aria-pressed', chosen.has(b.dataset.v)); };
   // „Tak” bez zaznaczenia to nadal zgłoszony ból: zapisuje się jako „coś innego”.
@@ -1030,8 +1063,8 @@ async function flushOutbox() {
 $('shareBtn').onclick = async () => {
   if (!API) return send(finalText());
   const b = $('shareBtn'), label = b.innerHTML;
-  b.disabled = true; b.textContent = 'wysyłam…';
-  b.textContent = await queueResult() ? 'wysłano' : 'zapisano, wyślę przy połączeniu';
+  b.disabled = true; b.textContent = t('sending');
+  b.textContent = await queueResult() ? t('sent') : t('queued');
   setTimeout(() => { b.disabled = false; b.innerHTML = label; }, 2500);
 };
 $('saveBtn').onclick = () => {
@@ -1049,7 +1082,7 @@ $('resumeBtn').onclick = () => {
   wake();
   cur.phase === 'rest' && cur.end > Date.now() ? timer('rest', 0, renderSet, cur.end) : renderSet();
 };
-$('dropBtn').onclick = async () => { if (await ask('Porzucić trening bez zapisu?', 'porzuć')) { cur = null; save(); renderHome(); } };
+$('dropBtn').onclick = async () => { if (await ask(t('askDiscard'), t('discard'))) { cur = null; save(); renderHome(); } };
 
 // --- dźwięk i ekran (AudioContext tworzony przy dotknięciu Start/Wznów)
 function beep(freq, sec) {
@@ -1073,27 +1106,27 @@ async function loadPlans() {
   if (!API || !auth) return;
   try {
     const r = await fetch(API + '/api/rozpiska', { headers: { Authorization: 'Bearer ' + auth.token } });
-    if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
+    if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
-    const d = await r.json(), t = JSON.stringify(d.plans);
+    const d = await r.json(), json = JSON.stringify(d.plans);
     flushOutbox();
-    if (t === servedJson) return;
-    servedJson = t; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans);
+    if (json === servedJson) return;
+    servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans);
     if (!$('home').hidden) renderHome();
   } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska; kod nie ma terminu ważności */ }
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
   auth = null; store('auth', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
-  floatText($('gTitle'), 'kod dostępu'); $('gMsg').textContent = msg || '';
+  floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = msg || '';
   show('gate');
 }
 async function activate(inicjaly, kod) {
-  if (!inicjaly.trim() || !kod.trim()) { $('gMsg').textContent = 'Wpisz inicjały i kod.'; return; }
+  if (!inicjaly.trim() || !kod.trim()) { $('gMsg').textContent = t('errEmpty'); return; }
   $('gBtn').disabled = true; $('gMsg').textContent = '';
   try {
     const r = await fetch(API + '/api/aktywacja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inicjaly, kod }) });
-    if (!r.ok) { $('gMsg').textContent = r.status === 429 ? 'Za dużo prób. Spróbuj za kilka minut.' : 'Inicjały albo kod się nie zgadzają. Sprawdź je albo napisz do trenera.'; return; }
+    if (!r.ok) { $('gMsg').textContent = r.status === 429 ? t('errTooMany') : t('errWrong'); return; }
     const d = await r.json();
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
@@ -1103,7 +1136,7 @@ async function activate(inicjaly, kod) {
     if (load('who', null) !== who) { store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
     $('gCode').value = $('gIni').value = '';
     show('home'); renderHome(); loadPlans(); checkSurvey();
-  } catch { $('gMsg').textContent = 'Brak połączenia. Kod trzeba wpisać z dostępem do internetu.'; }
+  } catch { $('gMsg').textContent = t('errOffline'); }
   finally { $('gBtn').disabled = false; }
 }
 $('gBtn').onclick = () => activate($('gIni').value, $('gCode').value);
@@ -1121,7 +1154,7 @@ async function checkSurvey() {
   if (load('ankieta', 0) && load('plec', 0)) return maybeAskName();
   try {
     const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
-    if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
+    if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) return;
     const d = await r.json();
     if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); setSex(d.odpowiedzi.plec); if (!$('home').hidden) renderHome(); return maybeAskName(); }
@@ -1130,19 +1163,23 @@ async function checkSurvey() {
     renderSurvey(); show('form');
   } catch { /* bez zasięgu spróbujemy przy następnym powrocie do aplikacji */ }
 }
+// Pytanie, odpowiedź i jednostka w języku aplikacji: po angielsku z SURVEY_EN (strings.js), a czego tam nie ma, zostaje po polsku.
+const qText = p => (LANG === 'en' && SURVEY_EN[p.id]?.[0]) || p.pyt;
+const oText = (p, o) => (LANG === 'en' && SURVEY_EN[p.id]?.[1]?.[o[0]]) || o[1];
+const uText = j => (LANG === 'en' && UNIT_EN[j]) || j;
 function renderSurvey() {
-  floatText($('fTitle'), 'kilka pytań');
+  floatText($('fTitle'), t('surveyTitle'));
   const qs = survey.pytania, html = [];
   for (let i = 0; i < qs.length; i++) {
     if (qs[i].typ !== 'liczba') {
       const p = qs[i];
-      html.push(`<fieldset class="ask" data-q="${p.id}"><legend>${esc(p.pyt)}</legend><div class="opts">${p.opcje.map((o, k) =>
-        `<button type="button" data-k="${k}" aria-pressed="${[].concat(survey.odp[p.id] ?? []).includes(o[0])}">${esc(o[1])}</button>`).join('')}</div></fieldset>`);
+      html.push(`<fieldset class="ask" data-q="${p.id}"><legend>${esc(qText(p))}</legend><div class="opts">${p.opcje.map((o, k) =>
+        `<button type="button" data-k="${k}" aria-pressed="${[].concat(survey.odp[p.id] ?? []).includes(o[0])}">${esc(oText(p, o))}</button>`).join('')}</div></fieldset>`);
       continue;
     }
     const row = []; // kolejne pytania o liczbę stoją obok siebie
-    for (; qs[i]?.typ === 'liczba'; i++) row.push(`<label class="num" data-q="${qs[i].id}"><span class="lbl">${esc(qs[i].pyt)}</span>
-      <span><input inputmode="numeric" maxlength="3" autocomplete="off" value="${survey.odp[qs[i].id] ?? ''}"> ${esc(qs[i].jedn)}</span></label>`);
+    for (; qs[i]?.typ === 'liczba'; i++) row.push(`<label class="num" data-q="${qs[i].id}"><span class="lbl">${esc(qText(qs[i]))}</span>
+      <span><input inputmode="numeric" maxlength="3" autocomplete="off" value="${survey.odp[qs[i].id] ?? ''}"> ${esc(uText(qs[i].jedn))}</span></label>`);
     i--; html.push(`<div class="nums">${row.join('')}</div>`);
   }
   $('fQs').innerHTML = html.join(''); $('fMsg').textContent = '';
@@ -1182,18 +1219,18 @@ $('fBtn').onclick = async () => {
   for (const box of $('fQs').querySelectorAll('[data-q]')) box.classList.toggle('bad', bad.some(p => p.id === box.dataset.q));
   if (bad.length) {
     const n = bad.find(p => p.typ === 'liczba' && survey.odp[p.id] !== undefined);
-    $('fMsg').textContent = n ? `${n.pyt}: wpisz liczbę od ${n.min} do ${n.max}.` : 'Uzupełnij zaznaczone pytania.';
+    $('fMsg').textContent = n ? t('surveyRange', qText(n), n.min, n.max) : t('surveyMissing');
     $('fQs').querySelector('.bad').scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   $('fBtn').disabled = true; $('fMsg').textContent = '';
   try {
     const r = await fetch(API + '/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
-    if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
+    if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
-    if (survey.edit) ask('Zapisano. Trener zobaczy zaktualizowaną ankietę.', 'ok', null); else maybeAskName();
-  } catch { $('fMsg').textContent = 'Nie udało się zapisać. Sprawdź połączenie i spróbuj jeszcze raz.'; }
+    if (survey.edit) ask(t('surveySaved'), t('ok'), null); else maybeAskName();
+  } catch { $('fMsg').textContent = t('surveyFail'); }
   finally { $('fBtn').disabled = false; }
 };
 // Nowa wersja: sw.js zmienia się przy każdej aktualizacji aplikacji. Po powrocie z tła porównujemy go z tym, z którym aplikacja wystartowała.
