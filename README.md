@@ -1,6 +1,8 @@
 # trening
 
-Aplikacja na telefon, która prowadzi przez trening kalisteniczny seria po serii: pokazuje, co teraz zrobić i jak, odlicza przerwę i zbiera wyniki dla trenera.
+Aplikacja na telefon do treningu z trenerem. Każda osoba dostaje własny plan, ułożony pod jej cel (zdrowie, sylwetka, samopoczucie), doświadczenie, sprzęt i miejsce: na dworze, na siłowni albo w domu.
+
+Aplikacja prowadzi przez trening seria po serii: pokazuje, co teraz zrobić i jak, odlicza przerwę i zbiera wyniki dla trenera.
 
 Otwórz: https://kenseikun.github.io/trening/
 
