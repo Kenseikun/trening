@@ -204,6 +204,7 @@
   .ask.bad legend, .num.bad .lbl { color: var(--red) }
   .ask.bad legend::after { content: ' (uzupełnij)'; font-weight: 500 }
   .num.bad input { border-color: var(--red) }
+  .fine { margin: 22px 0 8px; font-size: .84rem; line-height: 1.4 }
   #fMsg { margin: 0 0 8px; text-align: center }
   #fMsg:empty { display: none }
   /* Biblioteka: lista przewija się pełnymi wierszami (żaden nie jest ucięty), a nagłówek z zamknięciem zostaje na miejscu. */
@@ -349,6 +350,7 @@
   <h1 class="float" id="fTitle"></h1>
   <p class="stone">Z tych odpowiedzi trener ułoży Twój plan. Zaznacz to, co do Ciebie pasuje.</p>
   <div id="fQs"></div>
+  <p class="stone fine">Odpowiedzi służą tylko do układania Twojego planu. Jeśli zechcesz je usunąć, napisz do trenera: z bazy znikną od razu, a z kopii zapasowych najpóźniej po 5 tygodniach.</p>
   <div class="dock"><p id="fMsg" class="err" role="alert"></p><button id="fBtn" class="primary">zapisz i przejdź dalej</button></div>
 </section>
 
@@ -484,7 +486,8 @@ const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.se
 const API = localStorage.api || 'https://trening.tail847b94.ts.net';
 // auth = { token, nazwa }; outbox = wyniki czekające na wysłanie do trenera.
 let auth = load('auth', null), outbox = load('outbox', []);
-let served = [], imported = load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
+// Z kodem dostępu liczy się tylko rozpiska z serwisu. Rozpiska wczytana kiedyś importem zostaje w pamięci telefonu, ale się nie pokazuje.
+let served = [], imported = API ? [] : load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
 let tInt, tDone, tLen, lastBeep, ac, wl;
 const allPlans = () => [...imported, ...served];
 const save = () => store('cur', cur);
