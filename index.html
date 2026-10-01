@@ -872,17 +872,19 @@ function renderSet() {
   $('wNote').hidden = !it.note; $('wNote').textContent = it.note;
   $('stepper').hidden = !!it.time;
   $('val').value = cur.log[cur.i] ?? (parseInt(it.reps) || 0);
-  // Ciężar: z tej serii (powrót), z poprzedniej serii tego ćwiczenia, z rozpiski, z ostatniego takiego treningu; bez zmiany nic nie trzeba dotykać.
+  // Ciężar na start serii (reguła w startKg, logic.js); bez zmiany nic nie trzeba dotykać.
   cur.kg ??= {};
   $('kgBox').hidden = !(e?.kg && !it.time);
-  if (!$('kgBox').hidden) { kgNow = cur.kg[cur.i] ?? (st.set > 1 ? cur.kg[cur.i - 1] : null) ?? (it.kg || lastKg(it.ex) || 0); showKg(); }
+  if (!$('kgBox').hidden) {
+    kgNow = startKg({ setKg: cur.kg[cur.i], prevSetKg: st.set > 1 ? cur.kg[cur.i - 1] : null, planKg: it.kg,
+      same: lastKg(past, it.ex, planKind(cur.plan.name)), any: lastKg(past, it.ex), plansAt: load('plansAt', 0) });
+    showKg();
+  }
   $('doneBtn').innerHTML = it.time ? `<span>start · ${it.time}&nbsp;s</span>${ico('play')}` : `seria zrobiona${ico('done')}`;
   show('work'); mountMoves($('work'));
 }
 let kgNow = 0;
 const showKg = () => { const e = EXERCISES[curItem().ex]; $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<small>ciężar${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
-// Ostatni ciężar tego ćwiczenia z historii (ostatnia seria z ciężarem).
-const lastKg = ex => { for (const h of past) { const k = h.per?.find(p => p.ex === ex)?.kgs?.filter(x => x > 0); if (k?.length) return k[k.length - 1]; } return null; };
 $('kgMinus').onclick = () => { kgNow = Math.max(0, Math.round((kgNow - EXERCISES[curItem().ex].kg) * 10) / 10); showKg(); };
 $('kgPlus').onclick = () => { kgNow = Math.round((kgNow + EXERCISES[curItem().ex].kg) * 10) / 10; showKg(); };
 $('minus').onclick = () => $('val').value = Math.max(0, +$('val').value - 1);
@@ -1076,13 +1078,13 @@ async function loadPlans() {
     const d = await r.json(), t = JSON.stringify(d.plans);
     flushOutbox();
     if (t === servedJson) return;
-    servedJson = t; store('plans', d.plans); setPlans(d.plans);
+    servedJson = t; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans);
     if (!$('home').hidden) renderHome();
   } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska; kod nie ma terminu ważności */ }
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
-  auth = null; store('auth', null); store('plans', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
+  auth = null; store('auth', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
   floatText($('gTitle'), 'kod dostępu'); $('gMsg').textContent = msg || '';
   show('gate');
 }
@@ -1095,7 +1097,7 @@ async function activate(inicjaly, kod) {
     const d = await r.json();
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
-    store('plans', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
+    store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
     // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą imię, historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
     const who = inicjaly.replace(/\s/g, '').toUpperCase();
     if (load('who', null) !== who) { store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }

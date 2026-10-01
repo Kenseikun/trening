@@ -76,6 +76,24 @@ const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
 // Ciężar po polsku (przecinek), np. 42,5. Największy ciężar w serii ćwiczenia (0, gdy bez obciążenia).
 const kgTxt = k => String(Math.round(k * 10) / 10).replace('.', ',');
 const topKg = p => Math.max(0, ...(p?.kgs || []).filter(k => k > 0));
+// Ostatni ciężar ćwiczenia z historii (najnowszy trening pierwszy): { kg, t0 } albo null. kind = tylko ten typ treningu (planKind).
+function lastKg(history, ex, kind) {
+  for (const h of history) {
+    if (typeof h !== 'object' || (kind && planKind(h.name) !== kind)) continue;
+    const k = h.per?.find(p => p.ex === ex)?.kgs?.filter(x => x > 0);
+    if (k?.length) return { kg: k[k.length - 1], t0: h.t0 };
+  }
+  return null;
+}
+// Ciężar na start serii: ta seria (powrót do treningu) → poprzednia seria tego ćwiczenia → ostatni ukończony ten sam trening, jeśli
+// był już robiony z obecną rozpiską (osoba sama zmieniła ciężar) → ciężar z rozpiski (nowa rozpiska od trenera) → ostatni ciężar
+// tego samego treningu → tego ćwiczenia w ogóle → 0. plansAt = kiedy trener wysłał obecną rozpiskę.
+function startKg({ setKg, prevSetKg, planKg, same, any, plansAt = 0 }) {
+  if (setKg != null) return setKg;
+  if (prevSetKg != null) return prevSetKg;
+  if (same && same.t0 > plansAt) return same.kg;
+  return planKg || same?.kg || any?.kg || 0;
+}
 // Ocena treningu i zgłoszony ból (pierwsza strona wyników); te same partie co w ankiecie.
 const OCENA = { LEKKO: 'za lekko', OK: 'w sam raz', CIEZKO: 'za ciężko' };
 const BOL = { BARKI: 'barki', LOKCIE: 'łokcie', NADGARSTKI: 'nadgarstki', PLECY: 'plecy', KOLANA: 'kolana', BIODRA: 'biodra', INNE: 'coś innego' };
@@ -208,5 +226,19 @@ if (typeof module !== 'undefined' && require.main === module) {
   const gw = { reps: 30, per: [{ ex: 'przysiad-sztanga', vals: [6, 6, 6], kgs: [37.5, 37.5, 37.5] }] };
   assert.match(cheer(gs, gw, '', 'M'), /Ciężar w górę: przysiad ze sztangą \(\+5 kg\)\.$/);
   assert.doesNotMatch(cheer(gs, { ...gw, per: [{ ex: 'przysiad-sztanga', vals: [6], kgs: [null] }] }, '', 'M'), /Ciężar w górę/); // poprzednio bez ciężaru
+  // Ciężar na start: rozpiska ustawia, osoba zmienia, przy kolejnym razie z tą samą rozpiską zostaje jej ciężar, nowa rozpiska znów ustawia.
+  const hist = [{ name: 'T1 · Siła A', t0: 2000, per: [{ ex: 'wyciskanie-lezac', kgs: [40, 42.5] }] }, { name: 'T1 · Siła C', t0: 1500, per: [{ ex: 'wyciskanie-lezac', kgs: [30] }] }];
+  assert.deepStrictEqual(lastKg(hist, 'wyciskanie-lezac', planKind('T2 · Siła A')), { kg: 42.5, t0: 2000 });
+  assert.deepStrictEqual(lastKg(hist, 'wyciskanie-lezac', planKind('T1 · Siła C')), { kg: 30, t0: 1500 }); // inny trening, inny ciężar
+  assert.equal(lastKg(hist, 'przysiad-sztanga'), null);
+  const same = lastKg(hist, 'wyciskanie-lezac', 'siła a'), any = lastKg(hist, 'wyciskanie-lezac');
+  assert.equal(startKg({ planKg: 40, plansAt: 3000 }), 40);                    // pierwszy raz: z rozpiski
+  assert.equal(startKg({ planKg: 40, same, any, plansAt: 1000 }), 42.5);       // ta sama rozpiska: ciężar z ostatniego razu
+  assert.equal(startKg({ planKg: 45, same, any, plansAt: 3000 }), 45);         // nowa rozpiska: ciężar od trenera
+  assert.equal(startKg({ planKg: 0, same, any, plansAt: 3000 }), 42.5);        // nowa rozpiska bez ciężaru: ostatni z tego treningu
+  assert.equal(startKg({ planKg: 0, any: { kg: 10, t0: 1 } }), 10);
+  assert.equal(startKg({ setKg: 47.5, prevSetKg: 50, planKg: 40 }), 47.5);
+  assert.equal(startKg({ prevSetKg: 50, planKg: 40, same, plansAt: 1000 }), 50);
+  assert.equal(startKg({}), 0);
   console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (files.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : ''));
 }
