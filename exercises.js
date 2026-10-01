@@ -283,4 +283,12 @@ globalThis.EXERCISES = {
       'Powoli opuść pięty.'],
     tips: ['Pełny zakres ruchu. Na stopniu możesz opuścić pięty niżej.'],
   },
+  'wyciag-prostowanie': {
+    name: 'Prostowanie ramion na wyciągu', p: ['triceps'], s: ['forearms', 'abs'],
+    steps: ['Stań twarzą do wyciągu, linka z górnego bloczka. Chwyć drążek albo linę nachwytem.',
+      'Łokcie przyciśnij do boków, przedramiona mniej więcej poziomo. Tułów lekko pochylony, brzuch napięty.',
+      'Wyprostuj ręce w dół do pełnego wyprostu w łokciach, pół sekundy pauzy.',
+      'Powoli wróć do poziomu, łokcie cały czas w tym samym miejscu.'],
+    tips: ['Ruszają się tylko przedramiona. Jeśli łokcie uciekają do przodu albo pomagasz sobie tułowiem, zmniejsz ciężar.'],
+  },
 };
