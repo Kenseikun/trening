@@ -7,9 +7,9 @@ Aplikacja prowadzi przez trening seria po serii: pokazuje, co teraz zrobić i ja
 Otwórz: https://kenseikun.github.io/trening/
 
 <p align="center">
-  <img src="zrzuty/start.jpg" width="32%" alt="Ekran startowy: trening dnia, liczba serii, czas i pracujące mięśnie">
-  <img src="zrzuty/cwiczenie.jpg" width="32%" alt="Ćwiczenie: animacja ruchu, cel serii i licznik powtórzeń">
-  <img src="zrzuty/przerwa.jpg" width="32%" alt="Przerwa: zegar i następne ćwiczenie">
+  <img src="screenshots/home.jpg" width="32%" alt="Ekran startowy: trening dnia, liczba serii, czas i pracujące mięśnie">
+  <img src="screenshots/exercise.jpg" width="32%" alt="Ćwiczenie: animacja ruchu, cel serii i licznik powtórzeń">
+  <img src="screenshots/rest.jpg" width="32%" alt="Przerwa: zegar i następne ćwiczenie">
 </p>
 
 ## Co potrafi
@@ -22,9 +22,9 @@ Otwórz: https://kenseikun.github.io/trening/
 - **Działa bez zasięgu.** Po pierwszym otwarciu aplikacja jest w telefonie i nie potrzebuje internetu.
 
 <p align="center">
-  <img src="zrzuty/wyniki.jpg" width="32%" alt="Wyniki treningu w liczbach">
-  <img src="zrzuty/porownanie.jpg" width="32%" alt="Porównanie z poprzednim treningiem, ćwiczenie po ćwiczeniu">
-  <img src="zrzuty/biblioteka.jpg" width="32%" alt="Biblioteka ćwiczeń z miniaturami ruchu">
+  <img src="screenshots/results.jpg" width="32%" alt="Wyniki treningu w liczbach">
+  <img src="screenshots/comparison.jpg" width="32%" alt="Porównanie z poprzednim treningiem, ćwiczenie po ćwiczeniu">
+  <img src="screenshots/library.jpg" width="32%" alt="Biblioteka ćwiczeń z miniaturami ruchu">
 </p>
 
 ## Instalacja
