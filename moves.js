@@ -650,7 +650,7 @@ function mountMove(svg, fixed) {
 
 // Jedna pętla dla wszystkich widocznych animacji; ukryte i odłączone są pomijane.
 const moving = new Map();
-function moveFig(id) { return EX_MOVE[id] ? `<svg class="move" data-ex="${id}" role="img" aria-label="Animacja ruchu"></svg>` : ''; }
+function moveFig(id) { return EX_MOVE[id] ? `<svg class="move" data-ex="${id}" role="img" aria-label="${t('moveAria')}"></svg>` : ''; }
 // Miniatury: jedna klatka w fazie spięcia, bez pętli animacji.
 function stillMoves(root) { for (const svg of root.querySelectorAll('svg.move:not([data-on])')) { const d = mountMove(svg, [350, 250]); svg.dataset.on = svg.dataset.still = 1; d && d(1450); } }
 // Płeć z ankiety: animacje już na ekranie rysują się od nowa.
