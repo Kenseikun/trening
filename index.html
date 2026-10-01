@@ -374,7 +374,7 @@
   <p class="stone">Z tych odpowiedzi trener ułoży Twój plan. Zaznacz to, co do Ciebie pasuje.</p>
   <div id="fQs"></div>
   <p class="stone fine">Odpowiedzi służą tylko do układania Twojego planu. Jeśli zechcesz je usunąć, napisz do trenera: z bazy znikną od razu, a z kopii zapasowych najpóźniej po 5 tygodniach.</p>
-  <div class="dock"><p id="fMsg" class="err" role="alert"></p><button id="fBtn" class="primary">zapisz i przejdź dalej</button></div>
+  <div class="dock"><p id="fMsg" class="err" role="alert"></p><button id="fBtn" class="primary">zapisz i przejdź dalej</button><button id="fCancel" class="ghost" hidden>wróć bez zmian</button></div>
 </section>
 
 <main id="home" class="sheet" hidden>
@@ -504,6 +504,8 @@
   <div id="p-hist" class="pane"><div id="hist" class="hist"></div></div>
   <div id="p-set" class="pane">
     <p id="setWho" class="stone"></p>
+    <button id="surveyBtn">zaktualizuj ankietę</button>
+    <p class="stone fine">Zmieniła się waga, cel albo coś boli? Popraw odpowiedzi, trener zobaczy nową ankietę.</p>
     <button id="logoutBtn">wyloguj się</button>
     <p class="stone fine">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska i wyniki zostają u trenera.</p>
   </div>
@@ -798,6 +800,17 @@ document.querySelector('.menu').onclick = e => { const k = e.target.closest('[da
 $('sheetClose').onclick = () => $('sheet').close();
 // Ustawienia: na razie tylko wylogowanie. Przepustka znika z telefonu; niewysłane wyniki czekają na ponowne wejście tym samym kodem.
 document.querySelector('[data-sheet=set]').addEventListener('click', () => { const w = load('who', ''); $('setWho').textContent = w ? `Zalogowano jako ${w}.` : ''; });
+$('surveyBtn').onclick = async () => {
+  try {
+    const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
+    if (r.status === 401) { $('sheet').close(); return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.'); }
+    if (!r.ok) throw Error(r.status);
+    const d = await r.json();
+    survey = { pytania: d.pytania, odp: { ...(d.odpowiedzi || {}) }, edit: !!d.odpowiedzi };
+    $('sheet').close(); renderSurvey(); show('form');
+  } catch { ask('Ankietę można zmienić tylko z dostępem do internetu.', 'ok', null); }
+};
+$('fCancel').onclick = () => { show('home'); renderHome(); };
 $('logoutBtn').onclick = async () => {
   const busy = cur && cur.phase !== 'done', n = outbox.length;
   const msg = ['Wylogować się z tego telefonu?', busy && 'Trening w toku zostanie porzucony.', n && `Niewysłane wyniki (${n}) wyślą się po ponownym wejściu tym samym kodem.`].filter(Boolean).join(' ');
@@ -1122,15 +1135,16 @@ function renderSurvey() {
     if (qs[i].typ !== 'liczba') {
       const p = qs[i];
       html.push(`<fieldset class="ask" data-q="${p.id}"><legend>${esc(p.pyt)}</legend><div class="opts">${p.opcje.map((o, k) =>
-        `<button type="button" data-k="${k}" aria-pressed="false">${esc(o[1])}</button>`).join('')}</div></fieldset>`);
+        `<button type="button" data-k="${k}" aria-pressed="${[].concat(survey.odp[p.id] ?? []).includes(o[0])}">${esc(o[1])}</button>`).join('')}</div></fieldset>`);
       continue;
     }
     const row = []; // kolejne pytania o liczbę stoją obok siebie
     for (; qs[i]?.typ === 'liczba'; i++) row.push(`<label class="num" data-q="${qs[i].id}"><span class="lbl">${esc(qs[i].pyt)}</span>
-      <span><input inputmode="numeric" maxlength="3" autocomplete="off"> ${esc(qs[i].jedn)}</span></label>`);
+      <span><input inputmode="numeric" maxlength="3" autocomplete="off" value="${survey.odp[qs[i].id] ?? ''}"> ${esc(qs[i].jedn)}</span></label>`);
     i--; html.push(`<div class="nums">${row.join('')}</div>`);
   }
   $('fQs').innerHTML = html.join(''); $('fMsg').textContent = '';
+  $('fCancel').hidden = !survey.edit;
 }
 // Wybór odpowiedzi: „jeden” zastępuje poprzednią, „wiele” przełącza, a odpowiedź „sam” (np. „nic z tego”) wyklucza pozostałe.
 // Przy limicie (max) nowy wybór zastępuje najwcześniejszy.
@@ -1175,7 +1189,8 @@ $('fBtn').onclick = async () => {
     const r = await fetch(API + '/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) throw Error(r.status);
-    store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome(); maybeAskName();
+    store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
+    if (survey.edit) ask('Zapisano. Trener zobaczy zaktualizowaną ankietę.', 'ok', null); else maybeAskName();
   } catch { $('fMsg').textContent = 'Nie udało się zapisać. Sprawdź połączenie i spróbuj jeszcze raz.'; }
   finally { $('fBtn').disabled = false; }
 };
