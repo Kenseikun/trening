@@ -1,7 +1,7 @@
 {
   "name": "Trening",
   "short_name": "Trening",
-  "description": "Rozpiski kalisteniczne, przerwy i technika ćwiczeń",
+  "description": "Indywidualny plan od trenera, przerwy i technika ćwiczeń",
   "lang": "pl",
   "start_url": "./",
   "scope": "./",
