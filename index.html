@@ -580,6 +580,26 @@ const BODY = {
     [null, 'M65,324V336M60,338L70,338C72,344 72,350 70,352L58,352C56,348 57,342 60,338Z'],
   ],
 };
+// Sylwetka kobieca (płeć K z ankiety): te same mięśnie, inny kształt. Szerokość względem osi x=80 mnożona zależnie od wysokości:
+// węższe barki i talia, szersze biodra; ręce tylko przesunięte do węższych barków. Do tego linia biustu i włosy.
+const WIDTH_K = [[0, 1], [52, 1], [64, .9], [110, .9], [142, .85], [176, 1], [204, 1.08], [250, 1.03], [282, 1], [360, 1]];
+const widthAt = y => { for (let i = 1; i < WIDTH_K.length; i++) if (y <= WIDTH_K[i][0]) { const [a, b] = [WIDTH_K[i - 1], WIDTH_K[i]]; return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0]); } return 1; };
+function warpPath(d, arm) {
+  let y = 0;
+  const X = (x, yy) => arm ? x + 3.4 : 80 - (80 - x) * widthAt(yy);
+  return d.replace(/([MLCQ])([^MLCQHVZ]*)|([H])([^MLCQHVZ]*)|([V])([^MLCQHVZ]*)/g, (all, c, args, h, hx, v, vy) => {
+    if (h) return 'H' + X(+hx, y).toFixed(1);
+    if (v) { y = +vy; return all; }
+    const n = args.split(/[ ,]+/).filter(Boolean).map(Number), out = [];
+    for (let i = 0; i < n.length; i += 2) { y = n[i + 1]; out.push(X(n[i], y).toFixed(1) + ',' + y); }
+    return c + out.join(' ');
+  });
+}
+const isArm = d => { const n = d.match(/-?[\d.]+/g).map(Number), xs = n.filter((_, i) => i % 2 === 0), ys = n.filter((_, i) => i % 2); return Math.max(...xs) < 53 && Math.min(...ys) > 99; };
+const BODY_K = Object.fromEntries(Object.entries(BODY).map(([v, parts]) => [v, parts.map(([m, d, c]) => [m, warpPath(d, !c && isArm(d)), c])]));
+// Włosy: od przodu opadają za uszy, od tyłu kok; od przodu łuk biustu pod mięśniem klatki.
+BODY_K.F.push([null, 'M65,22C61,34 62,48 66,58'], [null, 'M58,99C60,111 70,116 80,113']);
+BODY_K.B.push([null, 'M80,0C86,0 90,5 90,10C90,15 86,19 80,19C74,19 70,15 70,10C70,5 74,0 80,0Z', 1], [null, 'M65,22C61,34 62,48 66,58']);
 // Gdzie spada kropla odnośnika: [widok, x, y] w układzie lewej połowy.
 const ANCHOR = {
   chest: ['F', 68, 90], shoulders: ['F', 46, 86], biceps: ['F', 43, 128], forearms: ['F', 40, 184], abs: ['F', 80, 150],
@@ -594,7 +614,7 @@ function figure(load, { plot = false, legend = true, u = 1 } = {}) {
   let k = 0;
   const view = v => {
     const half = [], mid = [];
-    for (const [m, d, center] of BODY[v]) (center ? mid : half).push(`<path pathLength="1" style="--i:${k++}" class="${m ? 'mu' + cls(m) : 'dt'}" d="${d}"/>`);
+    for (const [m, d, center] of (SEX === 'K' ? BODY_K : BODY)[v]) (center ? mid : half).push(`<path pathLength="1" style="--i:${k++}" class="${m ? 'mu' + cls(m) : 'dt'}" d="${d}"/>`);
     const bx = v === 'F' ? 11 : 189;
     let lastY = -99;
     // Kropla z numerem przy krawędzi; czerwony deszcz spada z niej łukiem i ląduje na mięśniu (jasny punkt).
@@ -1032,7 +1052,7 @@ async function checkSurvey() {
     if (r.status === 401) return lock('Kod przestał działać. Wpisz go ponownie albo napisz do trenera.');
     if (!r.ok) return;
     const d = await r.json();
-    if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); setSex(d.odpowiedzi.plec); return maybeAskName(); }
+    if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); setSex(d.odpowiedzi.plec); if (!$('home').hidden) renderHome(); return maybeAskName(); }
     if ($('home').hidden) return; // tylko z ekranu startowego, nigdy w trakcie treningu
     survey = { pytania: d.pytania, odp: {} };
     renderSurvey(); show('form');

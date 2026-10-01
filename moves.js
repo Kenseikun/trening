@@ -168,6 +168,76 @@ const MOVES = {
     A: { h: [150, 98], t: -84, E: [154, 70], ea: -32, F: [150, 184], fa: 12 },
     B: { h: [150, 98], t: -84, E: [154, 70], ea: 78, F: [150, 184], fa: 12 },
   },
+  // --- Siłownia. Sprzęt: 'bb' sztanga (z boku widać talerz), 'db' hantle ('end' z boku od czoła, 'v' pionowo, 'h' poziomo), 'bench' ławka [x, y, szer.],
+  // 'path' rama maszyny [d, ramka kadru], 'pulley' bloczek [x, y], 'pull' linka od dłoni do bloczka [x, y].
+  // Przysiad ze sztangą: sztanga na górze pleców, biodra w tył i w dół do uda poniżej poziomu, plecy proste.
+  bbsquat: {
+    props: [['ground', 190], ['bb']],
+    A: { ...STAND, H: [143, 37], eb: [-1, -1] },
+    B: { h: [112, 146], t: -55, H: [141, 92], F: [150, 184], fa: 12, eb: [-1, -1] },
+  },
+  // Przysiad z hantlem (goblet): hantel pionowo przy mostku, tułów wyprostowany, głęboko między kolana.
+  goblet: {
+    props: [['ground', 190], ['db', 'v']],
+    A: { ...STAND, H: [163, 62] },
+    B: { h: [114, 150], t: -62, H: [154, 110], F: [150, 184], fa: 12 },
+  },
+  // Martwy ciąg rumuński: kolana lekko ugięte i nieruchome, biodra w tył, hantle blisko nóg do połowy goleni.
+  rdl: {
+    props: [['ground', 190], ['db', 'end']],
+    A: { ...STAND, H: [152, 104] },
+    B: { h: [126, 102], t: -14, H: [180, 150], F: [150, 184], fa: 12 },
+  },
+  // Hip thrust: łopatki na ławce, stopy na ziemi, sztanga na biodrach; na górze tułów i uda w jednej linii.
+  hipthrust: {
+    props: [['ground', 190], ['bench', 46, 140, 56], ['bb']],
+    A: { h: [142.4, 173.3], t: 220, H: [148, 160], F: [200, 184], fa: 12 },
+    B: { h: [156, 136], t: 180, H: [158, 122], F: [200, 184], fa: 12 },
+  },
+  // Wyciskanie leżąc: plecy na ławce, stopy na ziemi, sztanga z prostych rąk do dołu klatki.
+  bench: {
+    props: [['ground', 190], ['bench', 70, 128, 104], ['bb']],
+    A: { h: [160, 117], t: 180, H: [104, 55], F: [204, 184], fa: 12 },
+    B: { h: [160, 117], t: 180, H: [114, 98], F: [204, 184], fa: 12 },
+  },
+  // Wyciskanie hantli nad głowę od przodu: z wysokości barków do prostych rąk nad głową.
+  ohp: {
+    front: true, props: [['ground', 199], ['db', 'h']],
+    A: { ...FSTAND, H: [[180, 34], [120, 34]] },
+    B: { ...FSTAND, H: [[164, -22], [136, -22]] },
+  },
+  // Wiosłowanie hantlem jednorącz: druga ręka oparta o ławkę, plecy prawie poziomo; łokieć jedzie w górę wzdłuż tułowia.
+  dbrow: {
+    props: [['ground', 190], ['bench', 188, 140, 80], ['db', 'end', [0]]],
+    A: { h: [124, 100], t: -6, H: [[182, 156], [206, 140]], F: [[132, 184], [112, 184]], fa: 12 },
+    B: { h: [124, 100], t: -6, H: [[158, 104], [206, 140]], F: [[132, 184], [112, 184]], fa: 12 },
+  },
+  // Ściąganie drążka wyciągu górnego: siedząc, lekko odchylony; drążek z prostych rąk do górnej części klatki.
+  pulldown: {
+    props: [['ground', 190], ['bench', 90, 140, 70], ['path', 'M232 190V-54M120 -54H238M154 134h26', [120, -60, 240, 190]], ['pulley', 132, -46], ['pull', 132, -46]],
+    A: { h: [126, 132], t: -98, H: [128, 14], F: [184, 184], fa: 12 },
+    B: { h: [126, 132], t: -98, H: [134, 64], F: [184, 184], fa: 12 },
+  },
+  // Wiosłowanie na wyciągu siedząc: stopy na podpórce, plecy proste; uchwyt do brzucha, łopatki ściągnięte.
+  cablerow: {
+    props: [['ground', 190], ['bench', 66, 160, 80], ['path', 'M244 190V128M236 128h16M196 190 204 138', [190, 120, 256, 190]], ['pulley', 244, 146], ['pull', 244, 146]],
+    A: { h: [104, 150], t: -78, H: [176, 112], F: [186, 158], fa: -76 },
+    B: { h: [104, 150], t: -96, H: [136, 128], F: [186, 158], fa: -76 },
+  },
+  // Wykroki z hantlami: hantle w opuszczonych rękach, tylne kolano tuż nad ziemią.
+  dblunge: { props: [['ground', 190], ['db', 'end']], A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [110, 184]], fa: [12, 40] }, B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [106, 172]], fa: [12, 65] } },
+  // Unoszenie hantli bokiem od przodu: proste ręce do wysokości barków, nie wyżej.
+  lateral: {
+    front: true, props: [['ground', 199], ['db', 'end']],
+    A: { ...FSTAND, a: [84, 96] },
+    B: { ...FSTAND, a: [6, 174] },
+  },
+  // Uginanie ramion z hantlami: łokieć przy boku i nieruchomy, przedramię zatacza łuk do barku.
+  curl: {
+    props: [['ground', 190], ['db', 'end']],
+    A: { ...STAND, E: [151, 70], ea: 86 },
+    B: { ...STAND, E: [151, 70], ea: -62 },
+  },
   calf: {
     props: [['ground', 190], ['band2', 'an0', 'sh']],
     A: { ...STAND, H: [158, 40] },
@@ -187,6 +257,9 @@ const EX_MOVE = {
   'przysiad': ['squat'], 'przysiad-guma': ['bandsquat'], 'trx-przysiad-wykroczny': ['trxsplit'], 'przysiad-jednonoz': ['boxpistol'],
   'wykroki': ['lunge'], 'mostek': ['bridge'], 'mostek-jednonoz': ['bridge1'], 'guma-sklon': ['goodmorning'],
   'guma-uginanie-nog': ['hamcurl'], 'lydki-guma': ['calf'], 'wyciag-prostowanie': ['pushdown'],
+  'przysiad-sztanga': ['bbsquat'], 'przysiad-goblet': ['goblet'], 'martwy-rumunski': ['rdl'], 'hip-thrust': ['hipthrust'], 'wyciskanie-lezac': ['bench'],
+  'wyciskanie-hantli-nad-glowe': ['ohp'], 'wioslowanie-hantlem': ['dbrow'], 'sciaganie-drazka': ['pulldown'], 'wioslowanie-wyciag': ['cablerow'],
+  'wykroki-hantle': ['dblunge'], 'unoszenie-bokiem': ['lateral'], 'uginanie-hantle': ['curl'],
 };
 // Czy ruch używa gumy / innego sprzętu (do legendy pod animacją).
 const moveGear = id => {
@@ -466,6 +539,10 @@ function mountMove(svg, fixed) {
     if (pr[0] === 'hbar') pts.push([pr[1], pr[3]], [pr[2], pr[3]]);
     else if (pr[0] === 'post') pts.push([pr[1], pr[2]], [pr[1], pr[3]]);
     else if (pr[0] === 'cable') pts.push([pr[1] - 8, pr[2] - 10], [pr[3] + 22, pr[4]]);
+    else if (pr[0] === 'bench') pts.push([pr[1], pr[2]], [pr[1] + pr[3], pr[2]]);
+    else if (pr[0] === 'path') pts.push(pr[2].slice(0, 2), pr[2].slice(2));
+    else if (pr[0] === 'pulley') pts.push([pr[1], pr[2] - 6]);
+    else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4); pts.push([G[0] - 14, G[1] - 14], [G[0] + 14, G[1] + 14]); }
     else if (typeof pr[1] === 'number' && pr[0] !== 'ground' && pr[0] !== 'strap') {
       pts.push([pr[1], pr[2]]);
       if (pr[0] === 'box') pts.push([pr[1] + pr[3], pr[2] + pr[4]]);
@@ -495,6 +572,10 @@ function mountMove(svg, fixed) {
     if (pr[0] === 'post') mk('line', { x1: pr[1], x2: pr[1], y1: pr[2], y2: pr[3], class: 'pp' });
     // Drążek stoi na dwóch słupach, które schodzą poza dół kadru.
     if (pr[0] === 'hbar') for (const x of [pr[1] + 6, pr[2] - 6]) mk('line', { x1: x, x2: x, y1: pr[3] - 8, y2: pr[3] + 600, class: 'pq' });
+    // Ławka: siedzisko na dwóch nogach do ziemi; rama maszyny i bloczek pod postacią.
+    if (pr[0] === 'bench') { for (const x of [pr[1] + 8, pr[1] + pr[3] - 8]) mk('line', { x1: x, x2: x, y1: pr[2] + 6, y2: ground?.[1] ?? pr[2] + 40, class: 'pp' }); mk('rect', { x: pr[1], y: pr[2], width: pr[3], height: 7, rx: 3, class: 'px' }); }
+    if (pr[0] === 'path') mk('path', { class: 'pq', d: pr[1] });
+    if (pr[0] === 'pulley') mk('circle', { cx: pr[1], cy: pr[2], r: 5, class: 'pw' });
     // Wyciąg: rama z dwóch słupów, belka, dwa bloczki i stos płytek; linka z uchwytem i ruchome płytki w draw.
     if (pr[0] === 'cable') {
       const [, px, py, rx, base] = pr;
@@ -515,7 +596,14 @@ function mountMove(svg, fixed) {
   }
   if (tempo === 'band') for (const foot of ['an0', 'an1']) dyn.push([mk('line', { class: 'pg' }), [150, 16], foot]);
   if (cable) Object.assign(cable, { rod: mk('line', { class: 'pc' }), line: mk('path', { class: 'pc' }), handle: mk('line', { class: 'pbl', 'stroke-width': 2.6 }) });
-  const grip = J => at(J.wr0, ang(J.el0, J.wr0), 4);
+  const grip = (J, i = 0) => at(J['wr' + i], ang(J['el' + i], J['wr' + i]), 4);
+  // Sprzęt w dłoniach: sztanga (talerz), hantle, linka do bloczka; rysowane nad postacią.
+  const held = [];
+  for (const pr of m.props) {
+    if (pr[0] === 'pull') held.push(['pull', mk('line', { class: 'pc' }), [pr[1], pr[2]], mk('circle', { r: 3.2, class: 'pb' })]);
+    if (pr[0] === 'bb') held.push(['bb', mk('circle', { r: 13, class: 'pw' }), mk('circle', { r: 2.6, class: 'pb' })]);
+    if (pr[0] === 'db') for (const i of pr[2] || (m.front ? [0, 1] : [0])) held.push(['db', pr[1], i, ...(pr[1] === 'end' ? [mk('circle', { r: 5.6, class: 'pw' }), mk('circle', { r: 1.8, class: 'pb' })] : [mk('line', { class: 'pbl', 'stroke-width': 2.4 }), mk('rect', { class: 'pt', rx: 1 }), mk('rect', { class: 'pt', rx: 1 })])]);
+  }
   const L0 = cable && Math.hypot(grip(joints(m, 0))[0] - cable.px, grip(joints(m, 0))[1] - cable.py);
 
   const still = JSON.stringify(m.A) === JSON.stringify(m.B);
@@ -534,6 +622,19 @@ function mountMove(svg, fixed) {
     for (const [el, a, b] of dyn) {
       const A = typeof a === 'string' ? J[a] : a, B = typeof b === 'string' ? J[b] : b;
       el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
+    }
+    for (const [k, a, b, c, d, e2] of held) {
+      if (k === 'pull') { const G = grip(J); a.setAttribute('x1', G[0]); a.setAttribute('y1', G[1]); a.setAttribute('x2', b[0]); a.setAttribute('y2', b[1]); c.setAttribute('cx', G[0]); c.setAttribute('cy', G[1]); }
+      if (k === 'bb') { const G = grip(J); for (const el of [a, b]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); } }
+      if (k === 'db') {
+        const G = grip(J, b);
+        if (a === 'end') for (const el of [c, d]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); }
+        else {
+          const v = a === 'v', [dx, dy] = v ? [0, 7] : [7, 0];
+          c.setAttribute('x1', G[0] - dx); c.setAttribute('y1', G[1] - dy); c.setAttribute('x2', G[0] + dx); c.setAttribute('y2', G[1] + dy);
+          for (const [el, sg] of [[d, -1], [e2, 1]]) { const [w, h] = v ? [10, 4] : [4, 10]; el.setAttribute('x', G[0] + sg * dx - w / 2); el.setAttribute('y', G[1] + sg * dy - h / 2); el.setAttribute('width', w); el.setAttribute('height', h); }
+        }
+      }
     }
     if (cable) {
       // Linka ma stałą długość: o ile dłonie odjadą od bloczka, o tyle podnosi się górna część stosu.
