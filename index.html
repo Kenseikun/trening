@@ -643,7 +643,7 @@ function renderHome() {
     $('startBtn').innerHTML = `wczytaj rozpiskę${ico('next')}`;
   }
   $('hist').innerHTML = past.length
-    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : `${day(h.t0)} · ${h.name} · ${h.reps} powt.`)}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + '<button id="histBtn" style="width:100%;margin-top:12px">wyślij ostatnie 10</button>'
+    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : `${day(h.t0)} · ${h.name} · ${h.reps} powt.`)}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + '<button id="histBtn" style="width:100%;margin-top:12px">wyślij ostatnie 10</button><button id="histClr" class="ghost" style="width:100%;margin-top:6px">wyczyść historię</button>'
     : '<p class="stone">Pusto. Zapisane treningi pojawią się tutaj.</p>';
   if (!plans.length) return;
   sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
@@ -667,7 +667,10 @@ $('hParts').onclick = e => {
 };
 $('startBtn').onclick = () => allPlans().length ? start(allPlans()[sel]) : openSheet('imp');
 // Bez zwracanej wartości: „false” z onclick anulowałby kliknięcie i wpisy historii (details) by się nie rozwijały.
-$('hist').onclick = e => { if (e.target.id === 'histBtn') send(past.slice(0, 10).map(pastText).join('\n\n')); };
+$('hist').onclick = e => {
+  if (e.target.id === 'histBtn') send(past.slice(0, 10).map(pastText).join('\n\n'));
+  if (e.target.id === 'histClr' && confirm('Usunąć wszystkie zapisane treningi z tego telefonu? Wyniki wysłane do trenera zostają u niego.')) { past = []; store('history', past); renderHome(); }
+};
 $('lib').innerHTML = Object.entries(EXERCISES).sort((a, b) => a[1].name.localeCompare(b[1].name, 'pl'))
   .map(([id, e]) => `<button data-ex="${id}">${moveFig(id)}<span>${esc(e.name)}<small>${e.p.map(m => MUSCLES[m]).join(', ')}</small></span></button>`).join('');
 stillMoves($('lib'));
@@ -937,6 +940,9 @@ async function activate(inicjaly, kod) {
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); store('ankieta', null); served = []; servedJson = ''; sel = null;
+    // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
+    const who = inicjaly.replace(/\s/g, '').toUpperCase();
+    if (load('who', null) !== who) { past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
     $('gCode').value = $('gIni').value = '';
     show('home'); renderHome(); loadPlans(); checkSurvey();
   } catch { $('gMsg').textContent = 'Brak połączenia. Kod trzeba wpisać z dostępem do internetu.'; }
