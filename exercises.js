@@ -1,5 +1,5 @@
 // Biblioteka ćwiczeń; animacje ruchu są w moves.js.
-// p = mięśnie główne, s = pomocnicze (klucze z MUSCLES).
+// p = mięśnie główne, s = pomocnicze (klucze z MUSCLES). kg = krok zmiany ciężaru w kg (ćwiczenie z obciążeniem), kgOpis = dopisek do ciężaru, np. „na hantel”.
 // \u00AD to miejsce, w którym długa nazwa może się złamać (z łącznikiem) w wąskiej kolumnie legendy; bez niego procent wychodzi poza kolumnę.
 globalThis.MUSCLES = {
   chest: 'klatka piersiowa', shoulders: 'barki', biceps: 'bicepsy', triceps: 'tricepsy', forearms: 'przed\u00ADramiona',
@@ -284,6 +284,7 @@ globalThis.EXERCISES = {
     tips: ['Pełny zakres ruchu. Na stopniu możesz opuścić pięty niżej.'],
   },
   'wyciag-prostowanie': {
+    kg: 2.5,
     name: 'Prostowanie ramion na wyciągu', p: ['triceps'], s: ['forearms', 'abs'],
     steps: ['Stań twarzą do wyciągu, linka z górnego bloczka. Chwyć drążek albo linę nachwytem.',
       'Łokcie przyciśnij do boków, przedramiona mniej więcej poziomo. Tułów lekko pochylony, brzuch napięty.',
@@ -292,6 +293,7 @@ globalThis.EXERCISES = {
     tips: ['Ruszają się tylko przedramiona. Jeśli łokcie uciekają do przodu albo pomagasz sobie tułowiem, zmniejsz ciężar.'],
   },
   'przysiad-sztanga': {
+    kg: 2.5,
     name: 'Przysiad ze sztangą', p: ['quads', 'glutes'], s: ['hamstrings', 'adductors', 'lowerback', 'abs'],
     steps: ['Sztanga na górze pleców (nie na karku), chwyt trochę szerzej niż barki. Stopy na szerokość bioder lub trochę szerzej, palce lekko na zewnątrz.',
       'Weź oddech, napnij brzuch. Biodra w tył i w dół, kolana idą w kierunku palców.',
@@ -300,6 +302,7 @@ globalThis.EXERCISES = {
     tips: ['Pięty cały czas na ziemi, kolana nie uciekają do środka.', 'Pierwsze tygodnie: lekko, technika ważniejsza od ciężaru.'],
   },
   'przysiad-goblet': {
+    kg: 1,
     name: 'Przysiad z hantlem (goblet)', p: ['quads', 'glutes'], s: ['adductors', 'abs'],
     steps: ['Trzymaj hantel pionowo przy mostku, łokcie w dół.',
       'Stopy trochę szerzej niż biodra, palce lekko na zewnątrz.',
@@ -308,6 +311,7 @@ globalThis.EXERCISES = {
     tips: ['Dobre pierwsze ćwiczenie na naukę przysiadu: ciężar z przodu pomaga trzymać plecy prosto.'],
   },
   'martwy-rumunski': {
+    kg: 1, kgOpis: 'na hantel',
     name: 'Martwy ciąg rumuński z hantlami', p: ['hamstrings', 'glutes'], s: ['lowerback', 'forearms'],
     steps: ['Stań prosto z hantlami przed udami, stopy na szerokość bioder, kolana lekko ugięte.',
       'Przesuwaj biodra w tył, hantle jadą blisko nóg. Plecy proste przez cały ruch.',
@@ -316,6 +320,7 @@ globalThis.EXERCISES = {
     tips: ['To ruch bioder, nie pleców: kolana zostają w tym samym ugięciu.', 'Jeśli plecy się zaokrąglają, skróć zakres.'],
   },
   'hip-thrust': {
+    kg: 2.5,
     name: 'Hip thrust ze sztangą', p: ['glutes'], s: ['hamstrings', 'quads'],
     steps: ['Oprzyj łopatki o krawędź ławki, sztanga na biodrach (z podkładką), stopy na ziemi na szerokość bioder.',
       'Napnij brzuch i wypchnij biodra w górę, aż tułów i uda będą w jednej linii.',
@@ -324,6 +329,7 @@ globalThis.EXERCISES = {
     tips: ['Na górze golenie mniej więcej pionowo: jeśli nie, przesuń stopy.', 'Nie wyginaj lędźwi w łuk: ruch kończą pośladki.'],
   },
   'wyciskanie-lezac': {
+    kg: 2.5,
     name: 'Wyciskanie sztangi leżąc', p: ['chest'], s: ['triceps', 'shoulders'],
     steps: ['Połóż się na ławce, oczy pod sztangą, stopy mocno na ziemi. Ściągnij łopatki.',
       'Chwyt trochę szerzej niż barki. Zdejmij sztangę i trzymaj ją nad barkami na prostych rękach.',
@@ -332,6 +338,7 @@ globalThis.EXERCISES = {
     tips: ['Przy większym ciężarze zawsze z asekuracją.', 'Pośladki i łopatki cały czas na ławce.'],
   },
   'wyciskanie-hantli-nad-glowe': {
+    kg: 1, kgOpis: 'na hantel',
     name: 'Wyciskanie hantli nad głowę', p: ['shoulders'], s: ['triceps', 'traps', 'abs'],
     steps: ['Stań stabilnie, hantle na wysokości barków, łokcie lekko przed tułowiem.',
       'Napnij brzuch i pośladki.',
@@ -340,6 +347,7 @@ globalThis.EXERCISES = {
     tips: ['Nie odchylaj się do tyłu: tułów zostaje prosto.', 'Można też siedząc na ławce z oparciem.'],
   },
   'wioslowanie-hantlem': {
+    kg: 1,
     name: 'Wiosłowanie hantlem jednorącz', p: ['lats', 'midback'], s: ['biceps', 'forearms'],
     steps: ['Oprzyj jedną rękę o ławkę, plecy proste, prawie poziomo. Hantel w drugiej ręce zwisa pod barkiem.',
       'Ciągnij łokieć w górę wzdłuż tułowia, hantel do biodra.',
@@ -348,6 +356,7 @@ globalThis.EXERCISES = {
     tips: ['Tułów się nie obraca: ruch robi ręka i łopatka.'],
   },
   'sciaganie-drazka': {
+    kg: 2.5,
     name: 'Ściąganie drążka wyciągu górnego', p: ['lats'], s: ['biceps', 'midback'],
     steps: ['Usiądź, uda pod wałkami. Chwyć drążek nachwytem, trochę szerzej niż barki.',
       'Lekko odchyl tułów, klatka do góry.',
@@ -356,6 +365,7 @@ globalThis.EXERCISES = {
     tips: ['Nie szarp tułowiem: zmniejsz ciężar, jeśli musisz się bujać.', 'Dobre przygotowanie do podciągania na drążku.'],
   },
   'wioslowanie-wyciag': {
+    kg: 2.5,
     name: 'Wiosłowanie na wyciągu siedząc', p: ['midback', 'lats'], s: ['biceps', 'lowerback'],
     steps: ['Usiądź, stopy na podpórce, kolana lekko ugięte. Chwyć uchwyt, plecy proste.',
       'Przyciągnij uchwyt do brzucha, łokcie blisko tułowia.',
@@ -364,6 +374,7 @@ globalThis.EXERCISES = {
     tips: ['Tułów prawie nieruchomy: ruch robią ręce i łopatki.'],
   },
   'wykroki-hantle': {
+    kg: 1, kgOpis: 'na hantel',
     name: 'Wykroki z hantlami', p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
     steps: ['Stań prosto z hantlami w opuszczonych rękach.',
       'Zrób duży krok do przodu i zejdź w dół, aż tylne kolano będzie tuż nad ziemią.',
@@ -372,6 +383,7 @@ globalThis.EXERCISES = {
     tips: ['Krok na tyle długi, żeby przednia pięta nie odrywała się od ziemi.'],
   },
   'unoszenie-bokiem': {
+    kg: 1, kgOpis: 'na hantel',
     name: 'Unoszenie hantli bokiem', p: ['shoulders'], s: ['traps'],
     steps: ['Stań prosto, hantle przy udach, łokcie lekko ugięte.',
       'Unieś ręce bokiem do wysokości barków.',
@@ -380,6 +392,7 @@ globalThis.EXERCISES = {
     tips: ['Lekki ciężar i pełna kontrola: bez bujania tułowiem.'],
   },
   'uginanie-hantle': {
+    kg: 1, kgOpis: 'na hantel',
     name: 'Uginanie ramion z hantlami', p: ['biceps'], s: ['forearms'],
     steps: ['Stań prosto, hantle w opuszczonych rękach, dłonie do przodu.',
       'Łokcie przy bokach. Ugnij ręce, hantle jadą do barków.',

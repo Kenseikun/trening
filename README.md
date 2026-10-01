@@ -17,6 +17,7 @@ Otwórz: https://kenseikun.github.io/trening/
 - **Plan tygodnia od trenera.** Rozpiska sama pojawia się w aplikacji, a od razu widać treningi tygodnia: ile serii, ile czasu i które mięśnie popracują.
 - **Technika pod ręką.** Każde ćwiczenie ma animację z podświetlonymi mięśniami i instrukcję krok po kroku.
 - **Przerwy bez zegarka.** Aplikacja odlicza przerwę, daje sygnał na koniec i pokazuje, co będzie następne.
+- **Ciężar i samopoczucie.** Przy ćwiczeniach z obciążeniem zapisujesz ciężar, a po treningu dwoma dotknięciami oceniasz, jak było, i zgłaszasz, jeśli coś bolało.
 - **Wyniki dla trenera.** Po treningu widzisz liczby i porównanie z poprzednim razem, a podsumowanie wysyłasz trenerowi jednym przyciskiem.
 - **Działa bez zasięgu.** Po pierwszym otwarciu aplikacja jest w telefonie i nie potrzebuje internetu.
 

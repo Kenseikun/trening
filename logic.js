@@ -16,6 +16,7 @@ function normalize(data) {
           ex: String(it.ex), name: it.name ? String(it.name) : '', sets: Math.max(1, parseInt(it.sets) || 1),
           reps: it.reps ?? '', time: Math.max(0, parseInt(it.time) || 0),
           rest: it.rest == null ? 90 : Math.max(0, parseInt(it.rest) || 0), note: it.note ? String(it.note) : '',
+          kg: +it.kg > 0 ? +it.kg : 0, // ciężar startowy z rozpiski (0 = nie podano)
         };
       }),
     };
@@ -57,12 +58,13 @@ function muscleShare(load) {
   return Object.entries(load).sort((a, b) => b[1] - a[1]).map(([m, v]) => ({ m, load: v, pct: Math.round(v / sum * 100) }));
 }
 
-// Wyniki treningu: per ćwiczenie + sumy. log: {indeks serii: wynik}.
-function stats(plan, log) {
+// Wyniki treningu: per ćwiczenie + sumy. log: {indeks serii: wynik}, kg: {indeks serii: ciężar} (tylko ćwiczenia z obciążeniem).
+function stats(plan, log, kg = {}) {
   const st = steps(plan);
   const per = plan.items.map((it, item) => ({
     ex: it.ex, name: exName(it), time: !!it.time, sets: it.sets, reps: it.reps,
     vals: st.flatMap((s, i) => s.item === item && log[i] != null ? [log[i]] : []),
+    kgs: st.flatMap((s, i) => s.item === item && log[i] != null ? [kg[i] ?? null] : []),
   }));
   const sum = f => per.filter(f).flatMap(p => p.vals).reduce((a, b) => a + b, 0);
   return { per, reps: sum(p => !p.time), hold: sum(p => p.time), done: Object.keys(log).length, total: st.length };
@@ -70,6 +72,13 @@ function stats(plan, log) {
 // Zmiana w % (null, gdy nie ma z czym porównać).
 const delta = (now, before) => before > 0 ? Math.round((now - before) / before * 100) : null;
 const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
+
+// Ciężar po polsku (przecinek), np. 42,5. Największy ciężar w serii ćwiczenia (0, gdy bez obciążenia).
+const kgTxt = k => String(Math.round(k * 10) / 10).replace('.', ',');
+const topKg = p => Math.max(0, ...(p?.kgs || []).filter(k => k > 0));
+// Ocena treningu i zgłoszony ból (pierwsza strona wyników); te same partie co w ankiecie.
+const OCENA = { LEKKO: 'za lekko', OK: 'w sam raz', CIEZKO: 'za ciężko' };
+const BOL = { BARKI: 'barki', LOKCIE: 'łokcie', NADGARSTKI: 'nadgarstki', PLECY: 'plecy', KOLANA: 'kolana', BIODRA: 'biodra', INNE: 'coś innego' };
 
 // Słowo od trenera po treningu: z liczb, nie ogólnik. name = imię z telefonu (może być puste), sex = płeć z ankiety ('K', 'M' albo brak: forma bezosobowa).
 function cheer(s, prev, name, sex) {
@@ -86,22 +95,36 @@ function cheer(s, prev, name, sex) {
     const g = q && p.vals.length ? tot(p.vals) - tot(q.vals) : 0;
     if (g > 0 && (!best || g > best.g)) best = { name: p.name.toLowerCase(), g, u: p.time ? ' s' : '' };
   }
-  const plus = best ? ` Największy postęp: ${best.name} (+${best.g}${best.u}).` : '';
-  if (d > 0) return `Udało się${n}! ${did} o ${pl(d, w)} więcej niż ostatnio. Tak trzymaj!${plus}`;
-  if (d === 0) return `Udało się${n}! Tyle samo co ostatnio, solidna robota.${plus}`;
-  return `Dobra robota${n}. Dziś o ${pl(-d, w)} mniej niż ostatnio, to normalne. Liczy się regularność.${best ? ` Za to ${best.name}: +${best.g}${best.u}.` : ''}`;
+  // Ćwiczenie, w którym najbardziej urósł ciężar (największy ciężar serii dziś i poprzednio).
+  let up;
+  for (const p of s.per) {
+    const g = topKg(p) - topKg(prev.per?.find(x => x.ex === p.ex));
+    if (topKg(p) && topKg(prev.per?.find(x => x.ex === p.ex)) && g > 0 && (!up || g > up.g)) up = { name: p.name.toLowerCase(), g };
+  }
+  const plus = best ? ` Największy postęp: ${best.name} (+${best.g}${best.u}).` : '', heavier = up ? ` Ciężar w górę: ${up.name} (+${kgTxt(up.g)} kg).` : '';
+  if (d > 0) return `Udało się${n}! ${did} o ${pl(d, w)} więcej niż ostatnio. Tak trzymaj!${plus}${heavier}`;
+  if (d === 0) return `Udało się${n}! Tyle samo co ostatnio, solidna robota.${plus}${heavier}`;
+  return `Dobra robota${n}. Dziś o ${pl(-d, w)} mniej niż ostatnio, to normalne. Liczy się regularność.${best ? ` Za to ${best.name}: +${best.g}${best.u}.` : ''}${heavier}`;
 }
 
-// Podsumowanie dla trenera; prev = poprzedni trening tego samego typu (z historii).
-function summaryText(plan, log, note, t0, t1, prev) {
-  const s = stats(plan, log);
+// Serie ćwiczenia jako tekst: „6, 6, 5 × 40 kg”, przy różnych ciężarach „6×40, 5×42,5 kg”; perKg = dopisek, np. „na hantel”.
+function setsText(p, perKg) {
+  if (!topKg(p)) return p.vals.map(v => v + (p.time ? ' s' : '')).join(', ');
+  const tail = ` kg${perKg ? ' ' + perKg : ''}`;
+  return new Set(p.kgs).size === 1 ? `${p.vals.join(', ')} × ${kgTxt(p.kgs[0])}${tail}` : p.vals.map((v, i) => p.kgs[i] ? `${v}×${kgTxt(p.kgs[i])}` : v).join(', ') + tail;
+}
+// Podsumowanie dla trenera; prev = poprzedni trening tego samego typu (z historii); extra = { kg, ocena, bol } z ekranu treningu i wyników.
+function summaryText(plan, log, note, t0, t1, prev, extra = {}) {
+  const s = stats(plan, log, extra.kg);
   const lines = [`Trening: ${plan.name} (${new Date(t0).toISOString().slice(0, 10)}, ${Math.round((t1 - t0) / 60000)} min)`];
   const skipped = [];
   for (const p of s.per) {
-    if (p.vals.length) lines.push(`${p.name} (cel ${p.sets}×${p.time ? plan.items.find(i => i.ex === p.ex).time + ' s' : p.reps}): ${p.vals.map(v => v + (p.time ? ' s' : '')).join(', ')}`);
+    if (p.vals.length) lines.push(`${p.name} (cel ${p.sets}×${p.time ? plan.items.find(i => i.ex === p.ex).time + ' s' : p.reps}): ${setsText(p, globalThis.EXERCISES?.[p.ex]?.kgOpis)}`);
     else skipped.push(p.name);
   }
   if (skipped.length) lines.push(`Pominięte: ${skipped.join(', ')}`);
+  if (extra.ocena) lines.push(`Ocena: ${OCENA[extra.ocena]}`);
+  if (extra.bol) lines.push(`Ból: ${extra.bol.length ? extra.bol.map(b => BOL[b]).join(', ') : 'nie'}`);
   lines.push(`Serie: ${s.done}/${s.total}, powtórzenia razem: ${s.reps}` + (s.hold ? `, czas w napięciu: ${s.hold} s` : ''));
   if (prev) lines.push(`Poprzednio (${new Date(prev.t0).toISOString().slice(0, 10)}): powtórzenia ${prev.reps} → ${s.reps} (${signed(delta(s.reps, prev.reps))})`);
   if (note?.trim()) lines.push(`Uwagi: ${note.trim()}`);
@@ -113,7 +136,7 @@ function planFormat(exercises, history) {
   return [
     'Format rozpiski dla aplikacji (JSON): jeden trening albo tablica treningów:',
     '{"name":"T2 · Góra A","note":"...","items":[{"ex":"podciaganie","sets":5,"reps":2,"rest":120,"note":"..."},{"ex":"plank","sets":3,"time":40,"rest":45}]}',
-    'reps: liczba albo tekst (np. "8/noga"); time: sekundy (zamiast reps); rest: przerwa po serii w sekundach.',
+    'reps: liczba albo tekst (np. "8/noga"); time: sekundy (zamiast reps); rest: przerwa po serii w sekundach; kg: ciężar startowy (ćwiczenia z obciążeniem).',
     'Dostępne ćwiczenia (ex): ' + Object.entries(exercises).map(([id, e]) => `${id} (${e.name})`).join(', ') + '.',
     'Ćwiczenie spoza listy: własne "ex" i "name".',
     ...(history.length ? ['', 'Moje ostatnie treningi:', ...history.slice(0, 3)] : []),
@@ -172,5 +195,18 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.match(cheer(s, { ...was, reps: 4 }, 'Ola', 'K'), /^Udało się, Ola! Zrobiłaś o 5 powtórzeń więcej/);
   assert.match(cheer(s, null, 'Ola', 'K'), /Pierwszy taki trening za Tobą/);
   assert.match(cheer({ ...s, done: 1 }, was, '', null), /^Trening zaliczony\. /);
+  // Ciężar: z rozpiski (pole kg), w serii, w tekście dla trenera i w słowie po treningu.
+  const g = normalize({ name: 'T1 · Siła', items: [{ ex: 'przysiad-sztanga', sets: 3, reps: 6, kg: '40' }, { ex: 'martwy-rumunski', sets: 2, reps: 8 }] })[0];
+  assert.deepStrictEqual(g.items.map(i => i.kg), [40, 0]);
+  const gs = stats(g, { 0: 6, 1: 6, 2: 5, 3: 8, 4: 8 }, { 0: 40, 1: 40, 2: 42.5, 3: 8, 4: 8 });
+  assert.deepStrictEqual(gs.per.map(p => p.kgs), [[40, 40, 42.5], [8, 8]]);
+  const gt = summaryText(g, { 0: 6, 1: 6, 2: 5, 3: 8, 4: 8 }, '', 0, 60000, null, { kg: { 0: 40, 1: 40, 2: 42.5, 3: 8, 4: 8 }, ocena: 'CIEZKO', bol: ['KOLANA'] });
+  assert.match(gt, /Przysiad ze sztangą \(cel 3×6\): 6×40, 6×40, 5×42,5 kg/);
+  assert.match(gt, /Martwy ciąg rumuński z hantlami \(cel 2×8\): 8, 8 × 8 kg na hantel/);
+  assert.match(gt, /Ocena: za ciężko\nBól: kolana/);
+  assert.match(summaryText(g, { 0: 6 }, '', 0, 60000, null, { bol: [] }), /Ból: nie/);
+  const gw = { reps: 30, per: [{ ex: 'przysiad-sztanga', vals: [6, 6, 6], kgs: [37.5, 37.5, 37.5] }] };
+  assert.match(cheer(gs, gw, '', 'M'), /Ciężar w górę: przysiad ze sztangą \(\+5 kg\)\.$/);
+  assert.doesNotMatch(cheer(gs, { ...gw, per: [{ ex: 'przysiad-sztanga', vals: [6], kgs: [null] }] }, '', 'M'), /Ciężar w górę/); // poprzednio bez ciężaru
   console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (files.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : ''));
 }

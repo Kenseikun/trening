@@ -265,6 +265,14 @@
   .stepper { display: grid; grid-template-columns: 50px 1fr 50px; align-items: center }
   .stepper button { width: 50px; height: 50px; min-height: 50px; padding: 0 }
   .stepper output { text-align: center; font-size: 2.1rem; font-weight: 500; line-height: 1 }
+  .stepper.kg { grid-template-columns: 44px 1fr 44px; margin: 6px 0 2px }
+  .stepper.kg button { width: 44px; height: 44px; min-height: 44px }
+  .stepper.kg output { font-size: 1.35rem } .stepper.kg small { display: block; font-size: .72rem; color: var(--stone); margin-top: 2px }
+  .rate { flex: none; margin: 0 0 6px } .rate .lbl { margin: 6px 0 4px } .rate .opts { gap: 6px; align-items: center; flex-wrap: nowrap } .rate .opts button { min-height: 44px; padding: 0 11px; font-size: .9rem; white-space: nowrap }
+  /* Liczby na pierwszej stronie wyników rosną z wysokością wiersza (--rows ustawia finish()), żeby nie nachodziły na podpisy na niskich ekranach. */
+  #dBlock { container-type: size }
+  #dBlock b { font-size: clamp(1.3rem, calc(100cqh / var(--rows, 3) * .48), 3.4rem) }
+  #rWhere { color: var(--red); font-size: .9rem }
 
   /* Przerwa pod chmurą */
   #timer { position: fixed; inset: 0; z-index: 5; overflow-y: auto; background: inherit }
@@ -417,6 +425,11 @@
       <output id="val" aria-live="polite">0</output>
       <button id="plus" aria-label="Więcej"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
     </div>
+    <div id="kgBox" class="stepper kg" hidden>
+      <button id="kgMinus" aria-label="Mniejszy ciężar"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+      <output id="kgVal" aria-live="polite"></output>
+      <button id="kgPlus" aria-label="Większy ciężar"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
+    </div>
     <button id="doneBtn" class="primary"></button>
   </div>
 </section>
@@ -441,6 +454,12 @@
   <header class="head"><span class="brand">wyniki<i class="dot c"></i></span><span id="dDate" class="lbl"></span></header>
   <h1 id="dName" class="float"></h1>
   <p id="dCheer" class="cheer"></p>
+  <div id="dRate" class="rate">
+    <p class="lbl">jak było?</p>
+    <div class="opts" id="rEase"><button data-v="LEKKO">za lekko</button><button data-v="OK">w sam raz</button><button data-v="CIEZKO">za ciężko</button></div>
+    <p class="lbl">coś bolało?</p>
+    <div class="opts" id="rPain"><button data-v="NIE">nie</button><button data-v="TAK">tak</button><span id="rWhere"></span></div>
+  </div>
   <div id="dBlock" class="stats lines"></div>
   </div>
   <div class="dpage figpage">
@@ -821,7 +840,7 @@ function strip() {
 }
 
 function start(plan) {
-  cur = { plan, i: 0, log: {}, phase: 'set', end: 0, t0: Date.now() };
+  cur = { plan, i: 0, log: {}, kg: {}, rate: {}, phase: 'set', end: 0, t0: Date.now() };
   wake();
   renderSet();
 }
@@ -840,9 +859,19 @@ function renderSet() {
   $('wNote').hidden = !it.note; $('wNote').textContent = it.note;
   $('stepper').hidden = !!it.time;
   $('val').value = cur.log[cur.i] ?? (parseInt(it.reps) || 0);
+  // Ciężar: z tej serii (powrót), z poprzedniej serii tego ćwiczenia, z rozpiski, z ostatniego takiego treningu; bez zmiany nic nie trzeba dotykać.
+  cur.kg ??= {};
+  $('kgBox').hidden = !(e?.kg && !it.time);
+  if (!$('kgBox').hidden) { kgNow = cur.kg[cur.i] ?? (st.set > 1 ? cur.kg[cur.i - 1] : null) ?? (it.kg || lastKg(it.ex) || 0); showKg(); }
   $('doneBtn').innerHTML = it.time ? `<span>start · ${it.time}&nbsp;s</span>${ico('play')}` : `seria zrobiona${ico('done')}`;
   show('work'); mountMoves($('work'));
 }
+let kgNow = 0;
+const showKg = () => { const e = EXERCISES[curItem().ex]; $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<small>ciężar${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
+// Ostatni ciężar tego ćwiczenia z historii (ostatnia seria z ciężarem).
+const lastKg = ex => { for (const h of past) { const k = h.per?.find(p => p.ex === ex)?.kgs?.filter(x => x > 0); if (k?.length) return k[k.length - 1]; } return null; };
+$('kgMinus').onclick = () => { kgNow = Math.max(0, Math.round((kgNow - EXERCISES[curItem().ex].kg) * 10) / 10); showKg(); };
+$('kgPlus').onclick = () => { kgNow = Math.round((kgNow + EXERCISES[curItem().ex].kg) * 10) / 10; showKg(); };
 $('minus').onclick = () => $('val').value = Math.max(0, +$('val').value - 1);
 $('plus').onclick = () => $('val').value = +$('val').value + 1;
 $('doneBtn').onclick = () => {
@@ -862,6 +891,7 @@ $('quitBtn').onclick = () => { $('sheet').close(); finish(); };
 
 function finishSet(v) {
   cur.log[cur.i] = v;
+  if (!$('kgBox').hidden) cur.kg[cur.i] = kgNow; // licznik ciężaru widać tylko przy ćwiczeniu z obciążeniem
   const rest = S()[cur.i].rest;
   if (cur.i + 1 >= S().length) return finish();
   cur.i++;
@@ -909,7 +939,8 @@ $('tSkip').onclick = () => {
 function finish() {
   clearInterval(tInt);
   cur.phase = 'done'; cur.t1 ??= Date.now(); save();
-  const s = stats(cur.plan, cur.log), prev = prevOf(cur.plan.name), mins = Math.round((cur.t1 - cur.t0) / 60000);
+  const s = stats(cur.plan, cur.log, cur.kg), prev = prevOf(cur.plan.name), mins = Math.round((cur.t1 - cur.t0) / 60000);
+  cur.rate ??= {}; showRate();
   $('dDate').textContent = new Date(cur.t0).toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
   floatText($('dName'), short(cur.plan.name).toLowerCase(), true);
   $('dCheer').textContent = cheer(s, prev, myName(), load('plec', null));
@@ -919,11 +950,12 @@ function finish() {
     ['Czas', mins, 'minut'],
     s.hold ? ['Napięcie', s.hold, `sekund${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
   ]);
+  $('dBlock').style.setProperty('--rows', $('dBlock').children.length);
   // Dziś i poprzednio w tej samej skali, na wspólnej linii bazowej.
   $('dCmp').innerHTML = s.per.filter(p => p.vals.length).map(p => {
     const now = p.vals.reduce((a, b) => a + b, 0), was = prev?.per.find(q => q.ex === p.ex)?.vals.reduce((a, b) => a + b, 0), top = Math.max(now, was || 0) || 1;
     const u = p.time ? ' s' : '';
-    return `<li><div class="t"><span>${esc(p.name)}</span><b>${now}${u}${was ? ` · ${signed(delta(now, was))}` : ''}</b></div>
+    return `<li><div class="t"><span>${esc(p.name)}${topKg(p) ? ` · ${kgTxt(topKg(p))} kg` : ''}</span><b>${now}${u}${was ? ` · ${signed(delta(now, was))}` : ''}</b></div>
       <div class="bar" style="--w:${now / top * 100}%"></div>${was ? `<div class="bar was" style="--w:${was / top * 100}%" title="poprzednio ${was}${u}"></div>` : ''}</li>`;
   }).join('');
   $('dFirst').hidden = !!prev;
@@ -934,13 +966,38 @@ function finish() {
   wl?.release(); wl = null;
   show('done');
 }
-const finalText = () => summaryText(cur.plan, cur.log, $('doneNote').value, cur.t0, cur.t1, prevOf(cur.plan.name));
+const finalText = () => summaryText(cur.plan, cur.log, $('doneNote').value, cur.t0, cur.t1, prevOf(cur.plan.name), { kg: cur.kg, ...cur.rate });
 $('doneNote').oninput = () => $('sum').textContent = finalText();
+// Ocena treningu: trudność i ból (po „tak” okienko z partiami). Trafia do tekstu dla trenera i do danych wyniku.
+function showRate() {
+  for (const b of $('rEase').querySelectorAll('button')) b.setAttribute('aria-pressed', b.dataset.v === cur.rate.ocena);
+  const bol = cur.rate.bol;
+  for (const b of $('rPain').querySelectorAll('button')) b.setAttribute('aria-pressed', bol ? (b.dataset.v === 'TAK') === bol.length > 0 : false);
+  $('rWhere').textContent = bol?.length ? bol.map(b => BOL[b]).join(', ') : '';
+  $('sum').textContent = finalText();
+}
+$('rEase').onclick = e => { const v = e.target.closest('button')?.dataset.v; if (v) { cur.rate.ocena = v; save(); showRate(); } };
+$('rPain').onclick = e => {
+  const v = e.target.closest('button')?.dataset.v;
+  if (v === 'NIE') { cur.rate.bol = []; save(); showRate(); }
+  if (v === 'TAK') painAsk();
+};
+function painAsk() {
+  const chosen = new Set(cur.rate.bol || []);
+  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">Zaznacz, co bolało. Trener zobaczy to razem z wynikami.</p>
+    <div class="opts" id="painOpts">${Object.entries(BOL).map(([k, t]) => `<button data-v="${k}" aria-pressed="${chosen.has(k)}">${t}</button>`).join('')}</div>
+    <button id="painOk" class="primary">gotowe</button></div>`;
+  floatText($('dlgName'), 'co bolało?');
+  $('dlg').classList.add('small'); $('dlg').showModal();
+  $('painOpts').onclick = e => { const b = e.target.closest('button'); if (!b) return; chosen.has(b.dataset.v) ? chosen.delete(b.dataset.v) : chosen.add(b.dataset.v); b.setAttribute('aria-pressed', chosen.has(b.dataset.v)); };
+  // „Tak” bez zaznaczenia to nadal zgłoszony ból: zapisuje się jako „coś innego”.
+  $('painOk').onclick = () => { cur.rate.bol = chosen.size ? Object.keys(BOL).filter(k => chosen.has(k)) : ['INNE']; save(); $('dlg').close(); showRate(); };
+}
 // Z serwisem: wynik trafia do kolejki i od razu próbujemy go wysłać. Bez zasięgu zostaje w kolejce do następnego połączenia.
 function queueResult() {
-  const s = stats(cur.plan, cur.log);
+  const s = stats(cur.plan, cur.log, cur.kg);
   outbox = [...outbox.filter(w => w.poczatek !== cur.t0), { trening: cur.plan.name, poczatek: cur.t0, koniec: cur.t1, tekst: finalText(),
-    dane: { reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals })) } }];
+    dane: { reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals, kgs: p.kgs })), ...cur.rate } }];
   store('outbox', outbox);
   return flushOutbox();
 }
@@ -964,8 +1021,8 @@ $('shareBtn').onclick = async () => {
 };
 $('saveBtn').onclick = () => {
   if (API) queueResult(); // zapis w historii zawsze oddaje wynik trenerowi
-  const s = stats(cur.plan, cur.log), text = finalText();
-  past.unshift({ name: cur.plan.name, t0: cur.t0, t1: cur.t1, text, reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals })) });
+  const s = stats(cur.plan, cur.log, cur.kg), text = finalText();
+  past.unshift({ name: cur.plan.name, t0: cur.t0, t1: cur.t1, text, reps: s.reps, hold: s.hold, done: s.done, total: s.total, per: s.per.map(p => ({ ex: p.ex, vals: p.vals, kgs: p.kgs })) });
   past = past.slice(0, 100); store('history', past);
   cur = null; save(); $('doneNote').value = ''; sel = null;
   show('home'); renderHome();
