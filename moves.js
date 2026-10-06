@@ -667,6 +667,43 @@ function setSex(sex) {
 function mountMoves(root = document) {
   for (const svg of root.querySelectorAll('svg.move:not([data-on])')) { const d = mountMove(svg); svg.dataset.on = 1; if (d) moving.set(svg, d); }
 }
+
+// Przerwa: popiersie od przodu (płeć z ankiety) z płucami w klatce, w stylu postaci z ćwiczeń: kremowy obrys, wnętrze w kolorze
+// panelu. Płuca jaśnieją i ciemnieją w rytmie oddechu (CSS .breath w index.html). Układ 100×100, oś ciała x = 50, punkty lewej
+// połowy (prawa to lustro). Proporcje: barki ok. 3 szerokości głowy u mężczyzny i 2,7 u kobiety, szyja schodzi w barki łukiem
+// mięśnia czworobocznego, ręce opuszczone wzdłuż tułowia; u kobiety węższa talia i delikatny obrys piersi.
+const BUST = {
+  M: {
+    torso: [[43, 27], [43, 32.5], [38.5, 36.5], [32, 38.7], [26.5, 41], [24.5, 44.5], [27.5, 52], [29.5, 58], [30.5, 68], [32.5, 79], [34, 88], [34.5, 96], [34.5, 104]],
+    arm: [[27, 40], [21.5, 42.5], [18.6, 49], [18, 58], [18.3, 70], [19, 82], [19.6, 94], [20, 104], [29.5, 104], [29.6, 94], [30, 82], [30.4, 70], [30.2, 60], [29.5, 52], [28.5, 45]],
+    lung: [[44.5, 38], [39, 41], [34, 50], [31.5, 62], [32, 72], [33.5, 77], [40, 73], [45.5, 71], [47.5, 62], [47.5, 50], [46.5, 42]],
+    chest: 'M31,57Q38,62.5 48.5,60', // dolny brzeg mięśnia piersiowego
+  },
+  K: {
+    torso: [[44, 27], [44, 32.5], [40.5, 36.3], [34.5, 38.6], [29.5, 41], [27.5, 44.5], [30.5, 52], [32.5, 58], [33.2, 66], [35.5, 78], [37, 86], [36.5, 96], [35.5, 104]],
+    arm: [[30, 40.5], [25.5, 42.5], [22.8, 48.5], [22.3, 57], [22.6, 69], [23.2, 81], [23.8, 93], [24.2, 104], [31.8, 104], [31.9, 93], [32.2, 81], [32.6, 69], [32.4, 60], [31.8, 52], [31, 45]],
+    lung: [[45.3, 38.5], [40.5, 41.5], [36.2, 50], [34.1, 61.5], [34.5, 71], [35.8, 75.5], [41.4, 72], [46.1, 70.2], [47.8, 62], [47.8, 50], [47, 42.5]],
+    chest: 'M34,55C34.5,63.5 39,68.5 44,68C46.5,67.8 48.5,66.6 49.2,65', // delikatny obrys piersi
+  },
+};
+function mountBreath(svg) {
+  const NS = 'http://www.w3.org/2000/svg', mk = (tag, attrs, parent = svg) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); parent.appendChild(el); return el; };
+  const B = BUST[SEX === 'K' ? 'K' : 'M'], mir = pts => pts.map(([x, y]) => [100 - x, y]).reverse();
+  const head = shape => smooth(shape.map(([x, y]) => [50 + x * 1.05, 16.5 + y * 1.05]));
+  svg.replaceChildren();
+  svg.setAttribute('viewBox', '0 0 100 100');
+  // Najpierw wszystkie obrysy, potem wypełnienia: tułów i ręce zlewają się w jeden kontur (jak w animacjach ćwiczeń).
+  const body = [smooth([...B.torso, ...mir(B.torso)]), smooth(B.arm), smooth(mir(B.arm))];
+  for (const cls of ['ao', 'af']) for (const d of body) mk('path', { class: cls, d });
+  for (const d of [...(SEX === 'K' ? [head(HAIR_CAP)] : []), head(HEAD_FRONT)]) for (const cls of ['ao', 'af']) mk('path', { class: cls, d });
+  for (const pts of [B.lung, mir(B.lung)]) mk('path', { class: 'lung', d: smooth(pts) });
+  mk('path', { class: 'tr', d: 'M50,30V44M45.5,49.5L50,44L54.5,49.5' }); // tchawica i oskrzela
+  // Obojczyki, mostek i dolny brzeg klatki albo piersi; lewa połowa i jej lustro.
+  const half = `M47,38.5Q40,37.5 31.5,40.5${B.chest}`;
+  mk('path', { class: 'ad', d: `${half}M50,41V71` });
+  mk('path', { class: 'ad', d: half, transform: 'translate(100 0) scale(-1 1)' });
+  svg.dataset.sex = SEX;
+}
 if (typeof requestAnimationFrame !== 'undefined') (function loop(ms) {
   for (const [svg, draw] of moving) { if (!svg.isConnected) moving.delete(svg); else if (svg.getClientRects().length) draw(ms); }
   requestAnimationFrame(loop);

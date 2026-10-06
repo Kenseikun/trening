@@ -255,9 +255,9 @@
   .mv figcaption span { display: inline-flex; align-items: center; gap: 7px }
   .eq { width: 16px; height: 4px; border-radius: 2px; background: var(--gear) }
   .eq.band { background: var(--blue) }
-  .move .ao { fill: var(--cream); stroke: var(--cream); stroke-width: 3; stroke-linejoin: round } .move .af { fill: var(--panel) }
-  .move .aho { fill: var(--cream) } .move .ahf { fill: var(--panel) } .move .an-far .ao, .move .an-far .aho { fill: #8E9892; stroke: #8E9892 }
-  .move .am { fill: var(--red) } .move .ad { fill: none; stroke: rgba(231,232,226,.32); stroke-width: 1; stroke-linecap: round }
+  :is(.move, .breath) .ao { fill: var(--cream); stroke: var(--cream); stroke-width: 3; stroke-linejoin: round } :is(.move, .breath) .af { fill: var(--panel) }
+  :is(.move, .breath) .aho { fill: var(--cream) } :is(.move, .breath) .ahf { fill: var(--panel) } .move .an-far .ao, .move .an-far .aho { fill: #8E9892; stroke: #8E9892 }
+  .move .am { fill: var(--red) } :is(.move, .breath) .ad { fill: none; stroke: rgba(231,232,226,.32); stroke-width: 1; stroke-linecap: round }
   .move .ae { fill: none; stroke: var(--cream); stroke-width: 1.5; stroke-linecap: round }
   .move .gr { stroke: rgba(231,232,226,.3); stroke-width: 1.5 }
   .move .pb { fill: var(--gear) } .move .pbl { stroke: var(--gear); stroke-width: 4; stroke-linecap: round }
@@ -279,18 +279,20 @@
   #dBlock b { font-size: clamp(1.3rem, calc(100cqh / var(--rows, 3) * .48), 3.4rem) }
   #rWhere { color: var(--red); font-size: .9rem }
 
-  /* Przerwa pod chmurą */
+  /* Przerwa: tors z płucami (płeć z ankiety). Płuca oddychają: jaśnieją i ciemnieją w rytmie 3 s wdech, 3 s wydech.
+     Niebieskie w przerwie, czerwone w ostatnich sekundach odliczania (.hot) i w serii na czas (.work). */
   #timer { position: fixed; inset: 0; z-index: 5; overflow-y: auto; background: inherit }
   #timer .sheet { justify-content: center; text-align: center; padding-bottom: 22px }
-  .cloud { width: 84px; height: 65px; margin: 0 auto; flex: none }
-  .cloud g { fill: var(--blue) } .cloud line { stroke: var(--blue); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 3 7; animation: fall .8s linear infinite }
-  #timer.work .cloud g { fill: var(--red) } #timer.work .cloud line { stroke: var(--red) }
-  #timer.prep .cloud g { fill: var(--cream) } #timer.prep .cloud line { stroke: var(--cream) }
-  @keyframes fall { to { stroke-dashoffset: -20 } }
+  .breath { display: block; height: 104px; width: auto; aspect-ratio: 1; margin: 0 auto; flex: none;
+    -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent) }
+  .breath .lung { fill: var(--blue); fill-opacity: .25; stroke: var(--blue); stroke-width: 1.2; stroke-linejoin: round; animation: breathe 6s ease-in-out infinite; transition: fill .4s, stroke .4s }
+  .breath .tr { fill: none; stroke: var(--cream); stroke-opacity: .5; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round }
+  #timer.work .lung, #timer.hot .lung { fill: var(--red); stroke: var(--red) }
+  @keyframes breathe { 0%, 100% { fill-opacity: .25 } 45%, 55% { fill-opacity: .95 } }
   #tLabel { margin: 2px auto 0; font-size: .9rem }
   #tNum { font-size: min(22vw, 140px); font-weight: 500; line-height: 1; margin: 0 auto 6px; letter-spacing: -.01em }
   #timer:not(:has(.mv)) #tNum { font-size: min(31vw, 200px) }
-  #timer:not(:has(.mv)) .cloud { width: 126px; height: 98px }
+  #timer:not(:has(.mv)) .breath { height: 150px }
   #tNum .d { display: inline-block; width: .6em; text-align: center } #tNum .c { display: inline-block; width: .28em; text-align: center; transform: translateY(-.06em) }
   #timer.hot #tNum { color: var(--red) }
   .track { height: 4px; border-radius: 4px; background: rgba(231,232,226,.16); margin: 4px 0 14px; overflow: hidden; flex: none }
@@ -354,7 +356,8 @@
     #work .mus span:has(.sw.s) { display: none }
   }
   @media (prefers-reduced-motion: reduce) {
-    .plot *, .float span, .cloud line { animation: none !important }
+    .plot *, .float span { animation: none !important }
+    .breath .lung { animation: none; fill-opacity: .6 }
   }
 </style>
 </head>
@@ -447,10 +450,7 @@
 <section id="timer" hidden role="timer">
   <div class="sheet">
     <div id="tStrip"></div>
-    <svg class="cloud" viewBox="0 0 120 96" aria-hidden="true">
-      <g><circle cx="37" cy="40" r="13"/><circle cx="59" cy="31" r="19"/><circle cx="82" cy="39" r="14"/><rect x="24" y="38" width="72" height="15" rx="7.5"/></g>
-      <line x1="44" y1="62" x2="44" y2="92"/><line x1="60" y1="62" x2="60" y2="92" style="animation-delay:-.3s"/><line x1="76" y1="62" x2="76" y2="92" style="animation-delay:-.55s"/>
-    </svg>
+    <svg id="tFig" class="breath" aria-hidden="true"></svg>
     <p id="tLabel" class="lbl"></p>
     <div id="tNum"></div>
     <div class="track"><span id="tDim"></span></div>
@@ -957,6 +957,7 @@ function timer(phase, sec, onEnd, end = Date.now() + sec * 1000) {
   tDone = onEnd; lastBeep = null; tLen = Math.max(1, (end - Date.now()) / 1000);
   const st = S()[cur.i], it = curItem();
   $('timer').className = phase;
+  if ($('tFig').dataset.sex !== SEX) mountBreath($('tFig')); // tors według płci z ankiety
   $('tStrip').innerHTML = strip();
   $('tLabel').textContent = { prep: t('getReady'), work: exName(it), rest: t('rest') }[phase];
   $('tSkip').textContent = phase === 'work' ? t('stop') : t('skip');
