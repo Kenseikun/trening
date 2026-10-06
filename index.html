@@ -172,6 +172,8 @@
   /* Menu: arkusze z importem, biblioteką i historią */
   .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px }
   .sheet-head h2 { margin: 0; flex: 1 }
+  /* Długi arkusz (np. dieta): nagłówek z zamknięciem zostaje na górze podczas przewijania. */
+  #sheet .sheet-head { position: sticky; top: -16px; z-index: 1; margin: -16px 0 2px; padding: 16px 0 6px; background: #38423E }
   .pane > * + * { margin-top: 10px }
   #p-act button, #p-set button { width: 100% }
   details summary { list-style: none; cursor: pointer }
@@ -220,6 +222,25 @@
   .lib .move { width: 84px; height: 60px; flex: none; margin: 0; border-radius: 12px; aspect-ratio: auto !important }
   .lib small { display: block; color: var(--stone); font-size: .8rem; font-weight: 500 }
   .hist summary { min-height: 52px; display: flex; align-items: center; border-bottom: 1px solid var(--line) }
+  /* Start: obok przycisku treningu przycisk diety (gdy trener ją wysłał). Bez rozpiski dieta zajmuje cały pasek. */
+  #home .dock { display: flex; gap: 10px }
+  #home .dock > * + * { margin-top: 0 }
+  #home .dock .primary { flex: 1; min-width: 0 }
+  #dietBtn { flex: none; min-height: 54px; padding: 0 16px; white-space: nowrap }
+  #home .dock:has(#startBtn[hidden]) #dietBtn { flex: 1 }
+  /* Dieta: dni tygodnia w jednym rzędzie (domyślnie dziś), posiłki jako karty z przykładami do wyboru. */
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 0 }
+  .days button { min-height: 44px; padding: 0; font-size: .92rem; color: var(--stone) }
+  .days button[aria-selected=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
+  .days + h2 { margin-top: 18px }
+  .meal { border: 1px solid var(--line); border-radius: 22px; padding: 12px 16px 4px; margin: 10px 0 }
+  .meal h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0; font-size: 1.15rem; font-weight: 600; text-transform: lowercase }
+  .meal h3 small { flex: none; font-size: .8rem; font-weight: 600; color: var(--stone); text-transform: none }
+  .meal .lbl { margin: 8px 0 2px }
+  .meal ul { list-style: none; margin: 0; padding: 0 }
+  .meal li { padding: 9px 0; border-top: 1px solid var(--line); line-height: 1.3 }
+  .meal li b { font-weight: 600 }
+  .meal li small { display: block; margin-top: 2px; color: var(--stone); font-size: .84rem }
   .resume { border: 1px solid var(--blue); border-radius: 22px; padding: 14px 16px; margin: 12px 0 0 }
   .resume p { margin: 0 0 12px }
 
@@ -437,7 +458,7 @@
     <button class="pos" data-for="hParts" hidden></button>
   </div>
   <div id="empty" class="gate" hidden><h1 class="float" id="eTitle"></h1><p class="stone" id="eText"></p></div>
-  <div class="dock"><button id="startBtn" class="primary"></button></div>
+  <div class="dock"><button id="dietBtn" hidden data-t="dietBtn">dieta</button><button id="startBtn" class="primary"></button></div>
 </main>
 
 <section id="work" class="sheet" hidden>
@@ -537,6 +558,7 @@
     <button id="logoutBtn" data-t="logout">wyloguj się</button>
     <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska i wyniki zostają u trenera.</p>
   </div>
+  <div id="p-diet" class="pane"><div id="diet"></div></div>
 </dialog>
 
 <dialog id="ask" tabindex="-1"><p id="askText"></p><div class="row"><button id="askYes" class="primary"></button><button id="askNo"></button></div></dialog>
@@ -564,6 +586,8 @@ let auth = load('auth', null), outbox = load('outbox', []);
 // Z kodem dostępu liczy się tylko rozpiska z serwisu. Rozpiska wczytana kiedyś importem zostaje w pamięci telefonu, ale się nie pokazuje.
 setSex(load('plec', 'M')); // postać w animacjach: kobieta albo mężczyzna, według ankiety
 let served = [], imported = API ? [] : load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
+// Dieta od trenera przychodzi z serwisu razem z rozpiską; kopia w pamięci telefonu działa bez zasięgu. dietDay: wybrany dzień (0 = poniedziałek).
+let diet = null, dietJson = '', dietDay = null;
 let tInt, tDone, tLen, lastBeep, ac, wl;
 const allPlans = () => [...imported, ...served];
 const save = () => store('cur', cur);
@@ -771,8 +795,9 @@ function renderHome() {
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
   $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
   $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
-  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma.
-  $('startBtn').parentElement.hidden = !plans.length && !!API;
+  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma. Obok przycisk diety.
+  $('startBtn').hidden = !plans.length && !!API; $('dietBtn').hidden = !diet;
+  $('startBtn').parentElement.hidden = $('startBtn').hidden && !diet;
   if (!plans.length) {
     floatText($('eTitle'), t('noPlanTitle'));
     $('eText').textContent = API ? t('noPlanApi') : t('noPlanLocal');
@@ -832,7 +857,7 @@ $('dlgClose').onclick = () => $('dlg').close();
 $('dlgBody').onclick = e => e.target.closest('.more') && $('dlgSteps').scrollIntoView({ behavior: 'smooth' });
 
 // Menu w nagłówku otwiera arkusz z jedną sekcją.
-const SHEETS = { imp: 'sheetImp', lib: 'sheetLib', hist: 'sheetHist', act: 'sheetAct', upd: 'sheetUpd', set: 'sheetSet' };
+const SHEETS = { imp: 'sheetImp', lib: 'sheetLib', hist: 'sheetHist', act: 'sheetAct', upd: 'sheetUpd', set: 'sheetSet', diet: 'sheetDiet' };
 let sheetNow;
 // Tytuł arkusza i „zalogowano jako” w ustawieniach; po zmianie języka piszą się od nowa.
 function sheetText() { const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : ''; }
@@ -843,6 +868,22 @@ function openSheet(k) {
 }
 document.querySelector('.menu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); };
 $('sheetClose').onclick = () => $('sheet').close();
+// Dieta od trenera: dzień tygodnia (na start dziś), cele dnia i posiłki z przykładami do wyboru.
+const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'long' }); // 1.01.2024 to poniedziałek
+function renderDiet() {
+  const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, d = diet.days[i], kcal = d.kcal || diet.kcal, protein = d.protein || diet.protein;
+  $('diet').innerHTML = `<p class="lbl">${esc(diet.name)}</p>
+    <div class="days" role="tablist">${t('dietDays').split(' ').map((n, k) => `<button role="tab" data-day="${k}" aria-selected="${k === i}" aria-label="${esc(dayName(k))}">${n}</button>`).join('')}</div>
+    <h2>${esc(dayName(i))}${i === today ? ' · ' + t('dietToday') : ''}</h2>
+    ${kcal || protein ? `<div class="stats">${cells([kcal && [t('dietKcal'), kcal, 'kcal'], protein && [t('dietProtein'), protein, 'g']])}</div>` : ''}
+    ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}
+    ${d.meals.map(m => `<section class="meal"><h3>${esc(m.name)}<small>${[m.time, m.kcal && m.kcal + ' kcal'].filter(Boolean).map(esc).join(' · ')}</small></h3>
+      ${m.note ? `<p class="stone">${esc(m.note)}</p>` : ''}<p class="lbl">${t('dietPick')}</p>
+      <ul>${m.options.map(o => `<li><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</li>`).join('')}</ul></section>`).join('')}
+    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
+}
+$('dietBtn').onclick = () => { dietDay = null; renderDiet(); openSheet('diet'); };
+$('diet').onclick = e => { const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); } };
 // Zmiana języka (ekran kodu albo ustawienia): napisy z data-t od razu, a to, co składa skrypt, rysuje się od nowa.
 document.addEventListener('click', e => {
   const l = e.target.closest('[data-lang]')?.dataset.lang;
@@ -851,6 +892,7 @@ document.addEventListener('click', e => {
   if (!$('gate').hidden) { floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = ''; }
   if (!$('home').hidden) renderHome();
   if ($('sheet').open) sheetText();
+  if ($('sheet').open && sheetNow === 'diet') renderDiet();
 });
 // Ustawienia: język, ankieta i wylogowanie. Przy wylogowaniu przepustka znika z telefonu; niewysłane wyniki czekają na ponowne wejście tym samym kodem.
 $('surveyBtn').onclick = async () => {
@@ -1123,22 +1165,26 @@ async function wake() {
 // Bez serwisu rozpiski pochodzą tylko z importu.
 let servedJson = '';
 const setPlans = list => { try { served = list.length ? normalize(list) : []; } catch { served = []; } };
+const setDiet = d => { try { diet = d ? normalizeDiet(d) : null; } catch { diet = null; } };
 async function loadPlans() {
   if (!API || !auth) return;
   try {
     const r = await fetch(API + '/api/rozpiska', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
-    const d = await r.json(), json = JSON.stringify(d.plans);
+    const d = await r.json(), json = JSON.stringify(d.plans), dj = JSON.stringify(d.dieta ?? null);
     flushOutbox();
-    if (json === servedJson) return;
-    servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans);
+    if (json === servedJson && dj === dietJson) return;
+    if (json !== servedJson) { servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans); }
+    // Dieta przychodzi razem z rozpiską (serwis bez diet jej nie podaje, wtedy jej nie ma). Usunięta przez trenera zamyka otwarty arkusz.
+    if (dj !== dietJson) { dietJson = dj; store('dieta', d.dieta ?? null); setDiet(d.dieta); if ($('sheet').open && sheetNow === 'diet') diet ? renderDiet() : $('sheet').close(); }
     if (!$('home').hidden) renderHome();
-  } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska; kod nie ma terminu ważności */ }
+  } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska i dieta; kod nie ma terminu ważności */ }
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
   auth = null; store('auth', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
+  store('dieta', null); diet = null; dietJson = '';
   floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = msg || '';
   show('gate');
 }
@@ -1152,6 +1198,7 @@ async function activate(inicjaly, kod) {
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
+    store('dieta', null); diet = null; dietJson = '';
     // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą imię, historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
     const who = inicjaly.replace(/\s/g, '').toUpperCase();
     if (load('who', null) !== who) { store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
@@ -1278,7 +1325,7 @@ history.scrollRestoration = 'manual';
 if (API) {
   document.querySelector('[data-sheet=imp]').hidden = true; // rozpiski przychodzą z serwisu
   document.querySelector('[data-sheet=set]').hidden = false;
-  setPlans(load('plans', []) || []);
+  setPlans(load('plans', []) || []); setDiet(load('dieta', null));
   // Link aktywacyjny od trenera: adres aplikacji z dopiskiem #kod=XXXX-XXXX-XXXX&inicjaly=JK. Dopisek znika z adresu od razu po odczytaniu.
   // Działa też w już otwartej aplikacji (hashchange). Ważna przepustka zostaje, dopóki serwis nie potwierdzi nowego kodu.
   const linkCode = () => {
