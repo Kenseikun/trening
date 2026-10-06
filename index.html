@@ -111,8 +111,9 @@
   /* Druga strona startu i pierwsza strona wyników też mieszczą się na ekranie. Lista przewija się w środku pełnymi wierszami. */
   #plan, .dpage { display: flex; flex-direction: column }
   #plan { height: calc(100dvh - 84px - env(safe-area-inset-bottom)); padding-top: 24px }
-  /* Wyniki to cztery strony: liczby, mięśnie, porównanie, uwagi. Każda kończy się równo z ekranem. */
-  #donePage1 { height: calc(100dvh - 18px - 132px - env(safe-area-inset-bottom)); display: flex; flex-direction: column; padding-bottom: 12px }
+  /* Wyniki to cztery strony: liczby, mięśnie, porównanie, uwagi. Każda kończy się równo z ekranem. Na bardzo niskim ekranie
+     (iPhone SE w Safari) pierwsza strona rośnie i się przewija, zamiast ściskać liczby (patrz #dBlock). */
+  #donePage1 { min-height: calc(100dvh - 18px - 132px - env(safe-area-inset-bottom)); display: flex; flex-direction: column; padding-bottom: 12px }
   .dpage { height: calc(100dvh - 132px - env(safe-area-inset-bottom)) }
   #donePage3 { height: auto; min-height: calc(100dvh - 132px - env(safe-area-inset-bottom)) }
   .dpage > h2:first-child { margin-top: 16px }
@@ -275,7 +276,7 @@
   .stepper.kg output { font-size: 1.35rem } .stepper.kg small { display: block; font-size: .72rem; color: var(--stone); margin-top: 2px }
   .rate { flex: none; margin: 0 0 6px } .rate .lbl { margin: 6px 0 4px } .rate .opts { gap: 6px; align-items: center; flex-wrap: nowrap } .rate .opts button { min-height: 44px; padding: 0 11px; font-size: .9rem; white-space: nowrap }
   /* Liczby na pierwszej stronie wyników rosną z wysokością wiersza (--rows ustawia finish()), żeby nie nachodziły na podpisy na niskich ekranach. */
-  #dBlock { container-type: size }
+  #dBlock { container-type: size; min-height: calc(var(--rows, 3) * 52px) }
   #dBlock b { font-size: clamp(1.3rem, calc(100cqh / var(--rows, 3) * .48), 3.4rem) }
   #rWhere { color: var(--red); font-size: .9rem }
 
@@ -355,6 +356,21 @@
     /* Na niskim ekranie trening pokazuje tylko mięśnie główne (pomocnicze zostają w karcie ćwiczenia), żeby animacja była większa. */
     #work .mus span:has(.sw.s) { display: none }
   }
+  /* Bardzo niskie ekrany (iPhone SE, Safari z paskami na górze i na dole): ciaśniejszy ekran serii, żeby przyciski na dole
+     nie zasłaniały animacji i notatki trenera. Poniżej 600 px znika jeszcze linia mięśni (jest w karcie ćwiczenia). */
+  @media (max-height: 700px) {
+    .page1 .garden, .figpage .garden { min-height: 236px }
+    #work h1 { font-size: 1.35rem }
+    .grow { min-height: 110px }
+    #work .dock { padding-top: 10px }
+    .stepper { grid-template-columns: 44px 1fr 44px }
+    .stepper button { width: 44px; height: 44px; min-height: 44px }
+    .stepper output { font-size: 1.8rem }
+    .stepper.kg { grid-template-columns: 40px 1fr 40px; margin: 2px 0 0 }
+    .stepper.kg button { width: 40px; height: 40px; min-height: 40px }
+    #work .primary { min-height: 48px }
+  }
+  @media (max-height: 600px) { #work .mus { display: none } }
   @media (prefers-reduced-motion: reduce) {
     .plot *, .float span { animation: none !important }
     .breath .lung { animation: none; fill-opacity: .6 }
