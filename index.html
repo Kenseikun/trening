@@ -322,6 +322,10 @@
   /* Karta ćwiczenia: dwie pełne strony z przyciąganiem przewijania (animacja, potem instrukcja), żeby nic nie było ucięte w połowie. */
   #dlg[open] { display: flex; flex-direction: column; height: 90dvh; overflow: hidden }
   #dlg.small[open] { height: fit-content }
+  /* Małe okienka (imię, ból): treść ma wysokość swojej zawartości. Z flex: 1 (podstawa 0) Safari na iPhonie liczyło
+     wysokość okienka „pod treść” z zera i zostawał sam nagłówek, bez pola i przycisków; Chrome liczył z zawartości.
+     Na bardzo niskim ekranie treść może się skurczyć i przewija się w środku, zamiast uciekać pod krawędź. */
+  #dlg.small #dlgBody { flex: 0 1 auto }
   #ask { width: min(420px, 88vw); padding: 22px 20px 16px }
   #ask p { margin: 0 0 18px; font-size: 1.05rem; line-height: 1.45 }
   #ask .row { display: flex; flex-direction: column; gap: 8px }
