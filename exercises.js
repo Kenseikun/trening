@@ -1,5 +1,7 @@
 // Biblioteka ćwiczeń; animacje ruchu są w moves.js.
 // p = mięśnie główne, s = pomocnicze (klucze z MUSCLES). kg = krok zmiany ciężaru w kg (ćwiczenie z obciążeniem), kgOpis = dopisek do ciężaru, np. „na hantel”.
+// sprzet = czego ćwiczenie wymaga, wartości jak w ankiecie (DRAZEK, PORECZE, HANTLE, KETTLE, TRX, GUMY) plus SILOWNIA (sztanga, wyciąg,
+// maszyny); pusta lista = masa ciała. Z tego zgodnosc.js sprawdza, czy rozpiska pasuje do ankiety (rodzaj treningu i dostępny sprzęt).
 // \u00AD to miejsce, w którym długa nazwa może się złamać (z łącznikiem) w wąskiej kolumnie legendy; bez niego procent wychodzi poza kolumnę.
 globalThis.MUSCLES = {
   chest: 'klatka piersiowa', shoulders: 'barki', biceps: 'bicepsy', triceps: 'tricepsy', forearms: 'przed\u00ADramiona',
@@ -10,6 +12,7 @@ globalThis.MUSCLES = {
 
 globalThis.EXERCISES = {
   'podciaganie': {
+    sprzet: ['DRAZEK'],
     name: 'Podciąganie nachwytem', p: ['lats'], s: ['biceps', 'midback', 'forearms'],
     steps: ['Chwyt nachwytem, trochę szerzej niż barki. Start z pełnego zwisu, łokcie proste.',
       'Najpierw ściągnij łopatki w dół, potem ciągnij łokcie w stronę żeber.',
@@ -19,6 +22,7 @@ globalThis.EXERCISES = {
       'Liczy się tylko pełne powtórzenie, od prostych łokci do brody nad drążkiem.'],
   },
   'podciaganie-podchwyt': {
+    sprzet: ['DRAZEK'],
     name: 'Podciąganie podchwytem', p: ['lats', 'biceps'], s: ['midback', 'forearms'],
     steps: ['Chwyt podchwytem (dłonie do siebie) na szerokość barków, pełny zwis.',
       'Ściągnij łopatki i ciągnij łokcie w dół wzdłuż tułowia.',
@@ -27,6 +31,7 @@ globalThis.EXERCISES = {
     tips: ['Zwykle łatwiejsze niż nachwyt, dobre do budowania liczby powtórzeń.'],
   },
   'podciaganie-guma': {
+    sprzet: ['DRAZEK', 'GUMY'],
     name: 'Podciąganie z gumą', p: ['lats'], s: ['biceps', 'midback'],
     steps: ['Zawiąż gumę na drążku (pętla przez pętlę) i włóż w nią stopę albo kolano.',
       'Chwyt jak w zwykłym podciąganiu (nachwyt lub podchwyt, patrz notatka), pełny zwis.',
@@ -36,6 +41,7 @@ globalThis.EXERCISES = {
       'Co kilka tygodni cieńsza guma. Cel: podciąganie bez pomocy.'],
   },
   'podciaganie-negatyw': {
+    sprzet: ['DRAZEK'],
     name: 'Negatywy podciągania', p: ['lats'], s: ['biceps', 'midback', 'forearms'],
     steps: ['Wejdź nad drążek z podskoku albo z podwyższenia, broda nad drążkiem.',
       'Opuszczaj się jak najwolniej (cel: 5 s) aż do pełnego zwisu.',
@@ -44,6 +50,7 @@ globalThis.EXERCISES = {
       'Jeśli nie trzymasz tempa, skróć serię zamiast „spadać”.'],
   },
   'podciaganie-lopatek': {
+    sprzet: ['DRAZEK'],
     name: 'Podciąganie łopatek', p: ['traps'], s: ['lats', 'midback'],
     steps: ['Pełny zwis nachwytem. Łokcie proste przez całe ćwiczenie.',
       'Ściągnij łopatki w dół i do tyłu, ciało uniesie się o kilka centymetrów.',
@@ -52,6 +59,7 @@ globalThis.EXERCISES = {
       'To podstawa zdrowych barków i czystego podciągania.'],
   },
   'zwis': {
+    sprzet: ['DRAZEK'],
     name: 'Zwis na drążku', p: ['forearms'], s: ['lats', 'shoulders'],
     steps: ['Chwyć drążek nachwytem na szerokość barków.',
       'Zawiśnij na prostych rękach, nogi razem.',
@@ -60,6 +68,7 @@ globalThis.EXERCISES = {
       'Wzmacnia chwyt i odciąża kręgosłup.'],
   },
   'trx-wioslowanie': {
+    sprzet: ['TRX'],
     name: 'TRX wiosłowanie', p: ['midback'], s: ['lats', 'biceps', 'shoulders'],
     steps: ['Chwyć uchwyty i odchyl się do tyłu na prostych rękach, ciało proste jak deska.',
       'Ściągnij łopatki i przyciągnij klatkę do dłoni, łokcie blisko tułowia.',
@@ -68,6 +77,7 @@ globalThis.EXERCISES = {
       'Biodra nie opadają, pośladki napięte.'],
   },
   'wioslowanie-australijskie': {
+    sprzet: ['DRAZEK'],
     name: 'Wiosłowanie australijskie', p: ['midback'], s: ['lats', 'biceps'],
     steps: ['Połóż się pod niskim drążkiem (na wysokości bioder), chwyć nachwytem szerzej niż barki.',
       'Ciało proste od pięt do głowy, pięty na ziemi.',
@@ -75,6 +85,7 @@ globalThis.EXERCISES = {
     tips: ['Łatwiej: ugięte kolana. Trudniej: nogi na podwyższeniu.'],
   },
   'dipy': {
+    sprzet: ['PORECZE'],
     name: 'Dipy na poręczach', p: ['triceps', 'chest'], s: ['shoulders'],
     steps: ['Podpór na prostych rękach, barki w dół (z dala od uszu), nogi lekko ugięte z tyłu.',
       'Opuszczaj się z lekkim pochyleniem tułowia, aż łokcie zegną się do ok. 90°.',
@@ -83,6 +94,7 @@ globalThis.EXERCISES = {
       'Łokcie prowadź do tyłu, nie na boki.'],
   },
   'dipy-negatyw': {
+    sprzet: ['PORECZE'],
     name: 'Negatywy dipów', p: ['triceps', 'chest'], s: ['shoulders'],
     steps: ['Wejdź do podporu na prostych rękach, z podskoku albo z podwyższenia.',
       'Opuszczaj się wolno (cel: 4 s) do zgięcia łokci ok. 90°.',
@@ -91,6 +103,7 @@ globalThis.EXERCISES = {
       'Jeśli czujesz przód barku, zmniejsz zakres.'],
   },
   'podpor-porecze': {
+    sprzet: ['PORECZE'],
     name: 'Podpór na poręczach', p: ['triceps', 'shoulders'], s: ['chest', 'abs'],
     steps: ['Wejdź na poręcze, ręce proste, łokcie zablokowane.',
       'Barki mocno w dół, klatka do przodu, brzuch napięty.',
@@ -99,6 +112,7 @@ globalThis.EXERCISES = {
       'Przygotowuje barki i nadgarstki do dipów.'],
   },
   'pompki': {
+    sprzet: [],
     name: 'Pompki', p: ['chest'], s: ['triceps', 'shoulders', 'abs'],
     steps: ['Dłonie trochę szerzej niż barki, ciało proste od głowy do pięt.',
       'Opuść klatkę prawie do podłogi, łokcie ok. 45° od tułowia.',
@@ -107,6 +121,7 @@ globalThis.EXERCISES = {
       'Łatwiej: dłonie na podwyższeniu. Trudniej: nogi na podwyższeniu.'],
   },
   'pompki-trx': {
+    sprzet: ['TRX'],
     name: 'Pompki na TRX', p: ['chest'], s: ['triceps', 'shoulders', 'abs'],
     steps: ['Chwyć uchwyty, stań tyłem do zaczepienia i pochyl się do przodu z prostymi rękami przed klatką.',
       'Ciało proste. Zginaj łokcie, aż dłonie znajdą się przy klatce.',
@@ -115,6 +130,7 @@ globalThis.EXERCISES = {
       'Panowanie nad chwiejnymi uchwytami to sedno tego ćwiczenia.'],
   },
   'pompki-waskie': {
+    sprzet: [],
     name: 'Pompki wąskie', p: ['triceps'], s: ['chest', 'shoulders'],
     steps: ['Dłonie pod barkami albo bliżej, palce do przodu.',
       'Opuszczaj się z łokciami blisko tułowia.',
@@ -123,6 +139,7 @@ globalThis.EXERCISES = {
       'Nie rozkładaj łokci na boki.'],
   },
   'pompki-nogi-wyzej': {
+    sprzet: [],
     name: 'Pompki z nogami wyżej', p: ['chest', 'shoulders'], s: ['triceps'],
     steps: ['Stopy na ławce albo podwyższeniu, dłonie na ziemi szerzej niż barki.',
       'Ciało proste, opuść klatkę do podłogi.',
@@ -130,6 +147,7 @@ globalThis.EXERCISES = {
     tips: ['Im wyższe podwyższenie, tym więcej pracy barków.', 'Nie łam bioder.'],
   },
   'pompki-na-podwyzszeniu': {
+    sprzet: [],
     name: 'Pompki na podwyższeniu', p: ['chest'], s: ['triceps', 'shoulders'],
     steps: ['Dłonie na ławce albo skrzyni, ciało proste, stopy na ziemi.',
       'Opuść klatkę do krawędzi, łokcie ok. 45°.',
@@ -137,6 +155,7 @@ globalThis.EXERCISES = {
     tips: ['Łatwiejsza wersja pompek: im wyżej dłonie, tym łatwiej.'],
   },
   'guma-rozciaganie': {
+    sprzet: ['GUMY'],
     name: 'Rozciąganie gumy (pull-apart)', p: ['shoulders'], s: ['midback', 'traps'],
     steps: ['Trzymaj gumę przed sobą na wysokości barków, ręce proste, chwyt na szerokość barków.',
       'Rozciągnij gumę na boki, ściągając łopatki, aż dotknie klatki.',
@@ -144,6 +163,7 @@ globalThis.EXERCISES = {
     tips: ['Barki nisko, nie unoś ich do uszu.', 'Świetne na rozgrzewkę i postawę.'],
   },
   'guma-rotacja': {
+    sprzet: ['GUMY'],
     name: 'Rotacja zewnętrzna z gumą', p: ['shoulders'], s: [],
     steps: ['Przyczep gumę na wysokości łokcia i stań do niej bokiem.',
       'Łokieć przy boku (możesz włożyć zwinięty ręcznik), zgięty pod kątem 90°.',
@@ -152,6 +172,7 @@ globalThis.EXERCISES = {
       'Seria na jedną rękę, potem na drugą.'],
   },
   'guma-odwrotne-rozpietki': {
+    sprzet: ['GUMY'],
     name: 'Odwrotne rozpiętki z gumą', p: ['shoulders'], s: ['midback', 'traps'],
     steps: ['Przyczep gumę przed sobą na wysokości klatki albo trzymaj oba jej końce.',
       'Ręce lekko ugięte. Rozciągnij je na boki, ściągając łopatki.',
@@ -159,6 +180,7 @@ globalThis.EXERCISES = {
     tips: ['Pracują tylne części barków. Nie pomagaj sobie odchylaniem tułowia.'],
   },
   'kolana-porecze': {
+    sprzet: ['PORECZE'],
     name: 'Unoszenie kolan na poręczach', p: ['abs'], s: ['triceps', 'shoulders'],
     steps: ['Podpór na poręczach na prostych rękach.',
       'Unieś kolana do klatki, lekko podwijając miednicę.',
@@ -166,6 +188,7 @@ globalThis.EXERCISES = {
     tips: ['Barki nisko przez całe ćwiczenie.', 'Trudniejsza wersja: proste nogi.'],
   },
   'kolana-zwis': {
+    sprzet: ['DRAZEK'],
     name: 'Unoszenie kolan w zwisie', p: ['abs'], s: ['forearms', 'lats'],
     steps: ['Zwis na drążku, łopatki lekko ściągnięte.',
       'Unieś kolana do klatki, podwijając miednicę.',
@@ -174,6 +197,7 @@ globalThis.EXERCISES = {
       'Następny krok: proste nogi do poziomu.'],
   },
   'plank': {
+    sprzet: [],
     name: 'Deska', p: ['abs'], s: ['shoulders', 'glutes'],
     steps: ['Oprzyj się na przedramionach, łokcie pod barkami.',
       'Ciało proste od głowy do pięt, pośladki i brzuch napięte.',
@@ -182,6 +206,7 @@ globalThis.EXERCISES = {
       'Lepiej krócej, ale w idealnej pozycji.'],
   },
   'deska-bokiem': {
+    sprzet: [],
     name: 'Deska bokiem', p: ['obliques'], s: ['abs', 'shoulders'],
     steps: ['Połóż się na boku, łokieć pod barkiem, nogi proste jedna na drugiej.',
       'Unieś biodra tak, żeby ciało tworzyło jedną linię.',
@@ -189,6 +214,7 @@ globalThis.EXERCISES = {
     tips: ['Biodra wypchnięte do przodu, pośladki nie uciekają do tyłu.'],
   },
   'trx-rollout': {
+    sprzet: ['TRX'],
     name: 'TRX rollout', p: ['abs'], s: ['lats', 'shoulders'],
     steps: ['Chwyć uchwyty i stań tyłem do zaczepienia. Proste ręce trzymaj przed sobą, taśmy napięte.',
       'Pochylaj się do przodu, unosząc proste ręce nad głowę. Ciało proste jak deska.',
@@ -197,6 +223,7 @@ globalThis.EXERCISES = {
       'Trudność zależy od kąta. Zacznij bardziej pionowo.'],
   },
   'trx-kolana': {
+    sprzet: ['TRX'],
     name: 'TRX przyciąganie kolan', p: ['abs'], s: ['shoulders'],
     steps: ['Stopy w pętlach TRX, podpór na prostych rękach jak do pompki.',
       'Przyciągnij kolana do klatki, lekko unosząc biodra.',
@@ -204,6 +231,7 @@ globalThis.EXERCISES = {
     tips: ['Barki nad dłońmi. W pozycji startowej biodra nie opadają.'],
   },
   'dead-bug': {
+    sprzet: [],
     name: 'Dead bug', p: ['abs'], s: [],
     steps: ['Połóż się na plecach, ręce w górę, biodra i kolana zgięte pod kątem 90°.',
       'Dociśnij lędźwie do podłogi.',
@@ -211,6 +239,7 @@ globalThis.EXERCISES = {
     tips: ['Lędźwie przez cały czas dociśnięte do podłogi. O to chodzi w tym ćwiczeniu.'],
   },
   'przysiad': {
+    sprzet: [],
     name: 'Przysiad', p: ['quads', 'glutes'], s: ['hamstrings'],
     steps: ['Stopy na szerokość bioder lub barków, palce lekko na zewnątrz.',
       'Zejdź w dół, cofając biodra, kolana idą w kierunku palców.',
@@ -218,6 +247,7 @@ globalThis.EXERCISES = {
     tips: ['Pięty na ziemi, plecy proste.'],
   },
   'przysiad-guma': {
+    sprzet: ['GUMY'],
     name: 'Przysiad z gumą', p: ['quads'], s: ['glutes', 'hamstrings'],
     steps: ['Stań na gumie, drugi koniec trzymaj przy barkach.',
       'Zrób przysiad jak zwykle: biodra do tyłu, kolana w kierunku palców.',
@@ -225,6 +255,7 @@ globalThis.EXERCISES = {
     tips: ['Grubsza guma albo krótszy chwyt to większy opór.'],
   },
   'trx-przysiad-wykroczny': {
+    sprzet: ['TRX'],
     name: 'TRX przysiad wykroczny', p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
     steps: ['Stań tyłem do zaczepienia, jedna stopa w pętli TRX za Tobą.',
       'Zegnij przednią nogę, cofając tylną w pętli. Tułów lekko pochylony.',
@@ -233,6 +264,7 @@ globalThis.EXERCISES = {
       'Ciężar na przedniej nodze, tylna tylko pomaga w równowadze.'],
   },
   'przysiad-jednonoz': {
+    sprzet: ['TRX'],
     name: 'Przysiad jednonóż na podwyższeniu', p: ['quads'], s: ['glutes'],
     steps: ['Stań jedną nogą na krawędzi ławki albo skrzyni, druga noga zwisa swobodnie.',
       'Trzymaj się TRX-a albo słupka dla równowagi.',
@@ -241,6 +273,7 @@ globalThis.EXERCISES = {
       'To droga do pistoletu. Z czasem coraz mniej pomagaj sobie rękami.'],
   },
   'wykroki': {
+    sprzet: [],
     name: 'Wykroki chodzone', p: ['quads', 'glutes'], s: ['hamstrings', 'calves'],
     steps: ['Zrób duży krok do przodu i opuść tylne kolano prawie do ziemi.',
       'Wypchnij się przednią nogą i przejdź do kolejnego kroku drugą nogą.',
@@ -248,6 +281,7 @@ globalThis.EXERCISES = {
     tips: ['Przednie kolano nad stopą, nie ucieka do środka.'],
   },
   'mostek': {
+    sprzet: [],
     name: 'Mostek biodrowy', p: ['glutes'], s: ['hamstrings'],
     steps: ['Połóż się na plecach, kolana zgięte, stopy blisko pośladków.',
       'Unieś biodra, mocno napinając pośladki, aż ciało utworzy linię od kolan do barków.',
@@ -255,6 +289,7 @@ globalThis.EXERCISES = {
     tips: ['Pracują pośladki, nie lędźwie. Nie przeginaj pleców.'],
   },
   'mostek-jednonoz': {
+    sprzet: [],
     name: 'Mostek jednonóż', p: ['glutes'], s: ['hamstrings'],
     steps: ['Jak mostek, ale z jedną nogą wyprostowaną w górze.',
       'Unieś biodra, odpychając się piętą nogi podporowej. Biodra na równi.',
@@ -262,6 +297,7 @@ globalThis.EXERCISES = {
     tips: ['Miednica nie przechyla się na bok.'],
   },
   'guma-sklon': {
+    sprzet: ['GUMY'],
     name: 'Skłon z gumą (good morning)', p: ['hamstrings'], s: ['glutes', 'lowerback'],
     steps: ['Stań na gumie, drugi koniec załóż za kark na barki.',
       'Kolana lekko ugięte. Pochyl tułów do przodu z prostymi plecami (ruch z bioder).',
@@ -270,6 +306,7 @@ globalThis.EXERCISES = {
       'Rozciąganie z tyłu ud jest tu normalne.'],
   },
   'guma-uginanie-nog': {
+    sprzet: ['GUMY'],
     name: 'Uginanie nóg z gumą', p: ['hamstrings'], s: ['calves'],
     steps: ['Przyczep gumę nisko przed sobą, załóż pętlę na kostki i usiądź na ławce.',
       'Zegnij kolana, przyciągając pięty pod siebie.',
@@ -277,6 +314,7 @@ globalThis.EXERCISES = {
     tips: ['Można też leżąc na brzuchu albo na plecach ze stopami w TRX.'],
   },
   'lydki-guma': {
+    sprzet: ['GUMY'],
     name: 'Wspięcia na palce z gumą', p: ['calves'], s: [],
     steps: ['Stań na gumie przednią częścią stóp, końce gumy trzymaj przy barkach.',
       'Wspnij się wysoko na palce, sekunda pauzy.',
@@ -284,6 +322,7 @@ globalThis.EXERCISES = {
     tips: ['Pełny zakres ruchu. Na stopniu możesz opuścić pięty niżej.'],
   },
   'wyciag-prostowanie': {
+    sprzet: ['SILOWNIA'],
     kg: 2.5,
     name: 'Prostowanie ramion na wyciągu', p: ['triceps'], s: ['forearms', 'abs'],
     steps: ['Stań twarzą do wyciągu, linka z górnego bloczka. Chwyć drążek albo linę nachwytem.',
@@ -293,6 +332,7 @@ globalThis.EXERCISES = {
     tips: ['Ruszają się tylko przedramiona. Jeśli łokcie uciekają do przodu albo pomagasz sobie tułowiem, zmniejsz ciężar.'],
   },
   'przysiad-sztanga': {
+    sprzet: ['SILOWNIA'],
     kg: 2.5,
     name: 'Przysiad ze sztangą', p: ['quads', 'glutes'], s: ['hamstrings', 'adductors', 'lowerback', 'abs'],
     steps: ['Sztanga na górze pleców (nie na karku), chwyt trochę szerzej niż barki. Stopy na szerokość bioder lub trochę szerzej, palce lekko na zewnątrz.',
@@ -302,6 +342,7 @@ globalThis.EXERCISES = {
     tips: ['Pięty cały czas na ziemi, kolana nie uciekają do środka.', 'Pierwsze tygodnie: lekko, technika ważniejsza od ciężaru.'],
   },
   'przysiad-goblet': {
+    sprzet: ['HANTLE'],
     kg: 1,
     name: 'Przysiad z hantlem (goblet)', p: ['quads', 'glutes'], s: ['adductors', 'abs'],
     steps: ['Trzymaj hantel pionowo przy mostku, łokcie w dół.',
@@ -311,6 +352,7 @@ globalThis.EXERCISES = {
     tips: ['Dobre pierwsze ćwiczenie na naukę przysiadu: ciężar z przodu pomaga trzymać plecy prosto.'],
   },
   'martwy-rumunski': {
+    sprzet: ['HANTLE'],
     kg: 1, kgOpis: 'na hantel',
     name: 'Martwy ciąg rumuński z hantlami', p: ['hamstrings', 'glutes'], s: ['lowerback', 'forearms'],
     steps: ['Stań prosto z hantlami przed udami, stopy na szerokość bioder, kolana lekko ugięte.',
@@ -320,6 +362,7 @@ globalThis.EXERCISES = {
     tips: ['To ruch bioder, nie pleców: kolana zostają w tym samym ugięciu.', 'Jeśli plecy się zaokrąglają, skróć zakres.'],
   },
   'hip-thrust': {
+    sprzet: ['SILOWNIA'],
     kg: 2.5,
     name: 'Hip thrust ze sztangą', p: ['glutes'], s: ['hamstrings', 'quads'],
     steps: ['Oprzyj łopatki o krawędź ławki, sztanga na biodrach (z podkładką), stopy na ziemi na szerokość bioder.',
@@ -329,6 +372,7 @@ globalThis.EXERCISES = {
     tips: ['Na górze golenie mniej więcej pionowo: jeśli nie, przesuń stopy.', 'Nie wyginaj lędźwi w łuk: ruch kończą pośladki.'],
   },
   'wyciskanie-lezac': {
+    sprzet: ['SILOWNIA'],
     kg: 2.5,
     name: 'Wyciskanie sztangi leżąc', p: ['chest'], s: ['triceps', 'shoulders'],
     steps: ['Połóż się na ławce, oczy pod sztangą, stopy mocno na ziemi. Ściągnij łopatki.',
@@ -338,6 +382,7 @@ globalThis.EXERCISES = {
     tips: ['Przy większym ciężarze zawsze z asekuracją.', 'Pośladki i łopatki cały czas na ławce.'],
   },
   'wyciskanie-hantli-nad-glowe': {
+    sprzet: ['HANTLE'],
     kg: 1, kgOpis: 'na hantel',
     name: 'Wyciskanie hantli nad głowę', p: ['shoulders'], s: ['triceps', 'traps', 'abs'],
     steps: ['Stań stabilnie, hantle na wysokości barków, łokcie lekko przed tułowiem.',
@@ -347,6 +392,7 @@ globalThis.EXERCISES = {
     tips: ['Nie odchylaj się do tyłu: tułów zostaje prosto.', 'Można też siedząc na ławce z oparciem.'],
   },
   'wioslowanie-hantlem': {
+    sprzet: ['HANTLE'],
     kg: 1,
     name: 'Wiosłowanie hantlem jednorącz', p: ['lats', 'midback'], s: ['biceps', 'forearms'],
     steps: ['Oprzyj jedną rękę o ławkę, plecy proste, prawie poziomo. Hantel w drugiej ręce zwisa pod barkiem.',
@@ -356,6 +402,7 @@ globalThis.EXERCISES = {
     tips: ['Tułów się nie obraca: ruch robi ręka i łopatka.'],
   },
   'sciaganie-drazka': {
+    sprzet: ['SILOWNIA'],
     kg: 2.5,
     name: 'Ściąganie drążka wyciągu górnego', p: ['lats'], s: ['biceps', 'midback'],
     steps: ['Usiądź, uda pod wałkami. Chwyć drążek nachwytem, trochę szerzej niż barki.',
@@ -365,6 +412,7 @@ globalThis.EXERCISES = {
     tips: ['Nie szarp tułowiem: zmniejsz ciężar, jeśli musisz się bujać.', 'Dobre przygotowanie do podciągania na drążku.'],
   },
   'wioslowanie-wyciag': {
+    sprzet: ['SILOWNIA'],
     kg: 2.5,
     name: 'Wiosłowanie na wyciągu siedząc', p: ['midback', 'lats'], s: ['biceps', 'lowerback'],
     steps: ['Usiądź, stopy na podpórce, kolana lekko ugięte. Chwyć uchwyt, plecy proste.',
@@ -374,6 +422,7 @@ globalThis.EXERCISES = {
     tips: ['Tułów prawie nieruchomy: ruch robią ręce i łopatki.'],
   },
   'wykroki-hantle': {
+    sprzet: ['HANTLE'],
     kg: 1, kgOpis: 'na hantel',
     name: 'Wykroki z hantlami', p: ['quads', 'glutes'], s: ['hamstrings', 'adductors'],
     steps: ['Stań prosto z hantlami w opuszczonych rękach.',
@@ -383,6 +432,7 @@ globalThis.EXERCISES = {
     tips: ['Krok na tyle długi, żeby przednia pięta nie odrywała się od ziemi.'],
   },
   'unoszenie-bokiem': {
+    sprzet: ['HANTLE'],
     kg: 1, kgOpis: 'na hantel',
     name: 'Unoszenie hantli bokiem', p: ['shoulders'], s: ['traps'],
     steps: ['Stań prosto, hantle przy udach, łokcie lekko ugięte.',
@@ -392,6 +442,7 @@ globalThis.EXERCISES = {
     tips: ['Lekki ciężar i pełna kontrola: bez bujania tułowiem.'],
   },
   'uginanie-hantle': {
+    sprzet: ['HANTLE'],
     kg: 1, kgOpis: 'na hantel',
     name: 'Uginanie ramion z hantlami', p: ['biceps'], s: ['forearms'],
     steps: ['Stań prosto, hantle w opuszczonych rękach, dłonie do przodu.',

@@ -53,7 +53,7 @@ Ikona „Trening” pojawi się na ekranie początkowym, a aplikacja otworzy si�
 
 ## Pierwsze uruchomienie
 
-Na pierwszym ekranie wpisz inicjały i kod od trenera albo otwórz link aktywacyjny od trenera. Potem aplikacja zada kilka pytań (np. o doświadczenie, cel i sprzęt), z których trener ułoży plan. Wystarczy raz: potem aplikacja działa też bez zasięgu, a każda nowa rozpiska pojawia się sama.
+Na pierwszym ekranie wpisz inicjały i kod od trenera albo otwórz link aktywacyjny od trenera. Potem aplikacja zada kilka pytań (np. o doświadczenie, cel, sprzęt i odżywianie), z których trener ułoży plan. Wystarczy raz: potem aplikacja działa też bez zasięgu, a każda nowa rozpiska pojawia się sama.
 
 Na iPhonie link otworzy się w Safari, a nie w aplikacji z ekranu początkowego, więc tam kod najlepiej wpisać ręcznie.
 
