@@ -6,6 +6,9 @@
 // fa kąt stóp, eb/kb kierunek zgięcia łokci/kolan (±1), s skrót perspektywiczny ramion [ramię, przedramię], sup = leży na plecach.
 // E i ea: łokieć nieruchomy w punkcie E, przedramię pod kątem ea (dłoń zatacza łuk wokół łokcia, np. prostowanie na wyciągu).
 // Bez h: ciało proste od kostek (biodro wynika z F i t). a zamiast H: proste ręce pod kątem a (liczba albo [bliższa, dalsza]).
+// Hs zamiast H: dłonie przypięte do barku [wzdłuż tułowia w stronę głowy, do przodu] i idą razem z tułowiem (guma albo sztanga przy barkach).
+// Anatomia (pilnuje `node logic.js`): łokieć zgięty najwyżej do ok. 150°, kąt goleń–stopa (kostka do czubków palców) od 65° (od 80° przy
+// prostym kolanie) do 158°, palce po stronie przodu nogi, stopa nie wchodzi w podłoże. Na palcach kostka jest wysoko nad ziemią.
 // Taśma TRX się nie rozciąga: w pozie A i B dłoń albo stopa musi być w tej samej odległości od zaczepu (pilnuje tego `node logic.js`).
 const SEG = { torso: 58, neck: 7, head: 11, ua: 30, fa: 34, th: 44, sh: 42, ft: 13 };
 const HALF = { shoulder: 19, hip: 9 }; // pół szerokości barków i bioder w widoku od przodu
@@ -13,7 +16,7 @@ const HALF = { shoulder: 19, hip: 9 }; // pół szerokości barków i bioder w w
 const STAND = { h: [150, 98], t: -90, H: [150, 104], F: [150, 184], fa: 12 };
 const HANG = { h: [150, 140], t: -90, H: [157, 18], F: [140, 222], fa: 60 };
 const SUPPORT = { h: [148, 94], t: -88, H: [152, 100], F: [120, 160], fa: 70 };
-const PLANK = { t: -11, H: [218, 186], F: [46, 182], fa: 40, eb: [1, 1] };
+const PLANK = { t: -8.2, H: [218, 186], F: [44.8, 175], fa: 86.8, eb: [1, 1] };
 // Widok od przodu: stoi, ręce wzdłuż tułowia / wisi na drążku na prostych rękach.
 const FSTAND = { h: [150, 98], H: [[176, 104], [124, 104]], F: [[160, 184], [140, 184]] };
 const FHANG = { h: [150, 139], H: [[182, 18], [118, 18]], F: [[158, 224], [142, 224]] };
@@ -33,14 +36,14 @@ const MOVES = {
   // Wiosłowanie TRX: twarzą do zaczepu, ciało odchylone do tyłu. Dłonie zostają prawie w miejscu, a klatka podchodzi do dłoni.
   row: {
     props: [['ground', 190], ['strap', 270, -16, 'wr0']],
-    A: { t: -130, H: [163, 43], F: [200, 184], fa: -60 },
-    B: { t: -109, H: [170, 53], F: [200, 184], fa: -60 },
+    A: { t: -130, H: [163, 43], F: [200, 184], fa: -41 },
+    B: { t: -109, H: [170, 53], F: [200, 184], fa: -20 },
   },
   // Wiosłowanie australijskie: zwis pod niskim drążkiem klatką do góry, pięty na ziemi; klatka idzie do drążka.
   invrow: {
     props: [['ground', 190], ['post', 131, 88, 190], ['bar', 131, 88]],
     A: { t: -159, H: [131, 89], F: [220, 184], fa: -60 },
-    B: { t: -138, H: [131, 89], F: [220, 184], fa: -60 },
+    B: { t: -138, H: [131, 89], F: [220, 184], fa: -50 },
   },
   // Dipy: na dole łokieć zgięty do 90° i nie głębiej, przedramię prawie pionowo, tułów lekko pochylony.
   dip: {
@@ -49,26 +52,27 @@ const MOVES = {
     B: { h: [154, 115], t: -70, H: [152, 100], F: [124, 182], fa: 70 },
   },
   support: { props: [['ground', 232], ['pbar', 152, 100, 232]], A: SUPPORT, B: SUPPORT },
+  // Pompki i inne podpory na palcach: stopa prawie pionowo, kostka wysoko, czubki palców na podłożu (palce przetaczają się między A i B).
   pushup: {
     props: [['ground', 190]],
-    A: { t: -25.5, H: [188, 184], F: [52, 182], fa: 40 },
-    B: { t: -10, H: [188, 184], F: [52, 182], fa: 40 },
+    A: { t: -22.7, H: [188, 184], F: [49.1, 175.6], fa: 72.3 },
+    B: { t: -7.2, H: [188, 184], F: [50.9, 175], fa: 87.8 },
   },
   // Pompki na TRX: tyłem do zaczepu, taśmy biegną zza pleców do dłoni.
   trxpush: {
     props: [['ground', 190], ['strap', 90, -90, 'wr0']],
-    A: { t: -50, H: [232, 94], F: [80, 182], fa: 40 },
-    B: { t: -35, H: [214, 112], F: [80, 182], fa: 40 },
+    A: { t: -48.1, H: [232, 94], F: [76.4, 178.9], fa: 46.9 },
+    B: { t: -32.4, H: [214, 112], F: [76.4, 176.6], fa: 62.6 },
   },
   declpush: {
     props: [['ground', 190], ['box', 18, 150, 56, 40]],
-    A: { t: -10.5, H: [192, 184], F: [50, 146], fa: 60 },
-    B: { t: 4, H: [192, 184], F: [50, 146], fa: 60 },
+    A: { t: -6.1, H: [192, 184], F: [48.4, 134.9], fa: 88.9 },
+    B: { t: 8.3, H: [192, 184], F: [51.1, 135.3], fa: 103.3 },
   },
   inclpush: {
     props: [['ground', 190], ['box', 176, 152, 56, 38]],
-    A: { t: -41, H: [198, 147], F: [70, 182], fa: 40 },
-    B: { t: -31, H: [198, 147], F: [70, 182], fa: 40 },
+    A: { t: -38.6, H: [198, 147], F: [66.1, 177.4], fa: 56.4 },
+    B: { t: -28.3, H: [198, 147], F: [66.7, 176.1], fa: 66.7 },
   },
   // Guma od tyłu (widać tylne barki i środek pleców; guma rysowana na wierzchu, żeby była widoczna): proste ręce z pozycji przed sobą (skrót perspektywiczny) rozchodzą się szeroko na boki, guma się napina.
   pullapart: {
@@ -85,8 +89,8 @@ const MOVES = {
   // Unoszenie kolan: kolana idą wyżej niż biodra, w stronę klatki.
   kneebars: {
     props: [['ground', 232], ['pbar', 152, 100, 232]],
-    A: { ...SUPPORT, F: [150, 180] },
-    B: { ...SUPPORT, F: [184, 116] },
+    A: { ...SUPPORT, F: [150, 180], fa: 40 },
+    B: { ...SUPPORT, F: [184, 116], fa: 44 },
   },
   kneehang: {
     props: [['bar', 157, 16]],
@@ -98,14 +102,16 @@ const MOVES = {
   // Rollout na TRX: tyłem do zaczepu. Ciało pochyla się jak deska, a proste ręce idą z dołu nad głowę.
   rollout: {
     props: [['ground', 190], ['strap', 60, -110, 'wr0']],
+    // Przy pochyleniu pięty odrywają się od ziemi: ciało przechodzi na palce, kostka idzie w górę.
     A: { t: -78, a: 30, F: [110, 184], fa: 12 },
-    B: { t: -50, a: -50, F: [110, 184], fa: 12 },
+    B: { t: -46.8, a: -50, F: [104, 178.6], fa: 48.2 },
   },
   // Kolana na TRX: stopy w pętlach pod zaczepem, podpór na prostych rękach; kolana idą pod klatkę, biodra lekko w górę.
   trxknees: {
     props: [['ground', 190], ['strap', 58, -150, 'an0']],
-    A: { h: [142, 132], t: -12, H: [200, 184], F: [58, 150], fa: 30 },
-    B: { h: [143.5, 107], t: 13, H: [200, 184], F: [130, 141], fa: 30 },
+    // Stopy w pętlach grzbietem w dół: palce wskazują ziemię, nie golenie.
+    A: { h: [142, 132], t: -12, H: [200, 184], F: [58, 150], fa: 131 },
+    B: { h: [143.5, 107], t: 13, H: [200, 184], F: [130, 141], fa: 139 },
   },
   // Dead bug: prosta ręka opada za głowę, przeciwna noga prostuje się nisko nad ziemią.
   deadbug: {
@@ -118,48 +124,53 @@ const MOVES = {
     A: { ...STAND, H: [210, 50] },
     B: { h: [112, 146], t: -55, H: [205, 100], F: [150, 184], fa: 12 },
   },
+  // Przysiad z gumą: guma pod stopami, końce w dłoniach przy barkach; dłonie idą razem z tułowiem.
   bandsquat: {
-    props: [['ground', 190], ['band2', 'an0', 'sh']],
-    A: { ...STAND, H: [158, 40], eb: [1, 1] },
-    B: { h: [112, 146], t: -55, H: [152, 98], F: [150, 184], fa: 12 },
+    props: [['ground', 190], ['band2', 'an0', 'wr0']],
+    A: { h: [150, 98], t: -90, Hs: [2, 20], F: [150, 184], fa: 12 },
+    B: { h: [112, 146], t: -55, Hs: [2, 20], F: [150, 184], fa: 12 },
   },
   // Przysiad wykroczny: tylna stopa w pętli pod zaczepem, tylne kolano schodzi prawie do ziemi.
   trxsplit: {
     props: [['ground', 190], ['strap', 92, -150, 'an1']],
-    A: { h: [150, 100], t: -88, H: [206, 60], F: [[180, 184], [95, 150]], fa: [12, 80] },
-    B: { h: [140, 140], t: -80, H: [200, 96], F: [[180, 184], [88, 151]], fa: [12, 80] },
+    // Tylna stopa leży w pętli grzbietem w dół: palce w tył i w dół, nie w stronę goleni.
+    A: { h: [150, 100], t: -88, H: [206, 60], F: [[180, 184], [95, 150]], fa: [12, 129] },
+    B: { h: [140, 140], t: -80, H: [200, 96], F: [[180, 184], [88, 151]], fa: [12, 182] },
   },
   // Przysiad na jednej nodze: dłonie trzymają uchwyty w jednym miejscu, druga noga zwisa obok skrzyni.
   boxpistol: {
     props: [['ground', 190], ['box', 70, 130, 90, 60], ['strap', 300, -90, 'wr0']],
-    A: { h: [150, 38], t: -90, H: [210, 9], F: [[150, 124], [182, 124]], fa: [12, 40] },
-    B: { h: [118, 84], t: -60, H: [210, 9], F: [[150, 124], [176, 168]], fa: [12, 60] },
+    A: { h: [150, 38], t: -90, H: [210, 9], F: [[150, 124], [182, 124]], fa: [12, 10] },
+    B: { h: [118, 84], t: -60, H: [210, 9], F: [[150, 124], [176, 168]], fa: [12, -4] },
   },
-  // Wykrok: tylne kolano tuż nad ziemią, tylna pięta w górze.
+  // Wykrok: tylne kolano tuż nad ziemią, tylna pięta w górze. Czubki palców tylnej stopy stoją w miejscu, stopa obraca się wokół nich.
   lunge: {
     props: [['ground', 190]],
-    A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [110, 184]], fa: [12, 40] },
-    B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [106, 172]], fa: [12, 65] },
+    A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [100.1, 175.5]], fa: [12, 74.3] },
+    B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [108.5, 175.7]], fa: [12, 108.1] },
   },
+  // Mostek: stopy płasko, palce w stronę od pośladków (fa 180); wolna noga w mostku jednonóż ma stopę zgiętą palcami w górę.
   bridge: {
     props: [['ground', 190]], sup: true,
-    A: { h: [100, 176], t: 0, H: [90, 185], F: [60, 184], kb: [1, 1], eb: [-1, -1], fa: 0 },
-    B: { h: [104, 140], t: 34, H: [90, 185], F: [60, 184], kb: [1, 1], eb: [-1, -1], fa: 0 },
+    A: { h: [100, 176], t: 0, H: [90, 185], F: [60, 184], kb: [1, 1], eb: [-1, -1], fa: 180 },
+    B: { h: [104, 140], t: 34, H: [90, 185], F: [60, 184], kb: [1, 1], eb: [-1, -1], fa: 180 },
   },
   bridge1: {
     props: [['ground', 190]], sup: true,
-    A: { h: [100, 176], t: 0, H: [90, 185], F: [[60, 184], [39, 115]], kb: [1, 1], eb: [-1, -1], fa: 0 },
-    B: { h: [104, 140], t: 34, H: [90, 185], F: [[60, 184], [33, 92]], kb: [1, 1], eb: [-1, -1], fa: 0 },
+    A: { h: [100, 176], t: 0, H: [90, 185], F: [[60, 184], [39, 115]], kb: [1, 1], eb: [-1, -1], fa: [180, -56] },
+    B: { h: [104, 140], t: 34, H: [90, 185], F: [[60, 184], [33, 92]], kb: [1, 1], eb: [-1, -1], fa: [180, -71] },
   },
+  // Skłon z gumą: guma pod stopami i za karkiem na barkach, dłonie przytrzymują ją z przodu barków i pochylają się razem z tułowiem.
   goodmorning: {
     props: [['ground', 190], ['band2', 'an0', 'sh']],
-    A: { ...STAND, H: [160, 34], eb: [1, 1] },
-    B: { h: [128, 104], t: -12, H: [190, 84], F: [150, 184], fa: 12 },
+    A: { h: [150, 98], t: -90, Hs: [2, 20], F: [150, 184], fa: 12 },
+    B: { h: [128, 104], t: -12, Hs: [2, 20], F: [150, 184], fa: 12 },
   },
+  // Siad na ławce, guma na kostkach: przy wyproście stopa w luzie palcami w górę, przy zgięciu pięta idzie pod ławkę.
   hamcurl: {
     props: [['ground', 190], ['box', 88, 130, 76, 60], ['post', 276, 158, 190], ['band', 276, 176, 'an0']],
-    A: { h: [128, 124], t: -95, H: [100, 128], F: [214, 150], fa: 0, eb: [-1, -1] },
-    B: { h: [128, 124], t: -95, H: [100, 128], F: [162, 178], fa: 40, eb: [-1, -1] },
+    A: { h: [128, 124], t: -95, H: [100, 128], F: [214, 150], fa: -42, eb: [-1, -1] },
+    B: { h: [128, 124], t: -95, H: [100, 128], F: [162, 178], fa: 31, eb: [-1, -1] },
   },
   // Prostowanie ramion na wyciągu: twarzą do maszyny, łokcie przy bokach i nieruchome, przedramię zatacza łuk wokół łokcia.
   // Linka nie zmienia długości: gdy dłonie idą w dół, część płytek stosu jedzie do góry.
@@ -171,10 +182,11 @@ const MOVES = {
   // --- Siłownia. Sprzęt: 'bb' sztanga (z boku widać talerz), 'db' hantle ('end' z boku od czoła, 'v' pionowo, 'h' poziomo), 'bench' ławka [x, y, szer.],
   // 'path' rama maszyny [d, ramka kadru], 'pulley' bloczek [x, y], 'pull' linka od dłoni do bloczka [x, y].
   // Przysiad ze sztangą: sztanga na górze pleców, biodra w tył i w dół do uda poniżej poziomu, plecy proste.
+  // Ręce idą do sztangi bokiem, więc z boku są skrócone (s); łokcie w dół i w tył.
   bbsquat: {
     props: [['ground', 190], ['bb']],
-    A: { ...STAND, H: [143, 37], eb: [-1, -1] },
-    B: { h: [112, 146], t: -55, H: [141, 92], F: [150, 184], fa: 12, eb: [-1, -1] },
+    A: { h: [150, 98], t: -90, Hs: [0, -12], s: [[.6, .6], [.6, .6]], F: [150, 184], fa: 12, eb: [-1, -1] },
+    B: { h: [112, 146], t: -55, Hs: [0, -12], s: [[.6, .6], [.6, .6]], F: [150, 184], fa: 12, eb: [-1, -1] },
   },
   // Przysiad z hantlem (goblet): hantel pionowo przy mostku, tułów wyprostowany, głęboko między kolana.
   goblet: {
@@ -225,7 +237,7 @@ const MOVES = {
     B: { h: [104, 150], t: -96, H: [136, 128], F: [186, 158], fa: -76 },
   },
   // Wykroki z hantlami: hantle w opuszczonych rękach, tylne kolano tuż nad ziemią.
-  dblunge: { props: [['ground', 190], ['db', 'end']], A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [110, 184]], fa: [12, 40] }, B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [106, 172]], fa: [12, 65] } },
+  dblunge: { props: [['ground', 190], ['db', 'end']], A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [100.1, 175.5]], fa: [12, 74.3] }, B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [108.5, 175.7]], fa: [12, 108.1] } },
   // Unoszenie hantli bokiem od przodu: proste ręce do wysokości barków, nie wyżej.
   lateral: {
     front: true, props: [['ground', 199], ['db', 'end']],
@@ -238,10 +250,11 @@ const MOVES = {
     A: { ...STAND, E: [151, 70], ea: 86 },
     B: { ...STAND, E: [151, 70], ea: -62 },
   },
+  // Wspięcie na palce: czubki palców zostają na ziemi, pięta i całe ciało idą w górę; końce gumy w dłoniach przy barkach.
   calf: {
-    props: [['ground', 190], ['band2', 'an0', 'sh']],
-    A: { ...STAND, H: [158, 40] },
-    B: { ...STAND, h: [150, 86], H: [158, 28], F: [150, 172], fa: 62 },
+    props: [['ground', 190], ['band2', 'an0', 'wr0']],
+    A: { h: [150, 98], t: -90, Hs: [2, 20], F: [150, 184], fa: 12 },
+    B: { h: [150, 91], t: -90, Hs: [2, 20], F: [150, 177], fa: 61 },
   },
 };
 
@@ -419,7 +432,7 @@ function ik(root, target, a, b, bend) {
 const pair = v => Array.isArray(v[0]) ? v : [v, v];
 function norm(P, front) {
   const two = (v, d) => Array.isArray(v) ? v : [v ?? d[0], v ?? d[1]];
-  return { h: P.h, t: P.t ?? -90, E: P.E, ea: P.ea, H: P.H && pair(P.H), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
+  return { h: P.h, t: P.t ?? -90, E: P.E, ea: P.ea, H: P.H && pair(P.H), Hs: P.Hs && pair(P.Hs), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
     s: P.s || [[1, 1], [1, 1]], eb: P.eb || (front ? [1, -1] : [1, 1]), kb: P.kb || (front ? [-1, 1] : [-1, -1]) };
 }
 const lerp = (a, b, p) => typeof a === 'number' ? a + (b - a) * p : a.map((x, i) => lerp(x, b[i], p));
@@ -427,7 +440,7 @@ const lerp = (a, b, p) => typeof a === 'number' ? a + (b - a) * p : a.map((x, i)
 // Stawy dla pozy pośredniej p (0 = A, 1 = B).
 function joints(m, p) {
   const A = m.nA, B = m.nB, mix = k => A[k] && lerp(A[k], B[k], p);
-  const P = { t: lerp(A.t, B.t, p), E: mix('E'), ea: mix('ea'), H: mix('H'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p) };
+  const P = { t: lerp(A.t, B.t, p), E: mix('E'), ea: mix('ea'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p) };
   // Poza bez h: ciało proste od kostek do barków (deska, pompka, wiosłowanie). Biodro idzie wtedy po łuku i kolana się nie uginają.
   P.h = mix('h') || at(P.F[0], P.t, SEG.th + SEG.sh);
   const J = { hip: P.h, sh: at(P.h, P.t, SEG.torso) };
@@ -439,9 +452,13 @@ function joints(m, p) {
     J['s' + i] = at(J.sh, P.t + 90, side * HALF.shoulder);
     J['h' + i] = at(J.hip, P.t + 90, side * HALF.hip);
     // Poza z a: ręka prosta pod kątem a (zatacza łuk wokół barku). Poza z H: dłoń w punkcie H, łokieć liczy kinematyka odwrotna.
+    // Poza z Hs: punkt dłoni liczony od barku w układzie tułowia, więc przy skłonie dłoń zostaje przy barku.
     if (P.E) { J['el' + i] = P.E; J['wr' + i] = at(P.E, P.ea, SEG.fa); }
     else if (P.a) { J['el' + i] = at(J['s' + i], P.a[i], SEG.ua * P.s[i][0]); J['wr' + i] = at(J['el' + i], P.a[i], SEG.fa * P.s[i][1]); }
-    else [J['el' + i], J['wr' + i]] = ik(J['s' + i], P.H[i], SEG.ua * P.s[i][0], SEG.fa * P.s[i][1], A.eb[i]);
+    else {
+      const T = P.Hs ? at(at(J['s' + i], P.t, P.Hs[i][0]), P.t + (m.sup ? -90 : 90), P.Hs[i][1]) : P.H[i];
+      [J['el' + i], J['wr' + i]] = ik(J['s' + i], T, SEG.ua * P.s[i][0], SEG.fa * P.s[i][1], A.eb[i]);
+    }
     [J['kn' + i], J['an' + i]] = ik(J['h' + i], P.F[i], SEG.th, SEG.sh, A.kb[i]);
     J['to' + i] = at(J['an' + i], P.fa[i], SEG.ft);
   }

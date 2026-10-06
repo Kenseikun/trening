@@ -198,6 +198,12 @@ if (typeof module !== 'undefined' && require.main === module) {
     assert(e.p.length, `${id}: brak mięśni głównych`);
   }
   // Animacje: każda poza da się policzyć, a taśma TRX ma stałą długość (nie rozciąga się jak guma).
+  // Anatomia w widoku z boku, 21 klatek ruchu (od przodu rzut przekłamuje kąty; skrócone ręce, s < .95, też pomijamy):
+  // łokieć i kolano zgięte najwyżej do ok. 150°, łokieć nie przeskakuje na drugą stronę (dłoń nie przechodzi przez bark),
+  // kąt goleń–stopa (kostka do czubków palców) 65–158°, przy prostym kolanie od 80° (łydka nie puści dalej),
+  // palce po stronie przodu nogi (tam, gdzie wypycha się kolano), czubki palców i pięta nie wchodzą w podłoże ani w skrzynię.
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1]], cross = (a, b) => a[0] * b[1] - a[1] * b[0];
+  const kat = (a, b) => Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1]) / Math.hypot(...a) / Math.hypot(...b)))) * 180 / Math.PI;
   for (const [key, m] of Object.entries(MOVES)) {
     m.nA = norm(m.A, m.front); m.nB = norm(m.B, m.front);
     const len = [0, .5, 1].map(p => {
@@ -206,6 +212,29 @@ if (typeof module !== 'undefined' && require.main === module) {
       return m.props.filter(pr => pr[0] === 'strap').map(pr => Math.hypot(pr[1] - J[pr[3]][0], pr[2] - J[pr[3]][1]));
     });
     len[0].forEach((l, k) => assert(Math.max(...len.map(x => Math.abs(x[k] - l))) / l < .05, `${key}: taśma TRX zmienia długość`));
+    if (m.front) continue;
+    const ground = m.props.find(pr => pr[0] === 'ground')?.[1] ?? Infinity, boxes = m.props.filter(pr => pr[0] === 'box'), strona = [0, 0];
+    for (let k = 0; k <= 20; k++) {
+      const J = joints(m, k / 20), gdzie = `${key}, klatka ${k}/20`;
+      for (const i of [0, 1]) {
+        const ua = sub(J['el' + i], J['s' + i]), fa = sub(J['wr' + i], J['el' + i]), lokiec = kat(sub(J['s' + i], J['el' + i]), fa);
+        if (Math.min(...m.nA.s[i], ...m.nB.s[i]) >= .95) {
+          assert(lokiec >= 28, `${gdzie}: łokieć ${i} zgięty ponad zakres stawu (${lokiec.toFixed(0)}°)`);
+          const z = Math.sign(cross(ua, fa));
+          if (lokiec < 170 && z) { assert(!strona[i] || z === strona[i], `${gdzie}: łokieć ${i} przeskakuje na drugą stronę (dłoń przechodzi przez bark)`); strona[i] = z; }
+        }
+        const an = J['an' + i], th = sub(J['kn' + i], J['h' + i]), sh = sub(an, J['kn' + i]), kolano = kat(sub(J['h' + i], J['kn' + i]), sh);
+        assert(kolano >= 28, `${gdzie}: kolano ${i} zgięte ponad zakres stawu (${kolano.toFixed(0)}°)`);
+        const golen = sub(J['kn' + i], an), stopa = sub(J['to' + i], an), kostka = kat(golen, stopa);
+        assert(Math.sign(cross(golen, stopa)) !== -(kolano > 178 ? -m.nA.kb[i] : Math.sign(cross(th, sh))), `${gdzie}: palce stopy ${i} skierowane w stronę łydki`);
+        assert(kostka >= (kolano > 160 ? 80 : 65) && kostka <= 158, `${gdzie}: kąt w kostce ${i} poza zakresem stawu (${kostka.toFixed(0)}°)`);
+        for (const [nazwa, d] of [['palce', 1.12], ['pięta', -.42]]) {
+          const q = [an[0] + d * stopa[0], an[1] + d * stopa[1]];
+          const pod = Math.min(ground, ...boxes.filter(b => q[0] > b[1] && q[0] < b[1] + b[3] && an[1] < b[2]).map(b => b[2]));
+          assert(q[1] <= pod + 1, `${gdzie}: ${nazwa} stopy ${i} wchodzą w podłoże`);
+        }
+      }
+    }
   }
 
   const p = normalize({ name: 'T2 · Góra A (x)', items: [{ ex: 'pompki', sets: 2, reps: 5, rest: 60 }, { ex: 'plank', sets: 1, time: 30 }] })[0];
