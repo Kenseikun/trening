@@ -212,6 +212,15 @@
   .ask.bad legend::after { content: ' (uzupełnij)'; font-weight: 500 }
   html[lang=en] .ask.bad legend::after { content: ' (required)' }
   .num.bad input { border-color: var(--red) }
+  /* Pole tekstowe w ankiecie (inne uczulenie): pokazuje się dopiero po zaznaczeniu „coś innego”. */
+  .txt { display: flex; flex-direction: column; gap: 8px; margin-top: 18px }
+  .txt input { width: 100%; min-height: 48px; padding: 0 18px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
+  .txt input:focus { outline: none; border-color: var(--blue) }
+  .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
+  .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
+  /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
+  .primary.alarm { background: var(--red); border-color: var(--red); color: var(--ink) }
+  .primary.alarm:active { background: #ff8a8a }
   .fine { margin: 22px 0 8px; font-size: .84rem; line-height: 1.4 }
   #fMsg { margin: 0 0 8px; text-align: center }
   #fMsg:empty { display: none }
@@ -312,6 +321,8 @@
   #timer.work .lung, #timer.hot .lung { fill: var(--red); stroke: var(--red) }
   @keyframes breathe { 0%, 100% { fill-opacity: .25 } 45%, 55% { fill-opacity: .95 } }
   #tLabel { margin: 2px auto 0; font-size: .9rem }
+  /* Zdanie motywacji na przerwie; na bardzo niskich ekranach znika, żeby zostało miejsce na zegar i następne ćwiczenie. */
+  .mot { margin: 4px auto 0; max-width: 32ch; font-size: .95rem; line-height: 1.35; color: var(--stone); text-wrap: balance }
   #tNum { font-size: min(22vw, 140px); font-weight: 500; line-height: 1; margin: 0 auto 6px; letter-spacing: -.01em }
   #timer:not(:has(.mv)) #tNum { font-size: min(31vw, 200px) }
   #timer:not(:has(.mv)) .breath { height: 150px }
@@ -351,7 +362,7 @@
      Na bardzo niskim ekranie treść może się skurczyć i przewija się w środku, zamiast uciekać pod krawędź. */
   #dlg.small #dlgBody { flex: 0 1 auto }
   #ask { width: min(420px, 88vw); padding: 22px 20px 16px }
-  #ask p { margin: 0 0 18px; font-size: 1.05rem; line-height: 1.45 }
+  #ask p { margin: 0 0 18px; font-size: 1.05rem; line-height: 1.45; white-space: pre-line }
   #ask .row { display: flex; flex-direction: column; gap: 8px }
   #ask .row button { width: 100% }
   .hello { display: block; margin: 2px 0 0; padding: 0; min-height: 44px; border: 0; border-radius: 0; text-align: left; text-transform: none; font-size: 1.25rem; font-weight: 600; color: var(--cream); background: none }
@@ -391,7 +402,7 @@
     .stepper.kg button { width: 40px; height: 40px; min-height: 40px }
     #work .primary { min-height: 48px }
   }
-  @media (max-height: 600px) { #work .mus { display: none } }
+  @media (max-height: 600px) { #work .mus, .mot { display: none } }
   @media (prefers-reduced-motion: reduce) {
     .plot *, .float span { animation: none !important }
     .breath .lung { animation: none; fill-opacity: .6 }
@@ -416,6 +427,17 @@
     <p id="gMsg" class="err" role="alert"></p>
   </div>
   <div class="dock"><button id="gBtn" class="primary" data-t="enter">wejdź</button></div>
+</section>
+
+<!-- Braki w ankiecie (nowe pytania, nowa zgoda): bez wyjścia, przy każdym uruchomieniu, aż osoba je uzupełni. -->
+<section id="gap" class="sheet" hidden>
+  <header class="head"><span class="brand"><span data-t="brand">trening</span><i class="dot b"></i><i class="dot r"></i></span></header>
+  <div class="gate">
+    <h1 class="float" id="gapTitle"></h1>
+    <p class="stone" data-t="gapText">W ankiecie pojawiły się nowe pytania, m.in. o odżywianie, i nowa zgoda. Uzupełnij je, żeby dalej korzystać z aplikacji. To zajmie minutę.</p>
+    <p id="gapMsg" class="err" role="alert"></p>
+  </div>
+  <div class="dock"><button id="gapBtn" class="primary alarm" data-t="gapBtn">uzupełnij ankietę</button></div>
 </section>
 
 <section id="form" class="sheet" hidden>
@@ -489,6 +511,7 @@
     <div id="tStrip"></div>
     <svg id="tFig" class="breath" aria-hidden="true"></svg>
     <p id="tLabel" class="lbl"></p>
+    <p id="tMot" class="mot" hidden></p>
     <div id="tNum"></div>
     <div class="track"><span id="tDim"></span></div>
     <div class="row"><button id="tMinus"><span>−15&nbsp;s</span></button><button id="tSkip"></button><button id="tPlus"><span>+15&nbsp;s</span></button></div>
@@ -938,7 +961,9 @@ async function send(text) {
 }
 
 // --- trening
-function show(id) { for (const s of ['gate', 'form', 'home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
+function show(id) { for (const s of ['gate', 'gap', 'form', 'home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
+// Zdanie z puli tekstów, stałe dla danego miejsca (k): po powrocie do aplikacji nie zmienia się w pół przerwy.
+const pick = (list, k) => list[Math.abs(k) % list.length];
 function strip() {
   return `<div class="strip" aria-hidden="true">${S().map((s, i) => {
     const v = cur.log[i], it = cur.plan.items[s.item];
@@ -959,7 +984,8 @@ function renderSet() {
   // Cel: duża liczba, jednostka pod spodem („8/noga” → 8, „powt. · noga”).
   const target = it.time ? [it.time, t('seconds')] : per ? [per[1], t('repsPer', per[2])] : /^\d+$/.test(String(it.reps)) ? [it.reps, t('reps')] : [it.reps, ''];
   $('wStrip').innerHTML = strip();
-  $('wProg').textContent = t('exOf', st.item + 1, cur.plan.items.length);
+  // W ostatniej serii treningu zamiast licznika ćwiczeń zdanie na doping.
+  $('wProg').textContent = cur.i === S().length - 1 && S().length > 1 ? t('lastSet') : t('exOf', st.item + 1, cur.plan.items.length);
   floatText($('wName'), exName(it).toLowerCase());
   $('wBlock').innerHTML = cells([[t('target'), ...target], [t('set'), `${st.set}/${it.sets}`], [t('rest'), fmt(it.rest), t('min')]]);
   $('wMove').innerHTML = moveBlock(it.ex);
@@ -1018,6 +1044,7 @@ function timer(phase, sec, onEnd, end = Date.now() + sec * 1000) {
   if ($('tFig').dataset.sex !== SEX) mountBreath($('tFig')); // tors według płci z ankiety
   $('tStrip').innerHTML = strip();
   $('tLabel').textContent = { prep: t('getReady'), work: exName(it), rest: t('rest') }[phase];
+  $('tMot').hidden = phase !== 'rest'; $('tMot').textContent = pick(t('motRest'), cur.i + Math.floor(cur.t0 / 1000));
   $('tSkip').textContent = phase === 'work' ? t('stop') : t('skip');
   $('tMinus').hidden = $('tPlus').hidden = phase !== 'rest';
   $('tNext').innerHTML = phase === 'rest'
@@ -1054,7 +1081,9 @@ function finish() {
   cur.rate ??= {}; showRate();
   $('dDate').textContent = new Date(cur.t0).toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
   floatText($('dName'), short(cur.plan.name).toLowerCase(), true);
-  $('dCheer').textContent = cheer(s, prev, myName(), load('plec', null));
+  // Słowo po treningu: liczby z cheer(), a do tego zdanie na doping; przy 1., 10., 25., 50. i 100. treningu gratulacje za wytrwałość.
+  const nr = past.length + 1;
+  $('dCheer').textContent = `${cheer(s, prev, myName(), load('plec', null))} ${[1, 10, 25, 50, 100].includes(nr) ? t('milestone', nr) : pick(t('motDone'), Math.floor(cur.t0 / 1000))}`;
   $('dBlock').innerHTML = cells([
     [t('repsT'), s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : t('firstTime')],
     [t('sets'), `${s.done}/${s.total}`, t('ofPlan', Math.round(s.done / s.total * 100))],
@@ -1177,14 +1206,39 @@ async function loadPlans() {
     if (json === servedJson && dj === dietJson) return;
     if (json !== servedJson) { servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans); }
     // Dieta przychodzi razem z rozpiską (serwis bez diet jej nie podaje, wtedy jej nie ma). Usunięta przez trenera zamyka otwarty arkusz.
-    if (dj !== dietJson) { dietJson = dj; store('dieta', d.dieta ?? null); setDiet(d.dieta); if ($('sheet').open && sheetNow === 'diet') diet ? renderDiet() : $('sheet').close(); }
+    if (dj !== dietJson) {
+      dietJson = dj; store('dieta', d.dieta ?? null); store('dietaAt', d.dieta_zmieniono ? Date.parse(d.dieta_zmieniono) : 0); setDiet(d.dieta);
+      if ($('sheet').open && sheetNow === 'diet') diet ? renderDiet() : $('sheet').close();
+    }
     if (!$('home').hidden) renderHome();
+    notices();
   } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska i dieta; kod nie ma terminu ważności */ }
+}
+// Komunikaty od trenera, raz na każdą zmianę: nowa albo zmieniona rozpiska (z listą nowych ćwiczeń), nowa, zmieniona albo zdjęta dieta.
+// Tylko na ekranie startowym, po sprawdzonej i pełnej ankiecie, nigdy w trakcie treningu ani nad innym okienkiem. Osoba, która już
+// trenowała przed tą wersją aplikacji, nie dostaje komunikatu o rozpisce, którą zna.
+function notices() {
+  if (!surveyOk || $('home').hidden || $('sheet').open || $('dlg').open || $('ask').open || (cur && cur.phase !== 'done')) return;
+  const n = myName(), msgs = [], plansAt = load('plansAt', 0), seenPlan = load('widzianaRozpiska', null);
+  const exNow = [...new Set(served.flatMap(p => p.items.map(it => it.ex)))];
+  if (served.length && plansAt && plansAt !== seenPlan) {
+    if (seenPlan !== null || !past.length) {
+      msgs.push(seenPlan === null ? t('noticePlanFirst', n) : t('noticePlan', n));
+      const before = load('cwiczenia', null), fresh = seenPlan !== null && before ? exNow.filter(x => !before.includes(x)) : [];
+      if (fresh.length) msgs.push(t('noticeNewEx', fresh.map(x => exName({ ex: x })).join(', ')));
+    }
+    store('widzianaRozpiska', plansAt); store('cwiczenia', exNow);
+  }
+  const dietAt = diet ? load('dietaAt', 0) : null, seenDiet = load('widzianaDieta', null), dietNew = !!diet && dietAt !== seenDiet;
+  if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
+  else if (!diet && seenDiet !== null) msgs.push(t('noticeDietGone'));
+  store('widzianaDieta', dietAt);
+  if (msgs.length) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null).then(yes => { if (yes && dietNew) $('dietBtn').click(); });
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
   auth = null; store('auth', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
-  store('dieta', null); diet = null; dietJson = '';
+  store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
   floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = msg || '';
   show('gate');
 }
@@ -1198,10 +1252,14 @@ async function activate(inicjaly, kod) {
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
-    store('dieta', null); diet = null; dietJson = '';
+    store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
     // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą imię, historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
+    // Razem z nimi znika to, które komunikaty od trenera już widziała.
     const who = inicjaly.replace(/\s/g, '').toUpperCase();
-    if (load('who', null) !== who) { store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who); }
+    if (load('who', null) !== who) {
+      store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who);
+      for (const k of ['widzianaRozpiska', 'widzianaDieta', 'cwiczenia']) store(k, null);
+    }
     $('gCode').value = $('gIni').value = '';
     show('home'); renderHome(); loadPlans(); checkSurvey();
   } catch { $('gMsg').textContent = t('errOffline'); }
@@ -1214,31 +1272,64 @@ $('gCode').onkeydown = $('gIni').onkeydown = e => { if (e.key === 'Enter') $('gB
 $('gIni').oninput = e => e.target.value = e.target.value.toLocaleUpperCase('pl').replace(/[^\p{L}]/gu, '');
 $('gCode').oninput = e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
 
-// Ankieta po wejściu kodem, dopóki osoba jej nie wypełni. Pytania przychodzą z serwisu (jedna lista w serwis.js).
-// Serwis bez ankiety (404) albo brak zasięgu: aplikacja działa dalej, a ankieta pojawi się przy następnym połączeniu.
-let survey;
+// Ankieta po wejściu kodem, dopóki osoba jej nie wypełni, i zawsze wtedy, gdy czegoś w niej brakuje: nowe pytania albo nowa zgoda po
+// zmianie ankiety w serwisie. Braki blokują aplikację przy każdym uruchomieniu (ekran „gap”, bez wyjścia), także bez zasięgu:
+// zapamiętuje je ankietaBraki. Trening w toku ma pierwszeństwo. Pytania przychodzą z serwisu (jedna lista w serwis.js).
+let survey, surveyOk = false;
+// Pytanie z warunkiem (gdy: [pytanie, odpowiedź], np. „inne uczulenie”) obowiązuje tylko przy tej odpowiedzi.
+const warunek = (p, odp) => !p.gdy || [].concat(odp[p.gdy[0]] ?? []).includes(p.gdy[1]);
+const valid = (p, v) => p.typ === 'liczba' ? Number.isInteger(v) && v >= p.min && v <= p.max
+  : p.typ === 'tekst' ? typeof v === 'string' && !!v.trim() && v.trim().length <= p.max
+  : p.typ === 'wiele' ? Array.isArray(v) && v.length > 0 && v.every(x => p.opcje.some(o => o[0] === x)) : p.opcje.some(o => o[0] === v);
+const answered = p => !warunek(p, survey.odp) || valid(p, survey.odp[p.id]);
+function showGap(offline) { floatText($('gapTitle'), t('gapTitle')); $('gapMsg').textContent = offline ? t('gapOffline') : ''; show('gap'); }
 async function checkSurvey() {
   if (!API || !auth || (cur && cur.phase !== 'done') || !$('form').hidden) return;
-  if (load('ankieta', 0) && load('plec', 0)) return maybeAskName();
   try {
     const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock(t('codeExpired'));
-    if (!r.ok) return;
+    if (!r.ok) throw Error(r.status);
     const d = await r.json();
-    if (d.odpowiedzi) { store('ankieta', 1); store('plec', d.odpowiedzi.plec); setSex(d.odpowiedzi.plec); if (!$('home').hidden) renderHome(); return maybeAskName(); }
-    if ($('home').hidden) return; // tylko z ekranu startowego, nigdy w trakcie treningu
-    survey = { pytania: d.pytania, odp: {} };
-    renderSurvey(); show('form');
-  } catch { /* bez zasięgu spróbujemy przy następnym powrocie do aplikacji */ }
+    if (!d.odpowiedzi) {
+      store('ankietaBraki', null);
+      if ($('home').hidden && $('gap').hidden) return; // tylko z ekranu startowego, nigdy w trakcie treningu
+      survey = { pytania: d.pytania, odp: {} };
+      return renderSurvey(), show('form');
+    }
+    store('plec', d.odpowiedzi.plec); setSex(d.odpowiedzi.plec);
+    const braki = d.pytania.filter(p => warunek(p, d.odpowiedzi) && !valid(p, d.odpowiedzi[p.id])).map(p => p.id);
+    if (braki.length) {
+      store('ankietaBraki', braki.length); surveyOk = false;
+      survey = { pytania: d.pytania, odp: Object.fromEntries(Object.entries(d.odpowiedzi).filter(([k]) => !braki.includes(k))), braki };
+      if ($('dlg').open) $('dlg').close(); if ($('sheet').open) $('sheet').close();
+      return showGap();
+    }
+    store('ankieta', 1); store('ankietaBraki', null); surveyOk = true;
+    if (!$('gap').hidden) show('home');
+    if (!$('home').hidden) renderHome();
+    maybeAskName(); notices();
+  } catch { if (load('ankietaBraki', 0) && !$('home').hidden) showGap(true); /* bez zasięgu: blokada z ostatniego połączenia */ }
 }
+$('gapBtn').onclick = () => {
+  if (!survey?.braki) return showGap(true);
+  renderSurvey(); show('form');
+  $('fQs').querySelector('.bad')?.scrollIntoView({ block: 'center' });
+};
 // Pytanie, odpowiedź i jednostka w języku aplikacji: po angielsku z SURVEY_EN (strings.js), a czego tam nie ma, zostaje po polsku.
 const qText = p => (LANG === 'en' && SURVEY_EN[p.id]?.[0]) || p.pyt;
 const oText = (p, o) => (LANG === 'en' && SURVEY_EN[p.id]?.[1]?.[o[0]]) || o[1];
 const uText = j => (LANG === 'en' && UNIT_EN[j]) || j;
 function renderSurvey() {
   floatText($('fTitle'), t('surveyTitle'));
-  const qs = survey.pytania, html = [];
+  // Przy brakach (nowe pytania, nowa zgoda) na górze czerwona prośba, a brakujące pytania są zaznaczone na czerwono.
+  const qs = survey.pytania, html = survey.braki ? [`<p class="note gap">${esc(t('gapHint'))}</p>`] : [];
   for (let i = 0; i < qs.length; i++) {
+    if (qs[i].typ === 'tekst') {
+      const p = qs[i];
+      html.push(`<label class="txt" data-q="${p.id}"${warunek(p, survey.odp) ? '' : ' hidden'}><span class="lbl">${esc(qText(p))}</span>
+        <input maxlength="${p.max}" autocomplete="off" value="${esc(survey.odp[p.id] ?? '')}"></label>`);
+      continue;
+    }
     if (qs[i].typ !== 'liczba') {
       const p = qs[i];
       html.push(`<fieldset class="ask" data-q="${p.id}"><legend>${esc(qText(p))}</legend><div class="opts">${p.opcje.map((o, k) =>
@@ -1251,8 +1342,11 @@ function renderSurvey() {
     i--; html.push(`<div class="nums">${row.join('')}</div>`);
   }
   $('fQs').innerHTML = html.join(''); $('fMsg').textContent = '';
+  for (const id of survey.braki || []) $('fQs').querySelector(`[data-q="${id}"]`)?.classList.add('bad');
   $('fCancel').hidden = !survey.edit;
 }
+// Pytania z warunkiem pokazują się i chowają razem z odpowiedzią, od której zależą.
+const showConditional = () => { for (const p of survey.pytania) if (p.gdy) $('fQs').querySelector(`[data-q="${p.id}"]`).hidden = !warunek(p, survey.odp); };
 // Wybór odpowiedzi: „jeden” zastępuje poprzednią, „wiele” przełącza, a odpowiedź „sam” (np. „nic z tego”) wyklucza pozostałe.
 // Przy limicie (max) nowy wybór zastępuje najwcześniejszy.
 $('fQs').onclick = e => {
@@ -1270,17 +1364,17 @@ $('fQs').onclick = e => {
   } else odp[p.id] = v;
   box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', [].concat(odp[p.id]).includes(p.opcje[x.dataset.k][0])));
   box.classList.remove('bad'); $('fMsg').textContent = '';
+  showConditional();
 };
-// Pola na liczby przyjmują tylko cyfry.
+// Pola na liczby przyjmują tylko cyfry; pole tekstowe (inne uczulenie) zapisuje tekst.
 $('fQs').oninput = e => {
   const box = e.target.closest('[data-q]');
-  e.target.value = e.target.value.replace(/\D/g, '');
-  survey.odp[box.dataset.q] = e.target.value ? +e.target.value : undefined;
+  if (box.classList.contains('txt')) survey.odp[box.dataset.q] = e.target.value || undefined;
+  else {
+    e.target.value = e.target.value.replace(/\D/g, '');
+    survey.odp[box.dataset.q] = e.target.value ? +e.target.value : undefined;
+  }
   box.classList.remove('bad'); $('fMsg').textContent = '';
-};
-const answered = p => {
-  const v = survey.odp[p.id];
-  return p.typ === 'liczba' ? Number.isInteger(v) && v >= p.min && v <= p.max : p.typ === 'wiele' ? v?.length > 0 : v !== undefined;
 };
 $('fBtn').onclick = async () => {
   const bad = survey.pytania.filter(p => !answered(p));
@@ -1296,8 +1390,9 @@ $('fBtn').onclick = async () => {
     const r = await fetch(API + '/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
-    store('ankieta', 1); store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
-    if (survey.edit) ask(t('surveySaved'), t('ok'), null); else maybeAskName();
+    store('ankieta', 1); store('ankietaBraki', null); surveyOk = true; store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
+    if (survey.edit || survey.braki) ask(t('surveySaved'), t('ok'), null).then(notices); else { maybeAskName(); notices(); }
+    survey.braki = null;
   } catch { $('fMsg').textContent = t('surveyFail'); }
   finally { $('fBtn').disabled = false; }
 };
@@ -1316,6 +1411,7 @@ $('updLater').onclick = () => $('sheet').close();
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   if (!$('home').hidden) { loadPlans(); checkSurvey(); checkUpdate(); }
+  if (!$('gap').hidden) checkSurvey(); // ankieta mogła zostać uzupełniona na innym telefonie
   if (!cur || cur.phase === 'done') return;
   if (!wl || wl.released) wake();
   if (!$('timer').hidden) tick();
@@ -1339,7 +1435,8 @@ if (API) {
   };
   addEventListener('hashchange', linkCode);
   const activating = linkCode();
-  if (auth) { show('home'); renderHome(); loadPlans(); checkSurvey(); }
+  // Braki w ankiecie z ostatniego połączenia blokują od razu, zanim serwis odpowie (i bez zasięgu).
+  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); }
   else if (!activating) lock();
 } else { show('home'); renderHome(); loadPlans(); }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

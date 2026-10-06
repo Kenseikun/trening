@@ -208,7 +208,10 @@ if (typeof module !== 'undefined' && require.main === module) {
   }
   // Pliki podane jako argumenty (`node logic.js rozpiski/T2.json rozpiski/dieta-T2.json`): rozpiska ma ćwiczenia z biblioteki
   // i animację dla każdego z nich; dieta (obiekt z "days") ma 7 dni i przykłady do każdego posiłku.
-  const docs = process.argv.slice(2).map(file => JSON.parse(fs.readFileSync(path.resolve(file), 'utf8')));
+  // `--ankieta rozpiski/ankieta-XX.json` (odpowiedzi z „Kopiuj komplet” w panelu) sprawdza jeszcze zgodność z ankietą (zgodnosc.js).
+  const args = process.argv.slice(2), ai = args.indexOf('--ankieta'), ankietaPlik = ai < 0 ? null : args.splice(ai, 2)[1];
+  require('./zgodnosc.js');
+  const docs = args.map(file => JSON.parse(fs.readFileSync(path.resolve(file), 'utf8')));
   const diets = docs.filter(d => d?.days).map(normalizeDiet);
   const plans = docs.filter(d => !d?.days).flatMap(d => normalize(d));
   for (const p of plans) for (const it of p.items) {
@@ -219,7 +222,20 @@ if (typeof module !== 'undefined' && require.main === module) {
     assert(MOVES[EX_MOVE[id]?.[0]], `${id}: brak animacji w moves.js`);
     for (const m of [...e.p, ...e.s]) assert(MUSCLES[m], `${id}: nieznany mięsień "${m}"`);
     assert(e.p.length, `${id}: brak mięśni głównych`);
+    // Sprzęt (wartości jak w ankiecie): bez niego kontrola zgodności z ankietą przepuściłaby ćwiczenie bez sprawdzenia.
+    assert(Array.isArray(e.sprzet) && e.sprzet.every(s => ['DRAZEK', 'PORECZE', 'HANTLE', 'KETTLE', 'TRX', 'GUMY', 'SILOWNIA'].includes(s)), `${id}: brak albo zły "sprzet"`);
   }
+  // Zgodność z ankietą: kalistenika bez sprzętu nie dostaje siłowni ani drążka, uczulenie i weganizm wyłapują dania, zgodny plan przechodzi.
+  const kal = { rodzaj: 'KALISTENIKA', sprzet: ['GUMY'], dni: 3, czas: 45, bol: ['KOLANA'], odzywianie: 'WEGANSKO', alergie: ['ORZECHY'], choroby: ['NIE'] };
+  const zle = ZGODNOSC.plan([{ name: 'T1 · Góra', items: [{ ex: 'przysiad-sztanga', sets: 3, reps: 5 }, { ex: 'podciaganie', sets: 3, reps: 5 }, { ex: 'przysiad-guma', sets: 3, reps: 10 }] }], kal);
+  assert.deepStrictEqual(zle.map(u => u.poziom), ['blad', 'blad', 'uwaga'], JSON.stringify(zle));
+  assert.match(zle[0].tekst, /siłowni/); assert.match(zle[1].tekst, /drążek/); assert.match(zle[2].tekst, /kolana.*Przysiad/);
+  assert.deepStrictEqual(ZGODNOSC.plan([{ name: 'T1', items: [{ ex: 'pompki', sets: 3, reps: 10 }, { ex: 'guma-rozciaganie', sets: 3, reps: 15 }] }], { ...kal, bol: ['NIE'] }), []);
+  const zlaDieta = ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Śniadanie', options: [{ name: 'Skyr z migdałami', note: '15 g migdałów' }, 'Tofu z warzywami'] }] }) }, kal);
+  assert.deepStrictEqual(zlaDieta.map(u => u.tekst.split(':')[0]), ['Uczulenie (orzechy)', 'Sposób odżywiania (wegańsko)'], JSON.stringify(zlaDieta));
+  assert.deepStrictEqual(ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Obiad', options: ['Tofu z ryżem', 'Ciecierzyca z warzywami'] }] }) }, kal), []);
+  assert.match(ZGODNOSC.dieta({ days: [] }, { ...kal, choroby: ['CUKRZYCA'] })[0].tekst, /dietetyk/);
+  assert.match(ZGODNOSC.dieta({ days: [] }, { rodzaj: 'DOM' })[0].tekst, /nie ma pytań o dietę/);
   // Animacje: każda poza da się policzyć, a taśma TRX ma stałą długość (nie rozciąga się jak guma).
   // Anatomia w widoku z boku, 21 klatek ruchu (od przodu rzut przekłamuje kąty; skrócone ręce, s < .95, też pomijamy):
   // łokieć i kolano zgięte najwyżej do ok. 150°, łokieć nie przeskakuje na drugą stronę (dłoń nie przechodzi przez bark),
@@ -333,6 +349,15 @@ if (typeof module !== 'undefined' && require.main === module) {
   globalThis.LANG = 'en';
   assert.match(summaryText(g, { 0: 6, 1: 6, 2: 5 }, '', 0, 60000, null, { kg: { 0: 40, 1: 40, 2: 42.5 } }), /Przysiad ze sztangą \(cel 3×6\): 6×40, 6×40, 5×42,5 kg/);
   globalThis.LANG = 'pl';
+  // Zgodność plików z ankietą osoby: błędy kończą test kodem 1, uwagi trzeba świadomie sprawdzić (np. zgłoszony ból).
+  if (ankietaPlik) {
+    const a = JSON.parse(fs.readFileSync(path.resolve(ankietaPlik), 'utf8')), odp = a.odpowiedzi || a;
+    const uw = [...(plans.length ? ZGODNOSC.plan(plans, odp) : []), ...diets.flatMap(d => ZGODNOSC.dieta(d, odp))];
+    for (const u of uw) console.log(`${u.poziom === 'blad' ? 'BŁĄD ' : 'UWAGA'} ${u.tekst}`);
+    const n = uw.filter(u => u.poziom === 'blad').length;
+    console.log(n ? `ZGODNOŚĆ Z ANKIETĄ: ${n} do poprawienia. Nie oddawaj tego planu.` : `ZGODNOŚĆ Z ANKIETĄ: bez błędów${uw.length ? ', sprawdź uwagi' : ''}.`);
+    if (n) process.exitCode = 1;
+  }
   console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (plans.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : '')
     + (diets.length ? `; diety: ${diets.map(d => d.name).join(', ')}` : ''));
 }
