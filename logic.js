@@ -23,6 +23,27 @@ function normalize(data) {
   });
 }
 
+// Dieta na tydzień od trenera: 7 dni od poniedziałku, w każdym posiłki z co najmniej dwoma przykładami do wyboru, żeby osoba
+// zawsze miała z czego wybrać. Przykład to tekst albo {name, note}; kcal, białko (protein, g), godzina (time) i notatki opcjonalne.
+// Te same reguły sprawdza serwis (dietOk) i panel trenera (parseDiet).
+function normalizeDiet(d) {
+  const txt = v => typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '', num = v => +v > 0 ? Math.round(+v) : 0;
+  if (!txt(d?.name)) throw Error('Dieta: brak "name"');
+  if (!Array.isArray(d.days) || d.days.length !== 7) throw Error('Dieta: "days" ma mieć 7 dni, od poniedziałku');
+  return {
+    name: txt(d.name), note: txt(d.note), kcal: num(d.kcal), protein: num(d.protein),
+    days: d.days.map((day, i) => {
+      if (!Array.isArray(day?.meals) || !day.meals.length) throw Error(`Dieta, dzień ${i + 1}: brak "meals"`);
+      return { note: txt(day.note), kcal: num(day.kcal), protein: num(day.protein), meals: day.meals.map((m, j) => {
+        const options = (Array.isArray(m?.options) ? m.options : []).map(o => o && typeof o === 'object' ? { name: txt(o.name), note: txt(o.note) } : { name: txt(o), note: '' });
+        if (!txt(m?.name)) throw Error(`Dieta, dzień ${i + 1}, posiłek ${j + 1}: brak "name"`);
+        if (options.length < 2 || options.some(o => !o.name)) throw Error(`Dieta, dzień ${i + 1}, ${txt(m.name)}: potrzeba co najmniej dwóch przykładów z nazwą ("options")`);
+        return { name: txt(m.name), time: txt(m.time), kcal: num(m.kcal), note: txt(m.note), options };
+      }) };
+    }),
+  };
+}
+
 // Trening → lista serii; rest = przerwa PO serii (po ostatniej 0).
 function steps(plan) {
   const out = [];
@@ -185,9 +206,11 @@ if (typeof module !== 'undefined' && require.main === module) {
     assert(e.en?.name && e.en.steps?.length === e.steps.length && e.en.tips?.length === e.tips.length, `${id}: brak albo niepełna wersja angielska (en)`);
     assert.strictEqual(!!e.en.kgOpis, !!e.kgOpis, `${id}: kgOpis bez angielskiego odpowiednika`);
   }
-  // Pliki rozpisek podane jako argumenty (`node logic.js rozpiska.json`): format, ćwiczenia z biblioteki i animacja dla każdego z nich.
-  const files = process.argv.slice(2);
-  const plans = files.flatMap(file => normalize(JSON.parse(fs.readFileSync(path.resolve(file), 'utf8'))));
+  // Pliki podane jako argumenty (`node logic.js rozpiski/T2.json rozpiski/dieta-T2.json`): rozpiska ma ćwiczenia z biblioteki
+  // i animację dla każdego z nich; dieta (obiekt z "days") ma 7 dni i przykłady do każdego posiłku.
+  const docs = process.argv.slice(2).map(file => JSON.parse(fs.readFileSync(path.resolve(file), 'utf8')));
+  const diets = docs.filter(d => d?.days).map(normalizeDiet);
+  const plans = docs.filter(d => !d?.days).flatMap(d => normalize(d));
   for (const p of plans) for (const it of p.items) {
     assert(EXERCISES[it.ex], `${p.name}: nieznane ćwiczenie "${it.ex}". Dodaj je do exercises.js razem z animacją w moves.js.`);
     assert(MOVES[EX_MOVE[it.ex]?.[0]], `${p.name}: ćwiczenie "${it.ex}" nie ma animacji w moves.js`);
@@ -240,6 +263,14 @@ if (typeof module !== 'undefined' && require.main === module) {
   const p = normalize({ name: 'T2 · Góra A (x)', items: [{ ex: 'pompki', sets: 2, reps: 5, rest: 60 }, { ex: 'plank', sets: 1, time: 30 }] })[0];
   assert.deepStrictEqual(steps(p), [{ item: 0, set: 1, rest: 60 }, { item: 0, set: 2, rest: 60 }, { item: 1, set: 1, rest: 0 }]);
   assert.throws(() => normalize({ name: 'x', items: [{ ex: 'a', sets: 3 }] }), /reps/);
+  // Dieta: przykłady jako tekst albo {name, note}, liczby z tekstu; 7 dni i co najmniej dwa przykłady do każdego posiłku.
+  const day = { meals: [{ name: 'Śniadanie', time: '7:30', kcal: '550', options: ['Owsianka', { name: 'Jajecznica', note: '3 jajka' }] }] };
+  const dt = normalizeDiet({ name: 'Dieta · tydzień 1', protein: 140, days: Array(7).fill(day) });
+  assert.deepStrictEqual([dt.protein, dt.kcal, dt.days[6].meals[0].kcal, dt.days[0].meals[0].options], [140, 0, 550, [{ name: 'Owsianka', note: '' }, { name: 'Jajecznica', note: '3 jajka' }]]);
+  assert.throws(() => normalizeDiet({ name: 'x', days: Array(6).fill(day) }), /7 dni/);
+  assert.throws(() => normalizeDiet({ name: 'x', days: [...Array(6).fill(day), { meals: [{ name: 'Obiad', options: ['jeden'] }] }] }), /dzień 7, Obiad: .*dwóch/);
+  assert.throws(() => normalizeDiet({ name: 'x', days: [...Array(6).fill(day), { meals: [{ name: 'Obiad', options: ['a', { note: 'b' }] }] }] }), /dwóch/);
+  assert.throws(() => normalizeDiet({ days: Array(7).fill(day) }), /name/);
   assert.strictEqual(fmt(125), '2:05');
   assert.strictEqual(planKind(p.name), planKind('T1 · Góra A (drążek + dipy)'));
   assert.strictEqual(estimate(p), 4); // 40+60+40+60+30 s = 230 s
@@ -302,5 +333,6 @@ if (typeof module !== 'undefined' && require.main === module) {
   globalThis.LANG = 'en';
   assert.match(summaryText(g, { 0: 6, 1: 6, 2: 5 }, '', 0, 60000, null, { kg: { 0: 40, 1: 40, 2: 42.5 } }), /Przysiad ze sztangą \(cel 3×6\): 6×40, 6×40, 5×42,5 kg/);
   globalThis.LANG = 'pl';
-  console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (files.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : ''));
+  console.log(`OK: ${Object.keys(EXERCISES).length} ćwiczeń, mięśnie i animacje na miejscu` + (plans.length ? `; rozpiski: ${plans.map(p => p.name).join(', ')}` : '')
+    + (diets.length ? `; diety: ${diets.map(d => d.name).join(', ')}` : ''));
 }

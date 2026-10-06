@@ -17,6 +17,7 @@ English: [see below](#in-english).
 ## Co potrafi
 
 - **Plan tygodnia od trenera.** Rozpiska sama pojawia się w aplikacji, a od razu widać treningi tygodnia: ile serii, ile czasu i które mięśnie popracują.
+- **Dieta od trenera.** Jeśli trener przygotuje dietę, przycisk „dieta” na ekranie startowym pokazuje plan na każdy dzień tygodnia: posiłki, kalorie i kilka przykładów do wyboru przy każdym posiłku.
 - **Technika pod ręką.** Każde ćwiczenie ma animację z podświetlonymi mięśniami i instrukcję krok po kroku.
 - **Przerwy bez zegarka.** Aplikacja odlicza przerwę, daje sygnał na koniec i pokazuje, co będzie następne.
 - **Ciężar i samopoczucie.** Przy ćwiczeniach z obciążeniem zapisujesz ciężar, a po treningu dwoma dotknięciami oceniasz, jak było, i zgłaszasz, jeśli coś bolało.
