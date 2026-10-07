@@ -70,6 +70,7 @@ globalThis.STR = {
     noticeNewEx: l => `Nowe ćwiczenia: ${l}. Przed treningiem zajrzyj do animacji.`,
     noticeDietFirst: 'Trener przygotował dla Ciebie dietę. Znajdziesz ją pod przyciskiem „dieta” w menu u góry.',
     noticeDiet: 'Trener wprowadził zmiany w Twojej diecie. Pamiętaj, że z każdym dniem efekty będą coraz bardziej widoczne, a Twój organizm będzie Ci wdzięczny.',
+    noticeBoth: n => `Hej${n ? ', ' + n : ''}! Trener dodał Ci nowy trening i dietę. Trening masz na ekranie startowym, a dietę pod przyciskiem „dieta” w menu u góry.`,
     noticeDietGone: 'Trener zdjął dietę z aplikacji. Jeśli masz pytania, napisz do niego.', seeDiet: 'zobacz dietę',
     // Motywacja: na przerwie (krótko), w ostatniej serii i po treningu; kamienie milowe zastępują zdanie po treningu.
     motRest: ['Dobra robota, oddech i dalej.', 'Każda seria to krok bliżej celu.', 'Silniejsze ciało buduje się właśnie tak.', 'Spokojny oddech, następna seria będzie dobra.',
@@ -144,6 +145,7 @@ globalThis.STR = {
     noticeNewEx: l => `New exercises: ${l}. Have a look at the animations before your workout.`,
     noticeDietFirst: 'Your trainer has prepared a diet for you. You will find it under the “diet” button in the top menu.',
     noticeDiet: 'Your trainer has updated your diet. Remember: every day the results become more visible, and your body will thank you.',
+    noticeBoth: n => `Hi${n ? ', ' + n : ''}! Your trainer has added new workouts and a diet for you. Your workouts are on the start screen, and the diet is under the “diet” button in the top menu.`,
     noticeDietGone: 'Your trainer has removed the diet from the app. If you have questions, message them.', seeDiet: 'see diet',
     motRest: ['Good job. Breathe and keep going.', 'Every set is a step closer to your goal.', 'This is how a stronger body is built.', 'Slow breath, the next set will be good.',
       'Consistency makes the difference.', 'Rest a moment, we go again soon.'],
