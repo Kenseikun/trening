@@ -231,12 +231,11 @@
   .lib .move { width: 84px; height: 60px; flex: none; margin: 0; border-radius: 12px; aspect-ratio: auto !important }
   .lib small { display: block; color: var(--stone); font-size: .8rem; font-weight: 500 }
   .hist summary { min-height: 52px; display: flex; align-items: center; border-bottom: 1px solid var(--line) }
-  /* Start: obok przycisku treningu przycisk diety (gdy trener ją wysłał). Bez rozpiski dieta zajmuje cały pasek. */
-  #home .dock { display: flex; gap: 10px }
-  #home .dock > * + * { margin-top: 0 }
-  #home .dock .primary { flex: 1; min-width: 0 }
-  #dietBtn { flex: none; min-height: 54px; padding: 0 16px; white-space: nowrap }
-  #home .dock:has(#startBtn[hidden]) #dietBtn { flex: 1 }
+  /* Ustawienia: pływająca okrągła ikonka w prawym dolnym rogu ekranu startowego, nad przyciskiem „zacznij” (decyzja właściciela
+     z 2026-10-07: w menu u góry jest miejsce na dietę). Bez rozpiski pasek z „zacznij” znika, więc ikonka schodzi niżej. */
+  .fab { position: fixed; right: max(18px, calc(50vw - 262px)); bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 3; width: 44px; height: 44px; min-height: 44px; padding: 0;
+    border-radius: 50%; background: #38423E; border: 1.5px solid var(--line-strong); box-shadow: 0 6px 18px rgba(15,17,19,.45) }
+  #home.noplan .fab { bottom: calc(18px + env(safe-area-inset-bottom)) }
   /* Dieta: dni tygodnia w jednym rzędzie (domyślnie dziś), posiłki jako karty z przykładami do wyboru. */
   .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 0 }
   .days button { min-height: 44px; padding: 0; font-size: .92rem; color: var(--stone) }
@@ -457,7 +456,7 @@
       <button data-sheet="imp"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg></i><span data-t="menuImport">import</span></button>
       <button data-sheet="lib"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg></i><span data-t="menuLib">ćwiczenia</span></button>
       <button data-sheet="hist"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i><span data-t="menuHist">historia</span></button>
-      <button data-sheet="set" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></i><span data-t="menuSet">ustawienia</span></button>
+      <button data-sheet="diet" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M8 3v18M5.5 3v4.5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-1.9 1.3-3 4.2-3 7.6 0 1.6 1 2.9 3 2.9"/></svg></i><span data-t="menuDiet">dieta</span></button>
     </nav>
   </header>
   <button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button>
@@ -480,7 +479,8 @@
     <button class="pos" data-for="hParts" hidden></button>
   </div>
   <div id="empty" class="gate" hidden><h1 class="float" id="eTitle"></h1><p class="stone" id="eText"></p></div>
-  <div class="dock"><button id="dietBtn" hidden data-t="dietBtn">dieta</button><button id="startBtn" class="primary"></button></div>
+  <button id="setFab" class="fab" hidden aria-label="ustawienia" data-ta="menuSet"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></button>
+  <div class="dock"><button id="startBtn" class="primary"></button></div>
 </main>
 
 <section id="work" class="sheet" hidden>
@@ -818,9 +818,8 @@ function renderHome() {
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
   $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
   $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
-  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma. Obok przycisk diety.
-  $('startBtn').hidden = !plans.length && !!API; $('dietBtn').hidden = !diet;
-  $('startBtn').parentElement.hidden = $('startBtn').hidden && !diet;
+  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma.
+  $('startBtn').parentElement.hidden = !plans.length && !!API;
   if (!plans.length) {
     floatText($('eTitle'), t('noPlanTitle'));
     $('eText').textContent = API ? t('noPlanApi') : t('noPlanLocal');
@@ -889,14 +888,18 @@ function sheetText() {
 }
 function openSheet(k) {
   sheetNow = k; sheetText();
+  if (k === 'diet') { dietDay = null; renderDiet(); } // dieta zawsze otwiera się na dzisiejszym dniu
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
 }
 document.querySelector('.menu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); };
+$('setFab').onclick = () => openSheet('set');
 $('sheetClose').onclick = () => $('sheet').close();
 // Dieta od trenera: dzień tygodnia (na start dziś), cele dnia i posiłki z przykładami do wyboru.
 const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'long' }); // 1.01.2024 to poniedziałek
+// Dieta jest w menu na stałe; bez diety od trenera arkusz mówi, że pojawi się tu sama.
 function renderDiet() {
+  if (!diet) return $('diet').innerHTML = `<p class="stone">${esc(t('dietNone'))}</p>`;
   const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, d = diet.days[i], kcal = d.kcal || diet.kcal, protein = d.protein || diet.protein;
   $('diet').innerHTML = `<p class="lbl">${esc(diet.name)}</p>
     <div class="days" role="tablist">${t('dietDays').split(' ').map((n, k) => `<button role="tab" data-day="${k}" aria-selected="${k === i}" aria-label="${esc(dayName(k))}">${n}</button>`).join('')}</div>
@@ -908,7 +911,6 @@ function renderDiet() {
       <ul>${m.options.map(o => `<li><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</li>`).join('')}</ul></section>`).join('')}
     ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
 }
-$('dietBtn').onclick = () => { dietDay = null; renderDiet(); openSheet('diet'); };
 $('diet').onclick = e => { const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); } };
 // Zmiana języka (ekran kodu albo ustawienia): napisy z data-t od razu, a to, co składa skrypt, rysuje się od nowa.
 document.addEventListener('click', e => {
@@ -1219,7 +1221,7 @@ async function loadPlans() {
     // Dieta przychodzi razem z rozpiską (serwis bez diet jej nie podaje, wtedy jej nie ma). Usunięta przez trenera zamyka otwarty arkusz.
     if (dj !== dietJson) {
       dietJson = dj; store('dieta', d.dieta ?? null); store('dietaAt', d.dieta_zmieniono ? Date.parse(d.dieta_zmieniono) : 0); setDiet(d.dieta);
-      if ($('sheet').open && sheetNow === 'diet') diet ? renderDiet() : $('sheet').close();
+      if ($('sheet').open && sheetNow === 'diet') renderDiet();
     }
     if (!$('home').hidden) renderHome();
     notices();
@@ -1244,7 +1246,7 @@ function notices() {
   if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
   else if (!diet && seenDiet !== null) msgs.push(t('noticeDietGone'));
   store('widzianaDieta', dietAt);
-  if (msgs.length) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null).then(yes => { if (yes && dietNew) $('dietBtn').click(); });
+  if (msgs.length) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null).then(yes => { if (yes && dietNew) openSheet('diet'); });
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
@@ -1431,7 +1433,8 @@ document.addEventListener('visibilitychange', () => {
 history.scrollRestoration = 'manual';
 if (API) {
   document.querySelector('[data-sheet=imp]').hidden = true; // rozpiski przychodzą z serwisu
-  document.querySelector('[data-sheet=set]').hidden = false;
+  document.querySelector('[data-sheet=diet]').hidden = false; // dieta przychodzi z serwisu
+  $('setFab').hidden = false;
   setPlans(load('plans', []) || []); setDiet(load('dieta', null));
   // Link aktywacyjny od trenera: adres aplikacji z dopiskiem #kod=XXXX-XXXX-XXXX&inicjaly=JK. Dopisek znika z adresu od razu po odczytaniu.
   // Działa też w już otwartej aplikacji (hashchange). Ważna przepustka zostaje, dopóki serwis nie potwierdzi nowego kodu.
