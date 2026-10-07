@@ -219,8 +219,8 @@
   .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
   .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
-  .primary.alarm { background: var(--red); border-color: var(--red); color: var(--ink) }
-  .primary.alarm:active { background: #ff8a8a }
+  .alarm { background: var(--red); border-color: var(--red); color: var(--ink); font-weight: 700 }
+  .alarm:active { background: #ff8a8a }
   .fine { margin: 22px 0 8px; font-size: .84rem; line-height: 1.4 }
   #fMsg { margin: 0 0 8px; text-align: center }
   #fMsg:empty { display: none }
@@ -883,7 +883,10 @@ $('dlgBody').onclick = e => e.target.closest('.more') && $('dlgSteps').scrollInt
 const SHEETS = { imp: 'sheetImp', lib: 'sheetLib', hist: 'sheetHist', act: 'sheetAct', upd: 'sheetUpd', set: 'sheetSet', diet: 'sheetDiet' };
 let sheetNow;
 // Tytuł arkusza i „zalogowano jako” w ustawieniach; po zmianie języka piszą się od nowa.
-function sheetText() { const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : ''; }
+function sheetText() {
+  const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : '';
+  $('surveyBtn').classList.toggle('alarm', !!load('ankietaBraki', 0)); // braki w ankiecie: przycisk ankiety na czerwono
+}
 function openSheet(k) {
   sheetNow = k; sheetText();
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
@@ -961,7 +964,15 @@ async function send(text) {
 }
 
 // --- trening
-function show(id) { for (const s of ['gate', 'gap', 'form', 'home', 'work', 'timer', 'done']) $(s).hidden = s !== id; scrollTo(0, 0); }
+// Ekran startowy przy znanych brakach w ankiecie zawsze prowadzi do blokady (np. po treningu albo po porzuceniu treningu w toku).
+function show(id) {
+  if (id === 'home' && auth && load('ankietaBraki', 0)) return showGap();
+  for (const s of ['gate', 'gap', 'form', 'home', 'work', 'timer', 'done']) $(s).hidden = s !== id;
+  scrollTo(0, 0);
+}
+// Ekrany samego treningu (seria, przerwa, wyniki): tylko ich nie przerywa blokada ankiety ani komunikat od trenera. Trening „w toku”
+// z paskiem na ekranie startowym nie chroni przed blokadą: porzucony w połowie zablokowałby ją na zawsze (zgłoszenie z 2026-10-07).
+const training = () => ['work', 'timer', 'done'].some(s => !$(s).hidden);
 // Zdanie z puli tekstów, stałe dla danego miejsca (k): po powrocie do aplikacji nie zmienia się w pół przerwy.
 const pick = (list, k) => list[Math.abs(k) % list.length];
 function strip() {
@@ -1218,7 +1229,7 @@ async function loadPlans() {
 // Tylko na ekranie startowym, po sprawdzonej i pełnej ankiecie, nigdy w trakcie treningu ani nad innym okienkiem. Osoba, która już
 // trenowała przed tą wersją aplikacji, nie dostaje komunikatu o rozpisce, którą zna.
 function notices() {
-  if (!surveyOk || $('home').hidden || $('sheet').open || $('dlg').open || $('ask').open || (cur && cur.phase !== 'done')) return;
+  if (!surveyOk || $('home').hidden || $('sheet').open || $('dlg').open || $('ask').open || training()) return;
   const n = myName(), msgs = [], plansAt = load('plansAt', 0), seenPlan = load('widzianaRozpiska', null);
   const exNow = [...new Set(served.flatMap(p => p.items.map(it => it.ex)))];
   if (served.length && plansAt && plansAt !== seenPlan) {
@@ -1284,7 +1295,7 @@ const valid = (p, v) => p.typ === 'liczba' ? Number.isInteger(v) && v >= p.min &
 const answered = p => !warunek(p, survey.odp) || valid(p, survey.odp[p.id]);
 function showGap(offline) { floatText($('gapTitle'), t('gapTitle')); $('gapMsg').textContent = offline ? t('gapOffline') : ''; show('gap'); }
 async function checkSurvey() {
-  if (!API || !auth || (cur && cur.phase !== 'done') || !$('form').hidden) return;
+  if (!API || !auth || training() || !$('form').hidden) return;
   try {
     const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock(t('codeExpired'));
