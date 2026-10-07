@@ -197,7 +197,7 @@ function planFormat(exercises, history) {
 if (typeof module !== 'undefined' && require.main === module) {
   const assert = require('node:assert'), fs = require('node:fs'), path = require('node:path');
   require('./exercises.js'); require('./strings.js');
-  const { EX_MOVE, MOVES, joints, norm } = require('./moves.js');
+  const { EX_MOVE, MOVES, joints, norm, frameAt, cycleOf } = require('./moves.js');
   // Angielski: każdy napis istnieje w obu językach (funkcja w obu albo w żadnym), każde ćwiczenie i mięsień ma tłumaczenie.
   assert.deepStrictEqual(Object.keys(STR.en).sort(), Object.keys(STR.pl).sort(), 'strings.js: różne klucze po polsku i po angielsku');
   for (const k in STR.pl) assert.strictEqual(typeof STR.en[k], typeof STR.pl[k], `strings.js: „${k}” ma inny typ po angielsku`);
@@ -253,8 +253,17 @@ if (typeof module !== 'undefined' && require.main === module) {
     len[0].forEach((l, k) => assert(Math.max(...len.map(x => Math.abs(x[k] - l))) / l < .05, `${key}: taśma TRX zmienia długość`));
     if (m.front) continue;
     const ground = m.props.find(pr => pr[0] === 'ground')?.[1] ?? Infinity, boxes = m.props.filter(pr => pr[0] === 'box'), strona = [0, 0];
-    for (let k = 0; k <= 20; k++) {
-      const J = joints(m, k / 20), gdzie = `${key}, klatka ${k}/20`;
+    // Ruch z sekwencją póz (wykroki z krokiem): klatki z całego cyklu, co 50 ms. Stopa na ziemi stoi w miejscu względem podłoża
+    // (kamera idzie za biodrem, więc liczymy x + cam): czubki palców nie ślizgają się o więcej niż 1,5 między klatkami.
+    const N = m.seq ? Math.round(cycleOf(m) * 20) : 20, naZiemi = [null, null];
+    for (let k = 0; k <= N; k++) {
+      const F = m.seq ? frameAt(m, null, k * 50) : { J: joints(m, k / 20), cam: 0 }, J = F.J, gdzie = `${key}, klatka ${k}/${N}`;
+      if (m.seq) for (const i of [0, 1]) {
+        const an = J['an' + i], st = [J['to' + i][0] - an[0], J['to' + i][1] - an[1]], q = [an[0] + 1.12 * st[0] + F.cam, an[1] + 1.12 * st[1]];
+        const stoi = q[1] >= ground - 3.5;
+        if (stoi && naZiemi[i]) assert(Math.abs(q[0] - naZiemi[i]) < 1.5, `${gdzie}: stopa ${i} ślizga się po podłożu (${(q[0] - naZiemi[i]).toFixed(1)})`);
+        naZiemi[i] = stoi ? q[0] : null;
+      }
       for (const i of [0, 1]) {
         const ua = sub(J['el' + i], J['s' + i]), fa = sub(J['wr' + i], J['el' + i]), lokiec = kat(sub(J['s' + i], J['el' + i]), fa);
         if (Math.min(...m.nA.s[i], ...m.nB.s[i]) >= .95) {

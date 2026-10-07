@@ -1,6 +1,7 @@
 // Animacje ćwiczeń: postać z konturem anatomicznym, widok z boku (twarzą w prawo), od przodu (front: true) albo od tyłu (front i back: true).
 // Priorytet: ma być dokładnie widać, jak wykonać ćwiczenie. Widok wybieramy tak, żeby ruch leżał w płaszczyźnie obrazu.
 // Każdy ruch ma pozę A (luz) i B (spięcie); dłonie i stopy to cele, łokcie i kolana liczy kinematyka odwrotna.
+// Ruch, który dzieje się w przestrzeni (krok), ma zamiast tego sekwencję póz seq (patrz lungeSeq), a z walk także przesuwane podłoże.
 // Pracujące mięśnie (EXERCISES[id].p / .s) czerwienieją przy spięciu i bledną przy rozluźnieniu.
 // Poza: h biodra [x,y], t kąt tułowia (°; 0 = w prawo, -90 = w górę), H dłonie, F kostki (jeden punkt albo [prawa/bliższa, lewa/dalsza]),
 // fa kąt stóp, eb/kb kierunek zgięcia łokci/kolan (±1), s skrót perspektywiczny ramion [ramię, przedramię], sup = leży na plecach.
@@ -24,6 +25,30 @@ const FNARROW = [[172, 18], [128, 18]]; // podchwyt: dłonie na szerokość bark
 const FBAR = ['hbar', 86, 214, 16];
 // Deska bokiem widziana od przodu: podpór na przedramieniu, stopy jedna na drugiej, druga ręka na biodrze.
 const SIDEPLANK = { h: [126, 152], t: -16, H: [[199, 185], [124, 143]], F: [[46, 184], [41, 167]], s: [[1, .35], [1, 1]], eb: [1, 1], fa: [164, 164] };
+
+// Wykrok z krokiem (wymóg właściciela z 2026-10-07: animacja oddaje ruch tak, jak wygląda naprawdę). Jedno powtórzenie, prowadzi noga 0:
+// stanie → noga w górę i krok → zejście, aż tylne kolano jest tuż nad ziemią → wypchnięcie → tylna noga przechodzi do przodu (fwd)
+// albo przednia wraca krokiem w tył do stania. Klucz: [poza, czas od początku cyklu (s), spięcie, stop]. Tylna stopa obraca się wokół
+// czubków palców, przednia stoi płasko w miejscu. Drugie powtórzenie to samo drugą nogą, przesunięte o długość kroku (fwd) albo w miejscu.
+const LUNGE_A = { h: [150, 108], H: [150, 114], F: [[190, 184], [100.1, 175.5]], fa: [12, 74.3] };
+const LUNGE_B = { h: [148, 134], t: -88, H: [148, 140], F: [[190, 184], [108.5, 175.7]], fa: [12, 108.1] };
+function lungeSeq(fwd) {
+  const stand = x => ({ h: [x, 98], H: [x, 104], F: [[x, 184], [x, 184]], fa: [12, 12] }), S = 99; // S: długość kroku (od stopy do stopy)
+  // Stopa w powietrzu: kolano w górę, a tuż przed postawieniem stopa jest nad miejscem lądowania i schodzi prawie pionowo (nie sunie nad podłogą).
+  const P = (h, F, fa) => ({ h, H: [h[0], h[1] + 6], F, fa });
+  const rep = [[stand(91), 0, 0, 1], [P([104, 101], [[136, 166], [91, 184]], [30, 12]), .4, .15], [P([140, 106], [[187, 175], [95.4, 176.7]], [4, 50]), .7, .25],
+    [LUNGE_A, .9, .35], [LUNGE_B, 1.4, 1, 1], [LUNGE_B, 1.9, 1, 1], [LUNGE_A, 2.5, .35],
+    // Odbicie: stopa najpierw odrywa się od ziemi (tylna z palców, przednia cała), dopiero potem idzie nad podłogą.
+    ...(fwd ? [[P([158, 105], [[190, 184], [106, 170]], [12, 84]), 2.7, .25], [P([176, 101], [[190, 184], [158, 164]], [12, 45]), 2.95, .15],
+      [P([186, 99], [[190, 184], [188, 175]], [12, 4]), 3.15, .05]]
+      : [[P([144, 109], [[188, 179], [96.5, 177.1]], [14, 57]), 2.6, .3], [P([138, 108], [[186, 174], [93.6, 179.6]], [16, 40]), 2.7, .25], [P([112, 101], [[148, 166], [91, 184]], [30, 12]), 2.95, .15],
+      [P([95, 99], [[93, 175], [91, 184]], [4, 12]), 3.15, .05]]),
+    [stand(fwd ? 190 : 91), 3.4, 0, 1], [stand(fwd ? 190 : 91), 3.7, 0, 1]];
+  // Druga noga: zamiana nóg (bliższa ↔ dalsza) i przesunięcie w przód o długość kroku.
+  const dx = fwd ? S : 0, sw = v => [v[1], v[0]];
+  const swap = P => ({ ...P, h: [P.h[0] + dx, P.h[1]], H: [P.H[0] + dx, P.H[1]], F: sw(P.F).map(f => [f[0] + dx, f[1]]), fa: sw(P.fa) });
+  return { seq: [...rep, ...rep.slice(1).map(([P, t, a, st]) => [swap(P), t + 3.7, a, st])], walk: fwd ? 2 * S : 0, A: LUNGE_A, B: LUNGE_B };
+}
 
 const MOVES = {
   // Drążek od tyłu (widać pracujące plecy): pełny zakres, na górze drążek na wysokości szyi, głowa nad drążkiem.
@@ -144,11 +169,8 @@ const MOVES = {
     B: { h: [118, 84], t: -60, H: [210, 9], F: [[150, 124], [176, 168]], fa: [12, -4] },
   },
   // Wykrok: tylne kolano tuż nad ziemią, tylna pięta w górze. Czubki palców tylnej stopy stoją w miejscu, stopa obraca się wokół nich.
-  lunge: {
-    props: [['ground', 190]],
-    A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [100.1, 175.5]], fa: [12, 74.3] },
-    B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [108.5, 175.7]], fa: [12, 108.1] },
-  },
+  // Wykroki chodzone: postać idzie do przodu, kamera za biodrem, kreski podłoża przesuwają się pod nią.
+  lunge: { props: [['ground', 190]], ...lungeSeq(true) },
   // Mostek: stopy płasko, palce w stronę od pośladków (fa 180); wolna noga w mostku jednonóż ma stopę zgiętą palcami w górę.
   bridge: {
     props: [['ground', 190]], sup: true,
@@ -237,7 +259,8 @@ const MOVES = {
     B: { h: [104, 150], t: -96, H: [136, 128], F: [186, 158], fa: -76 },
   },
   // Wykroki z hantlami: hantle w opuszczonych rękach, tylne kolano tuż nad ziemią.
-  dblunge: { props: [['ground', 190], ['db', 'end']], A: { h: [150, 108], t: -90, H: [150, 114], F: [[190, 184], [100.1, 175.5]], fa: [12, 74.3] }, B: { h: [148, 134], t: -88, H: [148, 140], F: [[192, 184], [108.5, 175.7]], fa: [12, 108.1] } },
+  // Krok w przód, zejście i powrót do stania przednią nogą; nogi na zmianę.
+  dblunge: { props: [['ground', 190], ['db', 'end']], ...lungeSeq(false) },
   // Unoszenie hantli bokiem od przodu: proste ręce do wysokości barków, nie wyżej.
   lateral: {
     front: true, props: [['ground', 199], ['db', 'end']],
@@ -465,6 +488,37 @@ function joints(m, p) {
   return J;
 }
 
+// Tempo: spięcie 1,2 s, zatrzymanie 0,5 s, powrót 1,2 s, pauza 0,5 s; negatyw 0,8/0,4/3/0,6. Ruch z sekwencją (seq) ma własny cykl.
+const tempoOf = tempo => tempo === 'neg' ? [.8, .4, 3, .6] : [1.2, .5, 1.2, .5];
+const ease = x => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+function cycleOf(m, tempo) { return m.seq ? m.seq[m.seq.length - 1][1] : tempoOf(tempo).reduce((a, b) => a + b); }
+// Klatka w chwili ms: stawy J, spięcie act i kamera cam (o ile w x przesunął się obraz, bo kamera idzie za biodrem idącej postaci).
+function frameAt(m, tempo, ms) {
+  m.nA ??= norm(m.A, m.front); m.nB ??= norm(m.B, m.front);
+  if (m.seq) {
+    const K = m.seq, total = cycleOf(m), lap = Math.floor(ms / 1000 / total);
+    for (const q of K) q.n ??= norm(q[0], m.front);
+    let x = ms / 1000 - lap * total, a = 0, b;
+    // Od stopu do stopu tempo zwalnia na końcach (ease), a w środku idzie równo przez kolejne pozy.
+    for (;;) { b = a + 1; while (!K[b][3]) b++; if (x <= K[b][1] || b === K.length - 1) break; a = b; }
+    x = K[a][1] + ease(Math.min(1, (x - K[a][1]) / (K[b][1] - K[a][1]))) * (K[b][1] - K[a][1]);
+    let k = a; while (k < b - 1 && x > K[k + 1][1]) k++;
+    const u = (x - K[k][1]) / (K[k + 1][1] - K[k][1]), J = joints({ ...m, nA: K[k].n, nB: K[k + 1].n }, u), act = K[k][2] + (K[k + 1][2] - K[k][2]) * u;
+    if (!m.walk) return { J, act, cam: 0 };
+    const cam = J.hip[0] - 150;
+    for (const j in J) J[j] = [J[j][0] - cam, J[j][1]];
+    return { J, act, cam: cam + lap * m.walk };
+  }
+  if (JSON.stringify(m.A) === JSON.stringify(m.B)) return { J: joints(m, 0), act: .78 + .22 * Math.sin(ms / 1000 * Math.PI), cam: 0 };
+  const T = tempoOf(tempo);
+  let x = ms / 1000 % cycleOf(m, tempo), p, act;
+  if (x < T[0]) p = act = ease(x / T[0]);
+  else if ((x -= T[0]) < T[1]) p = act = 1;
+  else if ((x -= T[1]) < T[2]) { p = 1 - ease(x / T[2]); act = tempo === 'neg' ? .9 : p; }
+  else p = act = 0;
+  return { J: joints(m, p), act, cam: 0 };
+}
+
 // Postać w warstwach (od najdalszej): w jednej warstwie najpierw wszystkie obrysy, potem wypełnienia, więc stawy zlewają się w jeden kontur.
 // Zwraca draw(J, act): J = stawy, act = spięcie 0–1 (krycie mięśni).
 function moveFigure(svg, m, e, mk, groundY) {
@@ -551,7 +605,8 @@ function mountMove(svg, fixed) {
   // Kadr: obejmuje obie pozy i rekwizyty; ruchy pionowe w kwadracie, reszta 3:2.
   // Zaczep taśmy TRX jest daleko, więc do kadru się nie liczy: taśma wychodzi poza kadr, a postać zostaje duża.
   const pts = [];
-  for (const p of [0, .5, 1]) { const J = joints(m, p); for (const k in J) pts.push(J[k]); }
+  if (m.seq) for (let k = 0; k < 60; k++) { const { J } = frameAt(m, tempo, k * cycleOf(m) * 1000 / 60); for (const q in J) pts.push(J[q]); }
+  else for (const p of [0, .5, 1]) { const J = joints(m, p); for (const k in J) pts.push(J[k]); }
   for (const pr of m.props) {
     if (pr[0] === 'hbar') pts.push([pr[1], pr[3]], [pr[2], pr[3]]);
     else if (pr[0] === 'post') pts.push([pr[1], pr[2]], [pr[1], pr[3]]);
@@ -579,9 +634,12 @@ function mountMove(svg, fixed) {
   svg.setAttribute('viewBox', `${x0} ${y0} ${x1 - x0} ${y1 - y0}`);
 
   // Rekwizyty stałe pod postacią.
-  let cable;
+  let cable, marks;
   for (const pr of m.props) {
     if (pr[0] === 'ground') mk('line', { x1: x0, x2: x1, y1: pr[1], y2: pr[1], class: 'gr' });
+    // Idąca postać: kreski na podłożu co 33 przesuwają się pod nią (cykl idzie o wielokrotność 33, więc pętla nie ma szwu).
+    if (pr[0] === 'ground' && m.walk) marks = { y: pr[1], x0, n: Math.ceil((x1 - x0) / 33) + 1 };
+    if (marks && !marks.list) marks.list = Array.from({ length: marks.n }, () => mk('line', { class: 'gr' }));
     // Poręcze do dipów biegną wzdłuż kierunku patrzenia, więc z boku to belka na dwóch słupkach.
     if (pr[0] === 'pbar') { for (const x of [pr[1] - 40, pr[1] + 40]) mk('line', { x1: x, x2: x, y1: pr[2], y2: pr[3], class: 'pp' }); mk('line', { x1: pr[1] - 46, x2: pr[1] + 46, y1: pr[2], y2: pr[2], class: 'pbl' }); }
     if (pr[0] === 'box') mk('rect', { x: pr[1], y: pr[2], width: pr[3], height: pr[4], rx: 5, class: 'px' });
@@ -623,19 +681,13 @@ function mountMove(svg, fixed) {
   }
   const L0 = cable && Math.hypot(grip(joints(m, 0))[0] - cable.px, grip(joints(m, 0))[1] - cable.py);
 
-  const still = JSON.stringify(m.A) === JSON.stringify(m.B);
-  const T = tempo === 'neg' ? [.8, .4, 3, .6] : [1.2, .5, 1.2, .5];
-  const ease = x => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
-
   return function draw(ms) {
-    const total = T[0] + T[1] + T[2] + T[3]; let x = ms / 1000 % total, p, act;
-    if (x < T[0]) p = act = ease(x / T[0]);
-    else if ((x -= T[0]) < T[1]) p = act = 1;
-    else if ((x -= T[1]) < T[2]) { p = 1 - ease(x / T[2]); act = tempo === 'neg' ? .9 : p; }
-    else p = act = 0;
-    if (still) { p = 0; act = .78 + .22 * Math.sin(ms / 1000 * Math.PI); }
-    const J = joints(m, p);
+    const { J, act, cam } = frameAt(m, tempo, ms);
     fig(J, act);
+    if (marks) marks.list.forEach((el, k) => {
+      const span = marks.n * 33, x = marks.x0 + ((k * 33 - cam) % span + span) % span;
+      el.setAttribute('x1', x); el.setAttribute('x2', x - 5); el.setAttribute('y1', marks.y); el.setAttribute('y2', marks.y + 5);
+    });
     for (const [el, a, b] of dyn) {
       const A = typeof a === 'string' ? J[a] : a, B = typeof b === 'string' ? J[b] : b;
       el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
@@ -725,4 +777,4 @@ if (typeof requestAnimationFrame !== 'undefined') (function loop(ms) {
   for (const [svg, draw] of moving) { if (!svg.isConnected) moving.delete(svg); else if (svg.getClientRects().length) draw(ms); }
   requestAnimationFrame(loop);
 })(0);
-if (typeof module !== 'undefined') module.exports = { EX_MOVE, MOVES, SEG, joints, norm, setSex };
+if (typeof module !== 'undefined') module.exports = { EX_MOVE, MOVES, SEG, joints, norm, setSex, frameAt, cycleOf };
