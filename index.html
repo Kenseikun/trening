@@ -916,7 +916,7 @@ $('diet').onclick = e => { const b = e.target.closest('[data-day]'); if (b) { di
 document.addEventListener('click', e => {
   const l = e.target.closest('[data-lang]')?.dataset.lang;
   if (!l || l === LANG) return;
-  setLang(l); renderLib();
+  setLang(l); renderLib(); loadPlans(); // serwis zapisuje wybrany język, panel pokazuje go trenerowi
   if (!$('gate').hidden) { floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = ''; }
   if (!$('home').hidden) renderHome();
   if ($('sheet').open) sheetText();
@@ -969,8 +969,10 @@ async function send(text) {
 // Ekran startowy przy znanych brakach w ankiecie zawsze prowadzi do blokady (np. po treningu albo po porzuceniu treningu w toku).
 function show(id) {
   if (id === 'home' && auth && load('ankietaBraki', 0)) return showGap();
+  const back = training();
   for (const s of ['gate', 'gap', 'form', 'home', 'work', 'timer', 'done']) $(s).hidden = s !== id;
   scrollTo(0, 0);
+  if (id === 'home' && back) notices(); // rozpiska albo dieta, która przyszła w trakcie treningu
 }
 // Ekrany samego treningu (seria, przerwa, wyniki): tylko ich nie przerywa blokada ankiety ani komunikat od trenera. Trening „w toku”
 // z paskiem na ekranie startowym nie chroni przed blokadą: porzucony w połowie zablokowałby ją na zawsze (zgłoszenie z 2026-10-07).
@@ -1211,12 +1213,13 @@ const setDiet = d => { try { diet = d ? normalizeDiet(d) : null; } catch { diet 
 async function loadPlans() {
   if (!API || !auth) return;
   try {
-    const r = await fetch(API + '/api/rozpiska', { headers: { Authorization: 'Bearer ' + auth.token } });
+    const r = await fetch(API + '/api/rozpiska?jezyk=' + LANG, { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     const d = await r.json(), json = JSON.stringify(d.plans), dj = JSON.stringify(d.dieta ?? null);
     flushOutbox();
-    if (json === servedJson && dj === dietJson) return;
+    // Bez zmian też sprawdza komunikaty: wstrzymany przez trening albo otwarty arkusz pokaże się teraz, a nie dopiero przy następnej zmianie.
+    if (json === servedJson && dj === dietJson) return notices();
     if (json !== servedJson) { servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans); }
     // Dieta przychodzi razem z rozpiską (serwis bez diet jej nie podaje, wtedy jej nie ma). Usunięta przez trenera zamyka otwarty arkusz.
     if (dj !== dietJson) {
@@ -1234,8 +1237,10 @@ function notices() {
   if (!surveyOk || $('home').hidden || $('sheet').open || $('dlg').open || $('ask').open || training()) return;
   const n = myName(), msgs = [], plansAt = load('plansAt', 0), seenPlan = load('widzianaRozpiska', null);
   const exNow = [...new Set(served.flatMap(p => p.items.map(it => it.ex)))];
+  let planNew = false;
   if (served.length && plansAt && plansAt !== seenPlan) {
     if (seenPlan !== null || !past.length) {
+      planNew = true;
       msgs.push(seenPlan === null ? t('noticePlanFirst', n) : t('noticePlan', n));
       const before = load('cwiczenia', null), fresh = seenPlan !== null && before ? exNow.filter(x => !before.includes(x)) : [];
       if (fresh.length) msgs.push(t('noticeNewEx', fresh.map(x => exName({ ex: x })).join(', ')));
@@ -1243,7 +1248,9 @@ function notices() {
     store('widzianaRozpiska', plansAt); store('cwiczenia', exNow);
   }
   const dietAt = diet ? load('dietaAt', 0) : null, seenDiet = load('widzianaDieta', null), dietNew = !!diet && dietAt !== seenDiet;
-  if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
+  // Trening i dieta naraz: jeden wspólny komunikat zamiast dwóch osobnych (prośba właściciela z 2026-10-07).
+  if (dietNew && planNew) msgs[0] = t('noticeBoth', n);
+  else if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
   else if (!diet && seenDiet !== null) msgs.push(t('noticeDietGone'));
   store('widzianaDieta', dietAt);
   if (msgs.length) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null).then(yes => { if (yes && dietNew) openSheet('diet'); });
