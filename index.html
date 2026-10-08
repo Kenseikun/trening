@@ -464,6 +464,7 @@
     <p id="resumeName"></p>
     <div class="row"><button id="resumeBtn" class="primary" data-t="resume">wznów</button><button id="dropBtn" data-t="discard">porzuć</button></div>
   </div>
+  <p id="hNet" class="note gap" role="status" hidden></p>
   <div id="tabs" class="tabs" role="tablist" aria-label="Treningi tygodnia" data-ta="weekTabs"></div>
   <div id="planHead">
     <h1 id="hName" class="float"></h1>
@@ -604,8 +605,10 @@ const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.se
 // past: nowsze wpisy to obiekty {name, t0, t1, text, reps, hold, done, total, per}; najstarsze były samym tekstem.
 // Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiski tylko z importu. localStorage.api podmienia go do prób lokalnych.
 const API = localStorage.api || 'https://trening.tail847b94.ts.net';
+// Każde połączenie z serwisem ma limit czasu: przy awarii serwera połączenie potrafi wisieć bez końca, a osoba musi dostać komunikat.
+const call = (path, o) => fetch(API + path, { ...o, signal: AbortSignal.timeout?.(15000) });
 // auth = { token, nazwa }; outbox = wyniki czekające na wysłanie do trenera.
-let auth = load('auth', null), outbox = load('outbox', []);
+let auth = load('auth', null), outbox = load('outbox', []), netDown = false; // netDown: serwis nie odpowiedział przy ostatniej próbie
 // Z kodem dostępu liczy się tylko rozpiska z serwisu. Rozpiska wczytana kiedyś importem zostaje w pamięci telefonu, ale się nie pokazuje.
 setSex(load('plec', 'M')); // postać w animacjach: kobieta albo mężczyzna, według ankiety
 let served = [], imported = API ? [] : load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
@@ -814,7 +817,7 @@ function renderHome() {
   $('today').textContent = new Date().toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
   hello();
   $('resume').hidden = !cur;
-  $('page1').classList.toggle('resuming', !!cur); // z banerem „w toku” legenda się chowa, żeby pierwsza strona się mieściła
+  netNote(); // z banerem „w toku” albo informacją o serwisie legenda się chowa, żeby pierwsza strona się mieściła
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
   $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
   $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
@@ -925,7 +928,7 @@ document.addEventListener('click', e => {
 // Ustawienia: język, ankieta i wylogowanie. Przy wylogowaniu przepustka znika z telefonu; niewysłane wyniki czekają na ponowne wejście tym samym kodem.
 $('surveyBtn').onclick = async () => {
   try {
-    const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
+    const r = await call('/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) { $('sheet').close(); return lock(t('codeExpired')); }
     if (!r.ok) throw Error(r.status);
     const d = await r.json();
@@ -1157,21 +1160,31 @@ function queueResult() {
   return flushOutbox();
 }
 async function flushOutbox() {
+  let ok = true;
   for (const w of [...outbox]) {
     try {
-      const r = await fetch(API + '/api/wyniki', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify(w) });
-      if (r.status === 401) return false; // kod przestał działać; wynik czeka na ponowne wejście
+      const r = await call('/api/wyniki', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify(w) });
+      if (r.status === 401) { ok = false; break; } // kod przestał działać; wynik czeka na ponowne wejście
       if (!r.ok) continue;
-      outbox = outbox.filter(x => x.poczatek !== w.poczatek); store('outbox', outbox);
-    } catch { return false; }
+      netDown = false; outbox = outbox.filter(x => x.poczatek !== w.poczatek); store('outbox', outbox);
+    } catch { netDown = true; ok = false; break; }
   }
-  return !outbox.length;
+  netNote();
+  return ok && !outbox.length;
+}
+// Na ekranie startowym: ile wyników czeka w telefonie i czy serwis był ostatnio nieosiągalny. Z tą informacją legenda się chowa, jak przy banerze „w toku”.
+function netNote() {
+  const msg = [netDown && t('netDown'), outbox.length && t('netPending', outbox.length)].filter(Boolean).join(' ');
+  $('hNet').hidden = !msg; $('hNet').textContent = msg;
+  $('page1').classList.toggle('resuming', !!cur || !!msg);
 }
 $('shareBtn').onclick = async () => {
   if (!API) return send(finalText());
   const b = $('shareBtn'), label = b.innerHTML;
   b.disabled = true; b.textContent = t('sending');
-  b.textContent = await queueResult() ? t('sent') : t('queued');
+  const ok = await queueResult();
+  b.textContent = ok ? t('sent') : t('queued');
+  if (!ok) ask(t('queuedInfo'), t('ok'), null);
   setTimeout(() => { b.disabled = false; b.innerHTML = label; }, 2500);
 };
 $('saveBtn').onclick = () => {
@@ -1213,11 +1226,11 @@ const setDiet = d => { try { diet = d ? normalizeDiet(d) : null; } catch { diet 
 async function loadPlans() {
   if (!API || !auth) return;
   try {
-    const r = await fetch(API + '/api/rozpiska?jezyk=' + LANG, { headers: { Authorization: 'Bearer ' + auth.token } });
+    const r = await call('/api/rozpiska?jezyk=' + LANG, { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     const d = await r.json(), json = JSON.stringify(d.plans), dj = JSON.stringify(d.dieta ?? null);
-    flushOutbox();
+    netDown = false; flushOutbox();
     // Bez zmian też sprawdza komunikaty: wstrzymany przez trening albo otwarty arkusz pokaże się teraz, a nie dopiero przy następnej zmianie.
     if (json === servedJson && dj === dietJson) return notices();
     if (json !== servedJson) { servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans); }
@@ -1228,7 +1241,7 @@ async function loadPlans() {
     }
     if (!$('home').hidden) renderHome();
     notices();
-  } catch { /* bez zasięgu zostaje ostatnia pobrana rozpiska i dieta; kod nie ma terminu ważności */ }
+  } catch { netDown = true; netNote(); /* bez zasięgu zostaje ostatnia pobrana rozpiska i dieta; kod nie ma terminu ważności */ }
 }
 // Komunikaty od trenera, raz na każdą zmianę: nowa albo zmieniona rozpiska (z listą nowych ćwiczeń), nowa, zmieniona albo zdjęta dieta.
 // Tylko na ekranie startowym, po sprawdzonej i pełnej ankiecie, nigdy w trakcie treningu ani nad innym okienkiem. Osoba, która już
@@ -1266,7 +1279,8 @@ async function activate(inicjaly, kod) {
   if (!inicjaly.trim() || !kod.trim()) { $('gMsg').textContent = t('errEmpty'); return; }
   $('gBtn').disabled = true; $('gMsg').textContent = '';
   try {
-    const r = await fetch(API + '/api/aktywacja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inicjaly, kod }) });
+    const r = await call('/api/aktywacja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ inicjaly, kod }) });
+    if (r.status >= 500) throw Error(r.status);
     if (!r.ok) { $('gMsg').textContent = r.status === 429 ? t('errTooMany') : t('errWrong'); return; }
     const d = await r.json();
     auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
@@ -1306,7 +1320,7 @@ function showGap(offline) { floatText($('gapTitle'), t('gapTitle')); $('gapMsg')
 async function checkSurvey() {
   if (!API || !auth || training() || !$('form').hidden) return;
   try {
-    const r = await fetch(API + '/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
+    const r = await call('/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     const d = await r.json();
@@ -1407,7 +1421,7 @@ $('fBtn').onclick = async () => {
   }
   $('fBtn').disabled = true; $('fMsg').textContent = '';
   try {
-    const r = await fetch(API + '/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
+    const r = await call('/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     store('ankieta', 1); store('ankietaBraki', null); surveyOk = true; store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
