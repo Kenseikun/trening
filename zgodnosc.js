@@ -80,6 +80,10 @@ globalThis.ZGODNOSC = (() => {
     };
     for (const a of lista(odp.alergie)) if (ALERGENY[a]) sprawdz(`Uczulenie (${ALERGENY[a][0]})`, ALERGENY[a][1]);
     if (lista(odp.alergie).includes('INNE')) out.push({ poziom: 'uwaga', tekst: `Inne uczulenie: „${odp.alergie_inne || 'nie podano'}”. Sprawdź każde danie ręcznie.` });
+    // Od 2026-10-13 ankieta pyta też, czego osoba nie je albo nie lubi, i ile posiłków dziennie jej pasuje.
+    if (odp.nie_lubi === 'TAK') out.push({ poziom: 'uwaga', tekst: `Nie je albo nie lubi: „${odp.nie_lubi_co || 'nie podano'}”. Sprawdź każde danie.` });
+    const ile = Number.isInteger(odp.posilki) ? odp.posilki : null, inne = ile && (d.days || []).map((x, i) => [i, x.meals?.length]).filter(([, n]) => n !== ile);
+    if (inne?.length) out.push({ poziom: 'uwaga', tekst: `W ankiecie liczba posiłków dziennie to ${ile}, a w diecie jest inaczej (${inne.map(([i, n]) => `${DNI[i]}: ${n}`).join(', ')}).` });
     if (ODZYWIANIE[odp.odzywianie]) sprawdz(`Sposób odżywiania (${ODZYWIANIE[odp.odzywianie][0]})`, ODZYWIANIE[odp.odzywianie][1]);
     return out;
   }

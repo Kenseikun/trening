@@ -198,6 +198,7 @@ globalThis.SURVEY_EN = {
   sprzet: ['What do you have access to?', { DRAZEK: 'pull-up bar', PORECZE: 'parallel bars', HANTLE: 'dumbbells', KETTLE: 'kettlebell', TRX: 'TRX', GUMY: 'resistance bands', BRAK: 'none of these' }],
   dni: ['How many days a week can you train?'],
   czas: ['How much time do you have for one workout?'],
+  pora: ['What time of day do you usually train?', { RANO: 'in the morning', POLUDNIE: 'around midday', WIECZOR: 'in the evening', ROZNIE: 'it varies' }],
   podciagniecia: ['How many clean pull-ups can you do?', { NIE_WIEM: "don't know" }],
   pompki: ['How many push-ups can you do?', { NIE_WIEM: "don't know" }],
   dipy: ['How many parallel bar dips can you do?', { NIE_WIEM: "don't know" }],
@@ -212,6 +213,9 @@ globalThis.SURVEY_EN = {
     TARCZYCA: 'thyroid disease', JELITA: 'bowel disease', CIAZA: 'pregnancy or breastfeeding', ZABURZENIA: 'eating disorder (now or in the past)', INNE: 'something else' }],
   ruch: ['How active are you outside training?', { SIEDZACY: 'I mostly sit', UMIARKOWANY: 'some movement during the day', FIZYCZNY: 'physical work' }],
   gotowanie: ['How much time can you spend cooking?', { SZYBKO: 'quick meals, up to 15 minutes', SREDNIO: 'up to 30 minutes', LUBIE: 'I like cooking, I can take longer' }],
+  posilki: ['How many meals a day suit you?', { DOWOLNIE: "doesn't matter" }],
+  nie_lubi: ["Is there anything you don't eat or don't like?", { NIE: 'no', TAK: 'yes' }],
+  nie_lubi_co: ["What don't you eat or don't like?"],
   zgoda: ['I agree that my trainer may store these answers, including information about my health and eating, and use them only to plan my training and diet.', { '2026-10': 'agree' }],
 };
 globalThis.UNIT_EN = { lat: 'years', cm: 'cm', kg: 'kg' };

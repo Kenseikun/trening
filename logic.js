@@ -305,6 +305,11 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.deepStrictEqual(zlaDieta.map(u => u.tekst.split(':')[0]), ['Uczulenie (orzechy)', 'Sposób odżywiania (wegańsko)'], JSON.stringify(zlaDieta));
   assert.deepStrictEqual(ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Obiad', options: ['Tofu z ryżem', 'Ciecierzyca z warzywami'] }] }) }, kal), []);
   assert.match(ZGODNOSC.dieta({ days: [] }, { ...kal, choroby: ['CUKRZYCA'] })[0].tekst, /dietetyk/);
+  // Ankieta od 2026-10-13: czego osoba nie je (uwaga) i liczba posiłków różna od diety (uwaga z dniami).
+  const dzien = n => ({ meals: Array(n).fill({ name: 'Obiad', options: ['Tofu z ryżem'] }) });
+  assert.deepStrictEqual(ZGODNOSC.dieta({ days: [dzien(3), ...Array(6).fill(dzien(4))] }, { ...kal, posilki: 4, nie_lubi: 'TAK', nie_lubi_co: 'ryby' }).map(x => x.tekst),
+    ['Nie je albo nie lubi: „ryby”. Sprawdź każde danie.', 'W ankiecie liczba posiłków dziennie to 4, a w diecie jest inaczej (Poniedziałek: 3).']);
+  assert.deepStrictEqual(ZGODNOSC.dieta({ days: Array(7).fill(dzien(4)) }, { ...kal, posilki: 'DOWOLNIE', nie_lubi: 'NIE' }), []);
   assert.match(ZGODNOSC.dieta({ days: [] }, { rodzaj: 'DOM' })[0].tekst, /nie ma pytań o dietę/);
   // Animacje: każda poza da się policzyć, a taśma TRX ma stałą długość (nie rozciąga się jak guma).
   // Anatomia w widoku z boku, 21 klatek ruchu (od przodu rzut przekłamuje kąty; skrócone ręce, s < .95, też pomijamy):
