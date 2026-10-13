@@ -16,7 +16,7 @@ globalThis.EXERCISES = {
     name: 'Podciąganie nachwytem', p: ['lats'], s: ['biceps', 'midback', 'forearms'],
     steps: ['Chwyt nachwytem, trochę szerzej niż barki. Start z pełnego zwisu, łokcie proste.',
       'Najpierw ściągnij łopatki w dół, potem ciągnij łokcie w stronę żeber.',
-      'Broda nad drążek, klatka blisko drążka.',
+      'Broda nad drążkiem, klatka blisko drążka.',
       'Opuszczaj się pod kontrolą aż do pełnego zwisu.'],
     tips: ['Bez bujania i kopania nogami: nogi razem, brzuch i pośladki napięte.',
       'Liczy się tylko pełne powtórzenie, od prostych łokci do brody nad drążkiem.'],
@@ -26,7 +26,7 @@ globalThis.EXERCISES = {
     name: 'Podciąganie podchwytem', p: ['lats', 'biceps'], s: ['midback', 'forearms'],
     steps: ['Chwyt podchwytem (dłonie do siebie) na szerokość barków, pełny zwis.',
       'Ściągnij łopatki i ciągnij łokcie w dół wzdłuż tułowia.',
-      'Broda nad drążek, pół sekundy pauzy.',
+      'Broda nad drążkiem, pół sekundy pauzy.',
       'Powoli wróć do pełnego zwisu.'],
     tips: ['Zwykle łatwiejsze niż nachwyt, dobre do budowania liczby powtórzeń.'],
   },
@@ -35,7 +35,7 @@ globalThis.EXERCISES = {
     name: 'Podciąganie z gumą', p: ['lats'], s: ['biceps', 'midback'],
     steps: ['Zawiąż gumę na drążku (pętla przez pętlę) i włóż w nią stopę albo kolano.',
       'Chwyt jak w zwykłym podciąganiu (nachwyt lub podchwyt, patrz notatka), pełny zwis.',
-      'Podciągnij się, broda nad drążek.',
+      'Podciągnij się, aż broda znajdzie się nad drążkiem.',
       'Opuszczaj się wolno, przez 2–3 s.'],
     tips: ['Gumę dobierz tak, żeby ostatnie 2 powtórzenia były trudne, ale czyste.',
       'Co kilka tygodni cieńsza guma. Cel: podciąganie bez pomocy.'],
@@ -311,7 +311,7 @@ globalThis.EXERCISES = {
     steps: ['Przyczep gumę nisko przed sobą, załóż pętlę na kostki i usiądź na ławce.',
       'Zegnij kolana, przyciągając pięty pod siebie.',
       'Powoli wróć do wyprostu.'],
-    tips: ['Można też leżąc na brzuchu albo na plecach ze stopami w TRX.'],
+    tips: ['Można je też robić na leżąco: na brzuchu albo na plecach, ze stopami w TRX.'],
   },
   'lydki-guma': {
     sprzet: ['GUMY'],
@@ -338,7 +338,7 @@ globalThis.EXERCISES = {
     steps: ['Sztanga na górze pleców (nie na karku), chwyt trochę szerzej niż barki. Stopy na szerokość bioder lub trochę szerzej, palce lekko na zewnątrz.',
       'Weź oddech, napnij brzuch. Biodra w tył i w dół, kolana idą w kierunku palców.',
       'Zejdź tak nisko, jak utrzymasz proste plecy, najlepiej udo do poziomu lub niżej.',
-      'Wstań, wypychając podłogę całą stopą. Wydech na górze.'],
+      'Wstań, odpychając się od podłogi całą stopą. Wydech na górze.'],
     tips: ['Pięty cały czas na ziemi, kolana nie uciekają do środka.', 'Pierwsze tygodnie: lekko, technika ważniejsza od ciężaru.'],
   },
   'przysiad-goblet': {
@@ -348,7 +348,7 @@ globalThis.EXERCISES = {
     steps: ['Trzymaj hantel pionowo przy mostku, łokcie w dół.',
       'Stopy trochę szerzej niż biodra, palce lekko na zewnątrz.',
       'Zejdź głęboko między kolana, tułów wyprostowany.',
-      'Wstań, wypychając podłogę całą stopą.'],
+      'Wstań, odpychając się od podłogi całą stopą.'],
     tips: ['Dobre pierwsze ćwiczenie na naukę przysiadu: ciężar z przodu pomaga trzymać plecy prosto.'],
   },
   'martwy-rumunski': {
@@ -389,7 +389,7 @@ globalThis.EXERCISES = {
       'Napnij brzuch i pośladki.',
       'Wyciśnij hantle w górę do prostych rąk nad głową.',
       'Opuść powoli do barków.'],
-    tips: ['Nie odchylaj się do tyłu: tułów zostaje prosto.', 'Można też siedząc na ławce z oparciem.'],
+    tips: ['Nie odchylaj się do tyłu: tułów zostaje prosto.', 'Można je też robić na siedząco, na ławce z oparciem.'],
   },
   'wioslowanie-hantlem': {
     sprzet: ['HANTLE'],
@@ -517,7 +517,7 @@ Object.entries({
     steps: ['Hold the handles and lean back on straight arms, body straight as a plank.',
       'Squeeze your shoulder blades and pull your chest to your hands, elbows close to your body.',
       'One-second pause at the top, then slowly back to straight arms.'],
-    tips: ['You set the difficulty with the angle: feet closer to the anchor point makes it harder.',
+    tips: ['You set the difficulty with the angle: moving your feet closer to the anchor point makes it harder.',
       "Hips don't sag, glutes tight."],
   },
   'wioslowanie-australijskie': {
@@ -601,7 +601,7 @@ Object.entries({
     steps: ['Attach the band at elbow height and stand side-on to it.',
       'Elbow at your side (you can tuck a rolled-up towel under it), bent at 90°.',
       'Rotate your forearm outwards without moving your elbow away, then return slowly.'],
-    tips: ['Light resistance: this exercise protects your shoulders, it is not for strength.',
+    tips: ["Use light resistance: this exercise protects your shoulders; it isn't a strength exercise.",
       'One set with one arm, then the other.'],
   },
   'guma-odwrotne-rozpietki': {
@@ -632,7 +632,7 @@ Object.entries({
       'Body straight from head to heels, glutes and abs tight.',
       'Hold, breathing calmly.'],
     tips: ['Hips neither sag nor rise.',
-      'Better shorter, but in perfect position.'],
+      'Better a shorter hold in perfect position.'],
   },
   'deska-bokiem': {
     name: 'Side plank',
@@ -667,7 +667,7 @@ Object.entries({
     name: 'Squat',
     steps: ['Feet hip- or shoulder-width apart, toes turned slightly out.',
       'Go down by pushing your hips back, knees tracking over your toes.',
-      'Go down at least until your thighs are level, then stand up, pressing through your whole feet.'],
+      'Go down at least until your thighs are level, then stand up, pressing through your whole foot.'],
     tips: ['Heels on the ground, back straight.'],
   },
   'przysiad-guma': {
@@ -843,6 +843,6 @@ Object.entries({
       'Elbows at your sides. Curl the dumbbells up towards your shoulders.',
       'Squeeze your biceps at the top.',
       'Lower slowly to straight arms.'],
-    tips: ["Elbows stay in place, your torso doesn't swing."],
+    tips: ["Your elbows stay in place and your torso doesn't swing."],
   },
 }).forEach(([id, en]) => { EXERCISES[id].en = en; });

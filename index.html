@@ -622,6 +622,7 @@
     <p id="waSetHint" class="stone fine" hidden data-t="waHint">Skurcz, ból, pytanie albo zmiana planów? Napisz od razu.</p>
     <button id="pushBtn" hidden></button>
     <p id="pushHint" class="stone fine" hidden></p>
+    <a id="apkLink" class="walink" href="https://github.com/Kenseikun/trening/releases/latest" target="_blank" rel="noopener" hidden data-t="pushApkLink">pobierz nową wersję aplikacji</a>
     <button id="soundBtn"></button>
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
     <button id="surveyBtn" data-t="surveyUpdate">zaktualizuj ankietę</button>
@@ -887,7 +888,7 @@ function renderHome() {
   $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · ');
   drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
   plotted = true;
-  $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes')], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
+  $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes', estimate(p))], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
   $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${t('partLine', it.sets, esc(goal(it)), fmt(it.rest))}</small></span>${ico('next')}</button></li>`).join('')
     + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">${t('delWorkout')}</button></li>` : '');
@@ -1065,7 +1066,7 @@ function renderSet() {
   cur.phase = 'set'; save();
   const st = S()[cur.i], it = curItem(), e = EXERCISES[it.ex], per = String(it.reps).match(/^(\d+)\s*\/\s*(.+)$/);
   // Cel: duża liczba, jednostka pod spodem („8/noga” → 8, „powt. · noga”).
-  const target = it.time ? [it.time, t('seconds')] : per ? [per[1], t('repsPer', per[2])] : /^\d+$/.test(String(it.reps)) ? [it.reps, t('reps')] : [it.reps, ''];
+  const target = it.time ? [it.time, t('seconds', it.time)] : per ? [per[1], t('repsPer', per[2])] : /^\d+$/.test(String(it.reps)) ? [it.reps, t('reps', it.reps)] : [it.reps, ''];
   $('wStrip').innerHTML = strip();
   // W ostatniej serii treningu zamiast licznika ćwiczeń zdanie na doping.
   $('wProg').textContent = cur.i === S().length - 1 && S().length > 1 ? t('lastSet') : t('exOf', st.item + 1, cur.plan.items.length);
@@ -1194,7 +1195,7 @@ function finish() {
     [t('repsT'), s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : t('firstTime')],
     // Czas pod seriami, nie w osobnym wierszu: z ciężarem dochodzi wiersz „podniesione”, a strona ma się zmieścić na niskim ekranie.
     [t('sets'), `${s.done}/${s.total}`, `${t('ofPlan', Math.round(s.done / s.total * 100))} · ${mins} min`],
-    s.hold ? [t('hold'), s.hold, `${t('seconds')}${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
+    s.hold ? [t('hold'), s.hold, `${t('seconds', s.hold)}${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
     // Łącznie podniesione kg (powtórzenia × ciężar): ciekawostka, która rośnie z tygodnia na tydzień.
     s.kgTotal ? [t('kgTotalT'), kgTxt(s.kgTotal), volume(prev?.per) ? `kg · ${signed(delta(s.kgTotal, volume(prev.per)))} vs ${kgTxt(volume(prev.per))}` : 'kg'] : null,
   ]);
@@ -1313,12 +1314,15 @@ async function sendReport(r, queued) {
 $('repCard').onclick = $('doneRep').onclick = () => openSheet('rep');
 // Powiadomienia (dzień treningowy, raport dnia) włącza się tylko tutaj, w ustawieniach: nigdy samo przy starcie.
 // iPhone: działają dopiero w aplikacji dodanej do ekranu początkowego, wtedy jest tylko wskazówka.
+// Aplikacja z pliku APK (opakowanie strony): przy starcie adres poprzedniej strony to android-app://<paczka>. APK 1.0.0 nie obsługiwał powiadomień.
+if (document.referrer.startsWith('android-app://io.github.kenseikun.trening')) store('apk', true);
 const canPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const iosBrowser = () => /iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone;
 function pushBtn(msg) {
   const ok = !!API && !!auth && canPush(), on = ok && load('push', false) && Notification.permission === 'granted';
   $('pushBtn').hidden = !ok; $('pushBtn').textContent = t(on ? 'pushOn' : 'pushOff');
   $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (ok ? t('pushHint') : t('pushIos'));
+  $('apkLink').hidden = msg !== t('pushApk');
 }
 $('pushBtn').onclick = async () => {
   const H = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token };
@@ -1329,7 +1333,7 @@ $('pushBtn').onclick = async () => {
       await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
       await was.unsubscribe(); store('push', false); pushBtn();
     } else {
-      if (await Notification.requestPermission() !== 'granted') return pushBtn(t('pushDenied'));
+      if (await Notification.requestPermission() !== 'granted') return pushBtn(load('apk', false) ? t('pushApk') : t('pushDenied'));
       const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
       const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
       const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
