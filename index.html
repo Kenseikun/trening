@@ -256,6 +256,16 @@
   .eat[aria-pressed=true] { background: #9DB89A; border-color: #9DB89A; color: var(--ink) }
   .meal.ate .mh, .meal.ate .macro { opacity: .6 }
   .meal li.opt { display: flex; align-items: center; gap: 12px } .meal li.opt > div { flex: 1; min-width: 0 }
+  /* Postęp ćwiczenia w historii: lista wyboru jak pola, linia w kolorze „zrobione”. */
+  .prog { margin: 18px 0 6px } .prog select { width: 100%; min-height: 48px; padding: 0 16px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
+  .prog select option { color: #1d2124 }
+  .progsvg { display: block; width: 100%; height: auto; margin: 10px 0 2px } .progsvg polyline { fill: none; stroke: #9DB89A; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round } .progsvg circle { fill: #9DB89A }
+  .shop { list-style: none; padding: 0; margin: 10px 0 16px } .shop li { display: flex; align-items: center; gap: 12px; padding: 4px 0 }
+  .shop li button { flex: none; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50% } .shop li button[aria-pressed=true] { background: #9DB89A; border-color: #9DB89A; color: var(--ink) }
+  .shop li button[aria-pressed=true] + span { text-decoration: line-through; color: var(--stone) }
+  .przyp { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 4px; color: var(--stone) }
+  .przyp select { min-height: 44px; padding: 0 14px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
+  .przyp select option { color: #1d2124 }
   .meal li.own input { flex: 1; min-width: 0; min-height: 44px; padding: 0 16px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .eaten { margin: 12px 0 0 } .eaten p { display: flex; justify-content: space-between; margin: 0 0 6px; font-size: .9rem; color: var(--stone) }
   .eaten .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden } .eaten .bar i { display: block; height: 100%; width: var(--p); background: #9DB89A }
@@ -620,7 +630,7 @@
     <p data-t="updText">Jest nowsza wersja aplikacji. Historia i zapisane treningi zostają na miejscu.</p>
     <div class="row"><button id="updBtn" class="primary" data-t="update">zaktualizuj</button><button id="updLater" data-t="later">później</button></div>
   </div>
-  <div id="p-hist" class="pane"><div id="cal" class="cal"></div><div id="hist" class="hist"></div></div>
+  <div id="p-hist" class="pane"><div id="cal" class="cal"></div><div id="prog" class="prog"></div><div id="hist" class="hist"></div></div>
   <div id="p-rep" class="pane"><div id="rep" class="rep"></div></div>
   <div id="p-set" class="pane">
     <p id="setWho" class="stone"></p>
@@ -630,6 +640,7 @@
     <p id="waSetHint" class="stone fine" hidden data-t="waHint">Skurcz, ból, pytanie albo zmiana planów? Napisz od razu.</p>
     <button id="pushBtn" hidden></button>
     <p id="pushHint" class="stone fine" hidden></p>
+    <label id="przypBox" class="przyp" hidden><span data-t="przypLbl">przypomnienie o treningu</span><select id="przyp"></select></label>
     <a id="apkLink" class="walink" href="https://github.com/Kenseikun/trening/releases/latest" target="_blank" rel="noopener" hidden data-t="pushApkLink">pobierz nową wersję aplikacji</a>
     <button id="soundBtn"></button>
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
@@ -954,7 +965,7 @@ function sheetText() {
 function openSheet(k) {
   sheetNow = k; sheetText();
   if (k === 'diet') { dietDay = null; renderDiet(); } // dieta zawsze otwiera się na dzisiejszym dniu
-  if (k === 'hist') { calM = 0; daysOpen = false; renderCal(); }
+  if (k === 'hist') { calM = 0; daysOpen = false; renderCal(); renderProg(); }
   if (k === 'rep') renderRep();
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
@@ -1021,7 +1032,7 @@ function renderDiet() {
       <ul>${m.options.map((o, k) => `<li${can ? ' class="opt"' : ''}><div><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</div>${can ? eatBtn(j, k, o.name, ate.includes(j) && z.o[j] === k) : ''}</li>`).join('')}
       ${can ? `<li class="opt own"><input data-own="${j}" value="${esc(z.w[j] || '')}" maxlength="80" placeholder="${esc(t('dietOwn'))}" aria-label="${esc(t('dietOwn'))}">${eatBtn(j, 'w', t('dietOwn'), ate.includes(j) && z.o[j] === 'w')}</li>` : ''}</ul></section>`).join('')}
     ${can && API && auth && (ate.length || z.s) ? `<button id="eatSend" class="primary"${sent ? ' disabled' : ''}>${t(sent ? 'dietSentOk' : z.s ? 'dietUpdate' : 'dietSend')}</button>` : ''}
-    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${can ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
+    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${can ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<button id="shopBtn" class="ghost">${t('shopBtn')}</button><p class="stone fine">${t('dietFine')}</p>`;
 }
 $('diet').onclick = async e => {
   const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); }
@@ -1032,6 +1043,7 @@ $('diet').onclick = async e => {
     if (k === 'w' && !own.value.trim() && eb.getAttribute('aria-pressed') !== 'true') { own.placeholder = t('dietOwnEmpty'); return own.focus(); }
     eatPick(dk, j, k); renderDiet();
   }
+  if (e.target.id === 'shopBtn') askShop();
   // Wysłanie zjedzonych posiłków trenerowi; po zmianie przycisk zmienia się na „zaktualizuj”.
   if (e.target.id === 'eatSend' && dk) {
     const pay = eatPayload(dk, diet.days[i]);
@@ -1044,6 +1056,19 @@ $('diet').onclick = async e => {
     renderDiet();
   }
 };
+// Lista zakupów na tydzień (pierwsza propozycja każdego posiłku): odhaczanie kupionych zostaje w telefonie dla tej diety, „kopiuj” do notatek.
+function askShop() {
+  const items = shopList(diet), key = load('dietaAt', 0), z = load('zakupy', null), got = new Set(z?.k === key ? z.m : []);
+  const draw = () => $('dlgBody').innerHTML = `<p class="stone">${t('shopHint')}</p><ul class="shop">${items.map((x, i) => `<li><button data-shop="${i}" aria-pressed="${got.has(x)}">${tickIco}</button><span>${esc(x)}</span></li>`).join('')}</ul>
+    <button id="shopCopy" class="primary">${t('shopCopy')}</button>`;
+  draw(); floatText($('dlgName'), t('shopTitle'));
+  $('dlg').classList.remove('small'); $('dlg').showModal();
+  $('dlgBody').onclick = e => {
+    const b = e.target.closest('[data-shop]');
+    if (b) { const x = items[+b.dataset.shop]; got.has(x) ? got.delete(x) : got.add(x); store('zakupy', { k: key, m: [...got] }); draw(); }
+    if (e.target.id === 'shopCopy') { const txt = items.filter(x => !got.has(x)).map(x => '• ' + x).join('\n'); navigator.clipboard?.writeText(txt).then(() => ask(t('copied'), t('ok'), null), () => ask(t('copyPrompt') + '\n' + txt, t('ok'), null)); }
+  };
+}
 // Własny posiłek zapisuje się przy każdej zmianie; wpisanie tekstu od razu zaznacza go jako zjedzony.
 $('diet').oninput = e => {
   const j = e.target.dataset.own, dk = eatKey(dietDay ?? (new Date().getDay() + 6) % 7); if (j == null || !dk) return;
@@ -1412,6 +1437,11 @@ const canPush = () => 'serviceWorker' in navigator && 'PushManager' in window &&
 const iosBrowser = () => /iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone;
 function pushBtn(msg) {
   const ok = !!API && !!auth && canPush(), on = ok && load('push', false) && Notification.permission === 'granted';
+  // Godzina przypomnienia o treningu (z serwisu, domyślnie 8:00) albo wyłączone; widać ją przy włączonych powiadomieniach.
+  const h = load('przyp', 8);
+  $('przypBox').hidden = !on;
+  $('przyp').innerHTML = [`<option value="">${t('przypOff')}</option>`, ...Array.from({ length: 18 }, (_, k) => `<option value="${k + 5}">${k + 5}:00</option>`)].join('');
+  $('przyp').value = h == null ? '' : String(h);
   $('pushBtn').hidden = !ok; $('pushBtn').textContent = t(on ? 'pushOn' : 'pushOff');
   $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (ok ? t('pushHint') : t('pushIos'));
   $('apkLink').hidden = msg !== t('pushApk');
@@ -1427,6 +1457,15 @@ async function pushSub(quiet) {
   if (!r.ok) throw Error(r.status);
   store('push', true); pushBtn(); if (!quiet) sound('tick');
 }
+$('przyp').onchange = async e => {
+  const godz = e.target.value === '' ? null : +e.target.value, was = load('przyp', 8);
+  store('przyp', godz);
+  try {
+    const r = await call('/api/przypomnienie', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ godz }) });
+    if (!r.ok) throw Error(r.status);
+    sound('tick');
+  } catch { store('przyp', was); pushBtn(t('pushFail')); }
+};
 $('pushBtn').onclick = async () => {
   $('pushBtn').disabled = true;
   try {
@@ -1470,6 +1509,23 @@ function renderCal() {
     <div class="mydays"><span>${t('myDays')}: <b>${mine.length ? mine.map(k => names[k]).join(' ') : t('myDaysNone')}</b></span><button data-cdays>${t('change')}</button></div>
     ${daysOpen ? `<p class="stone fine">${t('daysHint')}</p><div class="days">${names.map((d, k) => `<button data-wd="${k}" aria-selected="${mine.includes(k)}">${d}</button>`).join('')}</div>` : ''}`;
 }
+// Postęp ćwiczenia: wybór z ćwiczeń z historii i linia z ostatnich 12 treningów (największy ciężar albo najlepsza seria).
+let progSel = null;
+function renderProg() {
+  const list = progEx(past);
+  if (!list.length) return $('prog').innerHTML = '';
+  const ex = list.includes(progSel) ? progSel : list[0], all = progress(past, ex), pts = all.some(p => p.kg) ? all.filter(p => p.kg) : all;
+  const val = p => p.kg ? `${kgTxt(p.v)} kg` : String(p.v), day = p => new Date(p.t).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
+  const W = 320, Hh = 110, P = 12, lo = Math.min(...pts.map(p => p.v)), span = Math.max(...pts.map(p => p.v)) - lo || 1;
+  const xy = pts.map((p, i) => [P + (pts.length > 1 ? i * (W - 2 * P) / (pts.length - 1) : (W - 2 * P) / 2), Hh - P - (p.v - lo) / span * (Hh - 2 * P)].map(n => n.toFixed(1)));
+  $('prog').innerHTML = `<p class="lbl">${t('progTitle')}</p>
+    <select id="progEx" aria-label="${t('progTitle')}">${list.map(id => `<option value="${id}"${id === ex ? ' selected' : ''}>${esc(exName({ ex: id }))}</option>`).join('')}</select>
+    ${pts.length > 1 ? `<svg class="progsvg" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(`${t(pts[0].kg ? 'progKg' : 'progBest')}: ${val(pts[0])} → ${val(pts.at(-1))}`)}">
+      <polyline points="${xy.map(p => p.join(',')).join(' ')}"/>${xy.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5"/>`).join('')}</svg>
+      <p class="stone fine">${t(pts[0].kg ? 'progKg' : 'progBest')}: ${day(pts[0])} ${val(pts[0])} → ${day(pts.at(-1))} <b>${val(pts.at(-1))}</b></p>`
+      : `<p class="stone fine">${t('progOne')}</p>`}`;
+}
+$('prog').onchange = e => { if (e.target.id === 'progEx') { progSel = e.target.value; renderProg(); } };
 async function sendDays() {
   try { await call('/api/dni', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ dni: load('dni', null) || [] }) }); } catch {}
 }
@@ -1551,7 +1607,7 @@ async function loadPlans() {
     // Raport i waga wysłane z drugiego telefonu też się liczą; dni treningowe: nowy telefon bierze je z serwisu, zmienione tu idą do serwisu.
     if (d.raport && d.raport > (load('raportDzien', '') || '')) store('raportDzien', d.raport);
     if (d.raport_waga && d.raport_waga > (load('wagaDzien', '') || '')) store('wagaDzien', d.raport_waga);
-    store('kontakt', d.kontakt ?? null); waLinks();
+    store('kontakt', d.kontakt ?? null); waLinks(); store('wiadomosc', d.wiadomosc ?? null); if ('przypomnienie' in d) store('przyp', d.przypomnienie);
     if (d.dni && load('dni', null) == null) store('dni', d.dni);
     else if (load('dni', null) && JSON.stringify(d.dni) !== JSON.stringify(load('dni', null))) sendDays();
     $('repCard').hidden = !repDue(); netNote();
@@ -1591,6 +1647,9 @@ function notices() {
   if (dietNew && planNew) msgs[0] = t('noticeBoth', n);
   else if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
   store('widzianaDieta', dietAt);
+  // Wiadomość od trenera: raz, na początku okienka (razem z komunikatem o planie albo diecie, jeśli przyszły naraz).
+  const wm = load('wiadomosc', null);
+  if (wm && wm.id !== load('wiadomoscWidziana', null)) { msgs.unshift(`${t('msgFrom')}\n„${wm.tekst}”`); store('wiadomoscWidziana', wm.id); }
   if (msgs.length) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null).then(yes => { if (yes && dietNew) openSheet('diet'); });
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.

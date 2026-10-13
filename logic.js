@@ -111,6 +111,37 @@ const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
 // Ciężar po polsku z przecinkiem (42,5), po angielsku z kropką (42.5). Największy ciężar w serii ćwiczenia (0, gdy bez obciążenia).
 const kgTxt = (k, lang = globalThis.LANG) => { const s = String(Math.round(k * 100) / 100); return lang === 'en' ? s : s.replace('.', ','); };
 const topKg = p => Math.max(0, ...(p?.kgs || []).filter(k => k > 0));
+// Postęp ćwiczenia (historia od najnowszego): do 12 ostatnich treningów z tym ćwiczeniem, od najstarszego, { t, v, kg }. v to największy
+// ciężar, a bez obciążenia najlepsza seria (powtórzenia albo sekundy). progEx: ćwiczenia z historii, ostatnio robione pierwsze.
+function progress(history, ex) {
+  const pts = [];
+  for (const h of history) {
+    const p = typeof h === 'object' && h.per?.find(q => q.ex === ex);
+    if (!p?.vals?.length) continue;
+    const k = topKg(p); pts.push({ t: h.t0, v: k || Math.max(...p.vals), kg: !!k });
+    if (pts.length === 12) break;
+  }
+  return pts.reverse();
+}
+// Lista zakupów na tydzień: składniki pierwszej propozycji każdego posiłku (z notatki „60 g płatków, 250 ml mleka, banan”), zsumowane.
+// „liczba jednostka nazwa” sumuje się w g, ml albo szt. (kg i l przeliczone), „liczba nazwa” w szt., reszta liczy się jako ×n.
+function shopList(diet) {
+  const m = new Map(), J = { kg: ['g', 1000], g: ['g', 1], l: ['ml', 1000], ml: ['ml', 1], szt: ['szt.', 1], 'szt.': ['szt.', 1] };
+  for (const d of diet?.days || []) for (const meal of d.meals || []) {
+    const o = meal.options?.[0]; if (!o) continue;
+    for (const raw of (o.note || o.name).split(/,(?!\d)|;| \+ /)) { // przecinek przed cyfrą to ułamek (0,8 l)
+      const x = raw.trim(); if (!x) continue;
+      // Sama ilość („150 g”) dotyczy całej propozycji: nazwą jest wtedy nazwa propozycji.
+      const a = x.match(/^(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l|szt\.?)(?:\s+(.+))?$/i), b = !a && x.match(/^(\d+)\s+(.+)$/);
+      const [jedn, mn] = a ? J[a[2].toLowerCase()] : b ? ['szt.', 1] : ['×', 1], ile = a ? parseFloat(a[1].replace(',', '.')) * mn : b ? +b[1] : 1, nazwa = (a ? a[3] || o.name : b ? b[2] : x).trim();
+      const k = nazwa.toLowerCase() + '|' + jedn, w = m.get(k) || { nazwa, jedn, ile: 0 };
+      w.ile += ile; m.set(k, w);
+    }
+  }
+  const ile = w => w.jedn === '×' ? (w.ile > 1 ? ` ×${w.ile}` : '') : w.jedn === 'g' && w.ile >= 1000 ? `: ${kgTxt(w.ile / 1000)} kg` : w.jedn === 'ml' && w.ile >= 1000 ? `: ${kgTxt(w.ile / 1000)} l` : `: ${kgTxt(w.ile)} ${w.jedn}`;
+  return [...m.values()].sort((x, y) => x.nazwa.localeCompare(y.nazwa, 'pl')).map(w => w.nazwa + ile(w));
+}
+const progEx = history => [...new Set(history.filter(h => typeof h === 'object').flatMap(h => (h.per || []).filter(p => p.vals?.length).map(p => p.ex)))];
 // Ostatni ciężar ćwiczenia z historii (najnowszy trening pierwszy): { kg, t0 } albo null. kind = tylko ten typ treningu (planKind).
 function lastKg(history, ex, kind) {
   for (const h of history) {
@@ -406,6 +437,17 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.deepStrictEqual([kgTxt(42.5, 'en'), kgTxt(42.5, 'pl'), kgTxt(2.25, 'pl')], ['42.5', '42,5', '2,25']);
   // Ciężar co 0,25 kg (pole i suwak), łącznie podniesione kg bez ćwiczeń na czas i bez serii bez ciężaru.
   assert.deepStrictEqual([kgRound('2,3'), kgRound('5.1'), kgRound(-3), kgRound('x'), kgRound(7.125)], [2.25, 5, 0, 0, 7.25]);
+  // Lista zakupów: sumy w g/ml/szt. z pierwszej propozycji, kg i l przy dużych ilościach, reszta jako ×n.
+  const meal = (note, name = 'x') => ({ options: [{ name, note }, { name: 'inna', note: '999 g czegoś' }] });
+  assert.deepStrictEqual(shopList({ days: [{ meals: [meal('60 g płatków owsianych, 250 ml mleka, banan'), meal('2 jajka; 1 kromka chleba')] },
+    { meals: [meal('600 g płatków owsianych, 0,8 l mleka, banan'), meal(undefined, 'Skyr'), meal('150 g', 'Kurczak z ryżem')] }] }, 'pl'),
+    ['banan ×2', 'jajka: 2 szt.', 'kromka chleba: 1 szt.', 'Kurczak z ryżem: 150 g', 'mleka: 1,05 l', 'płatków owsianych: 660 g', 'Skyr']);
+  // Postęp: ciężar, gdy był; bez ciężaru najlepsza seria; od najstarszego, najwyżej 12 punktów.
+  const hp = [{ t0: 3, per: [{ ex: 'a', vals: [8, 8], kgs: [22.5, 20] }, { ex: 'b', vals: [10, 12] }] }, 'stary wpis', { t0: 2, per: [{ ex: 'a', vals: [10], kgs: [20] }] }, { t0: 1, per: [{ ex: 'c', vals: [] }] }];
+  assert.deepStrictEqual(progress(hp, 'a'), [{ t: 2, v: 20, kg: true }, { t: 3, v: 22.5, kg: true }]);
+  assert.deepStrictEqual(progress(hp, 'b'), [{ t: 3, v: 12, kg: false }]);
+  assert.deepStrictEqual(progEx(hp), ['a', 'b']);
+  assert.strictEqual(progress(Array.from({ length: 20 }, (_, i) => ({ t0: 20 - i, per: [{ ex: 'a', vals: [i] }] })), 'a').length, 12);
   assert.strictEqual(volume([{ vals: [10, 8], kgs: [20, 22.5] }, { vals: [12], kgs: [null] }, { time: true, vals: [30], kgs: [10] }]), 380);
   const se = stats(p, { 0: 5, 1: 4, 2: 30 }, {}, 'en');
   assert.strictEqual(cheer(se, was, 'Adrian', 'M', 'en'), 'You did it, Adrian! 1 rep more than last time. Keep it up! Biggest progress: push-up (+1).');
