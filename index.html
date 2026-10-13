@@ -264,6 +264,8 @@
   /* WhatsApp do trenera: zwykły link w ramce (nie główny przycisk), żeby nie zachęcał do pisania po każdym treningu. */
   .walink { display: flex; align-items: center; justify-content: center; min-height: 44px; margin: 10px 0 0; padding: 0 16px; border: 1.5px solid var(--line-strong); border-radius: 999px;
     color: var(--cream); text-decoration: none; text-align: center }
+  /* Wersja aplikacji i prawa autorskie: drobny druk na końcu ustawień. */
+  .ver { margin: 22px 0 0; text-align: center; font-size: .75rem; color: var(--stone); opacity: .7 }
   .walink.small { min-height: 40px; margin: 0 0 12px; border: 0; color: var(--stone); text-decoration: underline; text-underline-offset: 4px }
   .repcard b { display: block; font-size: 1.05rem; font-weight: 600 } .repcard small { display: block; color: var(--stone); font-size: .84rem }
   .rep .lbl { margin: 16px 0 6px } .rep .opts { flex-wrap: nowrap; gap: 6px } .rep .opts button { flex: 1; padding: 0; min-width: 0 }
@@ -629,6 +631,7 @@
     <p class="stone fine" data-t="surveyUpdateHint">Zmieniła się waga, cel albo coś boli? Popraw odpowiedzi, trener zobaczy nową ankietę.</p>
     <button id="logoutBtn" data-t="logout">wyloguj się</button>
     <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska i wyniki zostają u trenera.</p>
+    <p id="appVer" class="ver"></p>
   </div>
   <div id="p-diet" class="pane"><div id="diet"></div></div>
 </dialog>
@@ -938,6 +941,9 @@ function sheetText() {
   const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : '';
   $('surveyBtn').classList.toggle('alarm', !!load('ankietaBraki', 0)); // braki w ankiecie: przycisk ankiety na czerwono
   soundBtn(); waLinks(); pushBtn();
+  // Numer wersji z sw.js (zmienia się przy każdej aktualizacji), a w aplikacji z pliku także wersja pliku.
+  const v = swText?.match(/trening-v(\d+)/)?.[1], apk = inApk() && load('apkWersja', null);
+  $('appVer').textContent = [v && t('appVer', v), apk && t('apkVer', apk), t('rights')].filter(Boolean).join(' · ');
 }
 function openSheet(k) {
   sheetNow = k; sheetText();
