@@ -133,6 +133,8 @@ function startKg({ setKg, prevSetKg, planKg, same, any, plansAt = 0 }) {
 const OCENA = { LEKKO: 'za lekko', OK: 'w sam raz', CIEZKO: 'za ciężko' };
 const BOL = { BARKI: 'barki', LOKCIE: 'łokcie', NADGARSTKI: 'nadgarstki', PLECY: 'plecy', KOLANA: 'kolana', BIODRA: 'biodra', INNE: 'coś innego' };
 
+// Nazwa ćwiczenia w środku zdania: mała pierwsza litera, ale skrót zostaje („TRX wiosłowanie”, nie „tRX”).
+const lcFirst = x => /^\p{Lu}\p{Ll}/u.test(x) ? x[0].toLowerCase() + x.slice(1) : x;
 // Rekordy dnia względem całej historii: ciężar (największy w serii), a bez ciężaru powtórzenia albo czas w jednej serii.
 // Liczy się tylko ćwiczenie, które już było wcześniej (pierwszy raz to nie rekord). Najwyżej dwa, najpierw ciężar.
 function records(per, history) {
@@ -163,7 +165,7 @@ function streak(times, perWeek, now = Date.now()) {
 // Słowo od trenera po treningu: z liczb, nie ogólnik. name = imię z telefonu (może być puste), sex = płeć z ankiety ('K', 'M' albo brak: forma bezosobowa).
 // Po angielsku bez form zależnych od płci; nazwy ćwiczeń przychodzą w s.per już w języku aplikacji.
 function cheer(s, prev, name, sex, lang = globalThis.LANG) {
-  const en = lang === 'en', n = name ? `, ${name}` : '', tot = v => v.reduce((a, b) => a + b, 0), lc = x => x[0].toLowerCase() + x.slice(1);
+  const en = lang === 'en', n = name ? `, ${name}` : '', tot = v => v.reduce((a, b) => a + b, 0), lc = lcFirst;
   const pl = (k, w) => `${k} ${k === 1 ? w[0] : k % 10 > 1 && k % 10 < 5 && (k % 100 < 12 || k % 100 > 14) ? w[1] : w[2]}`;
   if (s.total && s.done / s.total < .8) return en ? `Workout done${n}. Next time try to finish all the sets.` : `Trening zaliczony${n}. Następnym razem spróbuj dokończyć wszystkie serie.`;
   if (!prev) return en ? `You did it${n}! Your first workout of this kind is done.` : `Udało się${n}! Pierwszy taki trening za Tobą.`;
@@ -334,6 +336,7 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.throws(() => normalizeDiet({ name: 'x', days: [...Array(6).fill(day), { meals: [{ name: 'Obiad', options: ['a', { note: 'b' }] }] }] }), /dwóch/);
   assert.throws(() => normalizeDiet({ days: Array(7).fill(day) }), /name/);
   assert.strictEqual(fmt(125), '2:05');
+  assert.deepStrictEqual([lcFirst('TRX wiosłowanie'), lcFirst('Pompki'), lcFirst('Ćwiczenie')], ['TRX wiosłowanie', 'pompki', 'ćwiczenie']);
   // Rekordy: ciężar wyżej niż kiedykolwiek, bez ciężaru więcej powtórzeń w serii; pierwszy raz to nie rekord.
   const hRec = [{ per: [{ ex: 'a', vals: [8, 8], kgs: [20, 22.5] }, { ex: 'b', vals: [10, 12], kgs: [null, null] }] }, 'stary wpis tekstem'];
   assert.deepStrictEqual(records([{ ex: 'a', name: 'A', vals: [8], kgs: [25] }, { ex: 'b', name: 'B', vals: [13], kgs: [null] }, { ex: 'c', name: 'C', vals: [50], kgs: [null] }], hRec).map(x => [x.ex, x.kind, x.val]), [['a', 'kg', 25], ['b', 'reps', 13]]);

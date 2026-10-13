@@ -17,11 +17,14 @@ English: [see below](#in-english).
 ## Co potrafi
 
 - **Plan tygodnia od trenera.** Rozpiska sama pojawia się w aplikacji, a od razu widać treningi tygodnia: ile serii, ile czasu i które mięśnie popracują.
-- **Dieta od trenera.** Jeśli trener przygotuje dietę, przycisk „dieta” w menu u góry pokazuje plan na każdy dzień tygodnia: posiłki, kalorie i kilka przykładów do wyboru przy każdym posiłku.
+- **Dieta od trenera.** Jeśli trener przygotuje dietę, przycisk „dieta” w menu u góry pokazuje plan na każdy dzień tygodnia: posiłki z kaloriami i makro, kilka przykładów do wyboru przy każdym posiłku i sumę dnia. Zjedzone posiłki odhaczasz jednym dotknięciem.
 - **Technika pod ręką.** Każde ćwiczenie ma animację z podświetlonymi mięśniami i instrukcję krok po kroku.
 - **Przerwy bez zegarka.** Aplikacja odlicza przerwę, daje sygnał na koniec i pokazuje, co będzie następne.
-- **Ciężar i samopoczucie.** Przy ćwiczeniach z obciążeniem zapisujesz ciężar, a po treningu dwoma dotknięciami oceniasz, jak było, i zgłaszasz, jeśli coś bolało.
-- **Wyniki dla trenera.** Po treningu widzisz liczby i porównanie z poprzednim razem, a podsumowanie wysyłasz trenerowi jednym przyciskiem.
+- **Ciężar i samopoczucie.** Przy ćwiczeniach z obciążeniem zmieniasz ciężar przyciskami, suwakiem co 0,25 kg albo wpisujesz go sam. Po treningu dwoma dotknięciami oceniasz, jak było, i zgłaszasz, jeśli coś bolało.
+- **Wyniki dla trenera.** Po treningu widzisz liczby, łącznie podniesione kilogramy, swoje rekordy i porównanie z poprzednim razem, a podsumowanie wysyłasz trenerowi jednym przyciskiem.
+- **Raport dnia i kalendarz.** W 30 sekund zaznaczasz sen, wodę, energię i sytość, raz w tygodniu wagę. Kalendarz w historii pokazuje ukończone treningi i Twoje dni treningowe.
+- **Kontakt z trenerem.** Skurcz, ból albo pytanie? Jednym dotknięciem piszesz do trenera na WhatsAppie.
+- **Przypomnienia.** Jeśli chcesz, aplikacja przypomni o dniu treningowym i o raporcie dnia. Na iPhonie działają w aplikacji dodanej do ekranu początkowego.
 - **Działa bez zasięgu.** Po pierwszym otwarciu aplikacja jest w telefonie i nie potrzebuje internetu.
 - **Po polsku albo po angielsku.** Język wybierasz na pierwszym ekranie albo później w ustawieniach.
 

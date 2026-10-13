@@ -1186,7 +1186,7 @@ function finish() {
   const nr = past.length + 1;
   // Rekordy względem całej historii i seria tygodni z kompletem treningów (przy wybranych dniach treningowych).
   const recs = records(s.per, past), weeks = streak([cur.t0, ...past.filter(h => typeof h === 'object').map(h => h.t0)], (load('dni', null) || []).length);
-  const extra = [...recs.map(x => t('rec_' + x.kind, x.name[0].toLowerCase() + x.name.slice(1), x.kind === 'kg' ? kgTxt(x.val) : x.val)), weeks >= 2 && t('streakW', weeks)].filter(Boolean).join(' ');
+  const extra = [...recs.map(x => t('rec_' + x.kind, lcFirst(x.name), x.kind === 'kg' ? kgTxt(x.val) : x.val)), weeks >= 2 && t('streakW', weeks)].filter(Boolean).join(' ');
   if (fresh) sound([1, 10, 25, 50, 100].includes(nr) || recs.length ? 'record' : 'done');
   $('doneRep').hidden = !repDue();
   $('dCheer').textContent = `${cheer(s, prev, myName(), load('plec', null))} ${extra || ([1, 10, 25, 50, 100].includes(nr) ? t('milestone', nr) : pick(t('motDone'), Math.floor(cur.t0 / 1000)))}`;
