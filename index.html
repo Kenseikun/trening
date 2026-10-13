@@ -472,7 +472,7 @@
   <header class="head"><span class="brand"><span data-t="brand">trening</span><i class="dot b"></i><i class="dot r"></i></span></header>
   <div class="gate">
     <h1 class="float" id="gapTitle"></h1>
-    <p class="stone" data-t="gapText">W ankiecie pojawiły się nowe pytania, m.in. o odżywianie, i nowa zgoda. Uzupełnij je, żeby dalej korzystać z aplikacji. To zajmie minutę.</p>
+    <p class="stone" data-t="gapText">W ankiecie są nowe pytania albo nowa zgoda. Uzupełnij je, żeby dalej korzystać z aplikacji. Zajmie to minutę.</p>
     <p id="gapMsg" class="err" role="alert"></p>
   </div>
   <div class="dock"><button id="gapBtn" class="primary alarm" data-t="gapBtn">uzupełnij ankietę</button></div>
@@ -630,7 +630,7 @@
     <button id="surveyBtn" data-t="surveyUpdate">zaktualizuj ankietę</button>
     <p class="stone fine" data-t="surveyUpdateHint">Zmieniła się waga, cel albo coś boli? Popraw odpowiedzi, trener zobaczy nową ankietę.</p>
     <button id="logoutBtn" data-t="logout">wyloguj się</button>
-    <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska i wyniki zostają u trenera.</p>
+    <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska treningu i wyniki zostają u trenera.</p>
     <p id="appVer" class="ver"></p>
   </div>
   <div id="p-diet" class="pane"><div id="diet"></div></div>
@@ -1345,25 +1345,37 @@ function pushBtn(msg) {
   $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (ok ? t('pushHint') : t('pushIos'));
   $('apkLink').hidden = msg !== t('pushApk');
 }
-$('pushBtn').onclick = async () => {
+// Zapis na powiadomienia: zgoda systemu, subskrypcja i jej adres w serwisie. Cicho (quiet) przy włączaniu samoczynnym.
+async function pushSub(quiet) {
   const H = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token };
+  const reg = await navigator.serviceWorker.ready, was = await reg.pushManager.getSubscription();
+  if (await Notification.requestPermission() !== 'granted') return quiet || pushBtn(inApk() ? t('pushApk') : t('pushDenied'));
+  const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
+  const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
+  if (!r.ok) throw Error(r.status);
+  store('push', true); pushBtn(); if (!quiet) sound('tick');
+}
+$('pushBtn').onclick = async () => {
   $('pushBtn').disabled = true;
   try {
-    const reg = await navigator.serviceWorker.ready, was = await reg.pushManager.getSubscription();
-    if (load('push', false) && was) {
-      await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
+    const was = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+    if (load('push', null) && was) {
+      await call('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
       await was.unsubscribe(); store('push', false); pushBtn();
-    } else {
-      if (await Notification.requestPermission() !== 'granted') return pushBtn(inApk() ? t('pushApk') : t('pushDenied'));
-      const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-      const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
-      const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
-      if (!r.ok) throw Error(r.status);
-      store('push', true); pushBtn(); sound('tick');
-    }
+    } else await pushSub(false);
   } catch { pushBtn(t('pushFail')); }
   finally { $('pushBtn').disabled = false; }
 };
+// Powiadomienia są domyślnie włączone (decyzja właściciela z 2026-10-13): po zalogowaniu system pyta o zgodę przy pierwszym dotknięciu
+// ekranu (iPhone i Chrome pozwalają zapytać tylko po geście). Wyłączenie w ustawieniach (push = false) jest trwałe; odmowa w systemie też.
+let pushWaits = false;
+function pushAuto() {
+  if (pushWaits || !API || !auth || !canPush() || load('push', null) !== null || Notification.permission === 'denied') return;
+  if (Notification.permission === 'granted') return void pushSub(true).catch(() => {});
+  pushWaits = true;
+  addEventListener('pointerup', () => { pushWaits = false; pushSub(true).catch(() => {}); }, { once: true });
+}
 // Link do WhatsAppa trenera (numer z serwisu: prowadzący, główny albo administrator) z początkiem wiadomości; bez numeru linków nie ma.
 function waLinks() {
   const k = load('kontakt', null), href = k ? `https://wa.me/${k}?text=${encodeURIComponent(t('waText', myName() || load('who', '')))}` : '';
@@ -1511,7 +1523,7 @@ function notices() {
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
-  auth = null; store('auth', null); store('kontakt', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
+  auth = null; store('auth', null); store('push', null); store('kontakt', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
   store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
   floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = msg || '';
   show('gate');
@@ -1524,7 +1536,7 @@ async function activate(inicjaly, kod) {
     if (r.status >= 500) throw Error(r.status);
     if (!r.ok) { $('gMsg').textContent = r.status === 429 ? t('errTooMany') : t('errWrong'); return; }
     const d = await r.json();
-    auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth);
+    auth = { token: d.token, nazwa: d.nazwa }; store('auth', auth); pushAuto();
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
     store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
@@ -1723,7 +1735,7 @@ if (API) {
   addEventListener('hashchange', linkCode);
   const activating = linkCode();
   // Braki w ankiecie z ostatniego połączenia blokują od razu, zanim serwis odpowie (i bez zasięgu).
-  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); repLink(); setTimeout(apkCheck, 2500); }
+  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); repLink(); setTimeout(apkCheck, 2500); pushAuto(); }
   else if (!activating) lock();
 } else { show('home'); renderHome(); loadPlans(); }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

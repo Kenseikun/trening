@@ -56,7 +56,7 @@ globalThis.ZGODNOSC = (() => {
     if (odp.dni && plans.length > odp.dni) blad(`W rozpisce jest ${plans.length} treningów, a osoba może trenować ${odp.dni} dni w tygodniu.`);
     if (odp.czas) for (const p of plans) if (minuty(p) > odp.czas + 5) blad(`${p.name}: ok. ${minuty(p)} min, a osoba ma na trening ${odp.czas} min.`);
     for (const b of lista(odp.bol)) {
-      if (!BOL[b]) { uwaga('Zgłoszony ból: coś innego. Dopytaj osobę, zanim wyślesz rozpiskę.'); continue; }
+      if (!BOL[b]) { uwaga(`Zgłoszony ból: ${odp.bol_inne ? `„${odp.bol_inne}”` : 'coś innego'}. Dopytaj osobę, zanim wyślesz rozpiskę.`); continue; }
       const cw = [...new Set(plans.flatMap(p => (p.items || []).filter(it => EX[it.ex]?.p.some(m => BOL[b][1].includes(m))).map(it => EX[it.ex].name)))];
       uwaga(`Zgłoszony ból: ${BOL[b][0]}. ${cw.length ? `Sprawdź obciążenie w: ${cw.join(', ')}.` : 'W rozpisce nie ma ćwiczeń, które go wprost obciążają.'}`);
     }
