@@ -216,7 +216,7 @@
   .txt { display: flex; flex-direction: column; gap: 8px; margin-top: 18px }
   .txt input { width: 100%; min-height: 48px; padding: 0 18px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .txt input:focus { outline: none; border-color: var(--blue) }
-  .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
+  .lbl.bad, .lbl.bad .hint { color: var(--red) } .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
   .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
   .alarm { background: var(--red); border-color: var(--red); color: var(--ink); font-weight: 700 }
@@ -340,7 +340,9 @@
   .stepper output { text-align: center; font-size: 2.1rem; font-weight: 500; line-height: 1 }
   .stepper.kg { grid-template-columns: 44px 1fr 44px; margin: 6px 0 2px }
   .stepper.kg button { width: 44px; height: 44px; min-height: 44px }
-  .stepper.kg output { font-size: 1.35rem; cursor: pointer; text-decoration: underline dotted rgba(231,232,226,.4); text-underline-offset: 5px } .stepper.kg small { display: block; font-size: .72rem; color: var(--stone); margin-top: 2px }
+  /* Ciężar wygląda jak przycisk (ramka i ołówek): dotknięcie otwiera suwak i pole do wpisania. */
+  .stepper.kg output { font-size: 1.35rem; cursor: pointer; border: 1.5px solid var(--line-strong); border-radius: 18px; padding: 4px 10px; margin: 0 6px; background: rgba(15,17,19,.18) }
+  .stepper.kg output .pen { width: .8em; height: .8em; margin-left: 6px; vertical-align: .05em; opacity: .75 } .stepper.kg small { display: block; font-size: .72rem; color: var(--stone); margin-top: 2px }
   .rate { flex: none; margin: 0 0 6px } .rate .lbl { margin: 6px 0 4px } .rate .opts { gap: 6px; align-items: center; flex-wrap: nowrap } .rate .opts button { min-height: 44px; padding: 0 11px; font-size: .9rem; white-space: nowrap }
   /* Liczby na pierwszej stronie wyników rosną z wysokością wiersza (--rows ustawia finish()), żeby nie nachodziły na podpisy na niskich ekranach. */
   #dBlock { container-type: size; min-height: calc(var(--rows, 3) * 52px) }
@@ -389,6 +391,8 @@
   #sheet::backdrop { background: rgba(15,17,19,.62) }
   dialog { background: #38423E; color: var(--cream); border: 1px solid var(--line); border-radius: 28px; padding: 18px; width: min(560px, 94vw); max-height: 90dvh; overflow-y: auto }
   dialog::backdrop { background: rgba(15,17,19,.62) }
+  /* Otwarte okno przewija tylko siebie: koniec listy nie przesuwa ekranu pod spodem, ten stoi, dopóki okno jest otwarte. */
+  dialog, #dlgBody { overscroll-behavior: contain } html:has(dialog[open]), html:has(dialog[open]) body { overflow: hidden }
   dialog h1 { font-size: 1.5rem; margin: 0; flex: 1 }
   dialog h2 { margin: 6px 0 8px }
   /* Karta ćwiczenia: dwie pełne strony z przyciąganiem przewijania (animacja, potem instrukcja), żeby nic nie było ucięte w połowie. */
@@ -961,57 +965,92 @@ $('sheetClose').onclick = () => $('sheet').close();
 // Dieta od trenera: dzień tygodnia (na start dziś), cele dnia i posiłki z przykładami do wyboru.
 const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'long' }); // 1.01.2024 to poniedziałek
 // Dieta jest w menu na stałe; bez diety od trenera arkusz mówi, że pojawi się tu sama.
-// Zjedzone posiłki: tylko dzisiejsze, w telefonie; wczorajsze znikają same. { d: 'RRRR-MM-DD', m: [numery zjedzonych posiłków],
-// o: { posiłek: numer propozycji albo 'w' (własny) }, w: { posiłek: wpisany własny posiłek } }.
+// Zjedzone posiłki: dziś i wczoraj (do przodu nie można), w telefonie pod datą: { 'RRRR-MM-DD': { m: [numery zjedzonych posiłków],
+// o: { posiłek: numer propozycji albo 'w' (własny) }, w: { posiłek: wpisany własny posiłek }, s: ostatnio wysłane trenerowi } }.
 const todayKey = () => new Date().toLocaleDateString('sv');
-const eatDay = () => { const z = load('zjedzone', null); return z?.d === todayKey() ? { o: {}, w: {}, ...z } : { d: todayKey(), m: [], o: {}, w: {} }; };
+const yesterdayKey = () => new Date(Date.now() - 864e5).toLocaleDateString('sv');
+const eatAll = () => {
+  const all = load('zjedzoneDni', null);
+  if (all) return all;
+  const old = load('zjedzone', null); // zapis sprzed v50: jeden dzień
+  return old?.d ? { [old.d]: { m: old.m || [], o: old.o || {}, w: old.w || {} } } : {};
+};
+const eatDay = (dk = todayKey()) => ({ m: [], o: {}, w: {}, ...eatAll()[dk] });
+const eatSave = (dk, z) => {
+  const all = eatAll(), od = new Date(Date.now() - 7 * 864e5).toLocaleDateString('sv');
+  all[dk] = z;
+  for (const k of Object.keys(all)) if (k < od) delete all[k];
+  store('zjedzoneDni', all);
+};
 const eaten = () => eatDay().m;
+// Data dnia z zakładki diety, gdy wolno go zaznaczać: dziś albo wczoraj; inne dni tylko do czytania.
+const eatKey = i => { const today = (new Date().getDay() + 6) % 7; return i === today ? todayKey() : i === (today + 6) % 7 ? yesterdayKey() : null; };
 // Znacznik przy propozycji (k = numer albo 'w'): drugie dotknięcie tej samej zdejmuje „zjedzone” z posiłku.
-function eatPick(j, k) {
-  const z = eatDay(), same = z.m.includes(j) && String(z.o[j]) === String(k);
+function eatPick(dk, j, k) {
+  const z = eatDay(dk), same = z.m.includes(j) && String(z.o[j]) === String(k);
   z.m = same ? z.m.filter(x => x !== j) : [...new Set([...z.m, j])];
   if (same) delete z.o[j]; else z.o[j] = k;
-  store('zjedzone', z);
+  eatSave(dk, z);
 }
+// Co idzie do trenera: zjedzone posiłki z nazwą wybranej propozycji albo własnym wpisem, i „n/m”.
+const eatPayload = (dk, d) => {
+  const z = eatDay(dk), m = z.m.filter(j => d.meals[j]).sort((a, b) => a - b);
+  return { dzien: dk, liczba: `${m.length}/${d.meals.length}`,
+    posilki: m.map(j => ({ posilek: d.meals[j].name, wybor: (z.o[j] === 'w' ? z.w[j] : d.meals[j].options[z.o[j]]?.name) || t('dietAte') })) };
+};
 const tickIco = `<svg class="ico" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
 const macroLine = x => [x.protein && `${t('dietProtein')} ${x.protein} g`, x.fat && `${t('dietFat')} ${x.fat} g`, x.carbs && `${t('dietCarbs')} ${x.carbs} g`].filter(Boolean).join(' · ');
 const eatBtn = (j, k, name, on) => `<button class="eat" data-eat="${j}" data-opt="${k}" aria-pressed="${on}" aria-label="${esc(t('dietAte'))}: ${esc(name)}">${tickIco}</button>`;
 function renderDiet() {
   if (!diet) return $('diet').innerHTML = `<p class="stone">${esc(t('dietNone'))}</p>`;
   const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, d = diet.days[i], { kcal, protein, fat, carbs } = dayMacros(diet, d);
-  const isToday = i === today, z = eatDay(), ate = isToday ? z.m : [], ateKcal = d.meals.reduce((a, m, j) => a + (ate.includes(j) ? m.kcal : 0), 0);
+  const dk = eatKey(i), can = !!dk, z = dk ? eatDay(dk) : { m: [], o: {}, w: {} }, ate = z.m, ateKcal = d.meals.reduce((a, m, j) => a + (ate.includes(j) ? m.kcal : 0), 0);
+  const pay = dk && JSON.stringify(eatPayload(dk, d)), sent = dk && z.s === pay;
   $('diet').innerHTML = `<p class="lbl">${esc(diet.name)}</p>
     <div class="days" role="tablist">${t('dietDays').split(' ').map((n, k) => `<button role="tab" data-day="${k}" aria-selected="${k === i}" aria-label="${esc(dayName(k))}">${n}</button>`).join('')}</div>
-    <h2>${esc(dayName(i))}${i === today ? ' · ' + t('dietToday') : ''}</h2>
+    <h2>${esc(dayName(i))}${i === today ? ' · ' + t('dietToday') : dk ? ' · ' + t('dietYesterday') : ''}</h2>
     ${kcal || protein ? `<div class="stats">${cells([kcal && [t('dietKcal'), kcal, 'kcal'], protein && [t('dietProtein'), protein, 'g']])}</div>` : ''}
     ${fat || carbs ? `<p class="macro stone">${esc(macroLine({ fat, carbs }))}</p>` : ''}
-    ${isToday ? `<div class="eaten"><p><span>${t('dietEaten', ate.length, d.meals.length)}</span>${kcal ? `<span>${ateKcal} / ${kcal} kcal</span>` : ''}</p>
+    ${can ? `<div class="eaten"><p><span>${t('dietEaten', ate.length, d.meals.length)}</span>${kcal ? `<span>${ateKcal} / ${kcal} kcal</span>` : ''}</p>
       <div class="bar"><i style="--p:${Math.round(ate.length / d.meals.length * 100)}%"></i></div></div>` : ''}
     ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}
     ${d.meals.map((m, j) => `<section class="meal${ate.includes(j) ? ' ate' : ''}"><div class="mh"><h3>${esc(m.name)}<small>${[m.time, m.kcal && m.kcal + ' kcal'].filter(Boolean).map(esc).join(' · ')}</small></h3>
       </div>
       ${macroLine(m) ? `<p class="macro">${esc(macroLine(m))}</p>` : ''}
       ${m.note ? `<p class="stone">${esc(m.note)}</p>` : ''}<p class="lbl">${t('dietPick')}</p>
-      <ul>${m.options.map((o, k) => `<li${isToday ? ' class="opt"' : ''}><div><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</div>${isToday ? eatBtn(j, k, o.name, ate.includes(j) && z.o[j] === k) : ''}</li>`).join('')}
-      ${isToday ? `<li class="opt own"><input data-own="${j}" value="${esc(z.w[j] || '')}" maxlength="80" placeholder="${esc(t('dietOwn'))}" aria-label="${esc(t('dietOwn'))}">${eatBtn(j, 'w', t('dietOwn'), ate.includes(j) && z.o[j] === 'w')}</li>` : ''}</ul></section>`).join('')}
-    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${isToday ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
+      <ul>${m.options.map((o, k) => `<li${can ? ' class="opt"' : ''}><div><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</div>${can ? eatBtn(j, k, o.name, ate.includes(j) && z.o[j] === k) : ''}</li>`).join('')}
+      ${can ? `<li class="opt own"><input data-own="${j}" value="${esc(z.w[j] || '')}" maxlength="80" placeholder="${esc(t('dietOwn'))}" aria-label="${esc(t('dietOwn'))}">${eatBtn(j, 'w', t('dietOwn'), ate.includes(j) && z.o[j] === 'w')}</li>` : ''}</ul></section>`).join('')}
+    ${can && API && auth && (ate.length || z.s) ? `<button id="eatSend" class="primary"${sent ? ' disabled' : ''}>${t(sent ? 'dietSentOk' : z.s ? 'dietUpdate' : 'dietSend')}</button>` : ''}
+    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${can ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
 }
-$('diet').onclick = e => {
+$('diet').onclick = async e => {
   const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); }
+  const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, dk = eatKey(i);
   const eb = e.target.closest('[data-eat]');
-  if (eb) {
+  if (eb && dk) {
     const j = +eb.dataset.eat, k = eb.dataset.opt === 'w' ? 'w' : +eb.dataset.opt, own = $('diet').querySelector(`[data-own="${j}"]`);
     if (k === 'w' && !own.value.trim() && eb.getAttribute('aria-pressed') !== 'true') { own.placeholder = t('dietOwnEmpty'); return own.focus(); }
-    eatPick(j, k); renderDiet();
+    eatPick(dk, j, k); renderDiet();
+  }
+  // Wysłanie zjedzonych posiłków trenerowi; po zmianie przycisk zmienia się na „zaktualizuj”.
+  if (e.target.id === 'eatSend' && dk) {
+    const pay = eatPayload(dk, diet.days[i]);
+    e.target.disabled = true;
+    try {
+      const r = await call('/api/zjedzone', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify(pay) });
+      if (!r.ok) throw Error(r.status);
+      eatSave(dk, { ...eatDay(dk), s: JSON.stringify(pay) }); sound('tick');
+    } catch { ask(t('dietSendFail'), t('ok'), null); }
+    renderDiet();
   }
 };
 // Własny posiłek zapisuje się przy każdej zmianie; wpisanie tekstu od razu zaznacza go jako zjedzony.
 $('diet').oninput = e => {
-  const j = e.target.dataset.own; if (j == null) return;
-  const z = eatDay(), v = e.target.value.trim(); z.w[+j] = v;
+  const j = e.target.dataset.own, dk = eatKey(dietDay ?? (new Date().getDay() + 6) % 7); if (j == null || !dk) return;
+  const z = eatDay(dk), v = e.target.value.trim(); z.w[+j] = v;
   if (v && !(z.m.includes(+j) && z.o[+j] === 'w')) { z.m = [...new Set([...z.m, +j])]; z.o[+j] = 'w'; e.target.nextElementSibling.setAttribute('aria-pressed', 'true'); }
   if (!v && z.o[+j] === 'w') { z.m = z.m.filter(x => x !== +j); delete z.o[+j]; e.target.nextElementSibling.setAttribute('aria-pressed', 'false'); }
-  store('zjedzone', z);
+  eatSave(dk, z);
 };
 $('diet').addEventListener('change', e => { if (e.target.dataset.own != null) renderDiet(); });
 // Zmiana języka (ekran kodu albo ustawienia): napisy z data-t od razu, a to, co składa skrypt, rysuje się od nowa.
@@ -1122,7 +1161,7 @@ function renderSet() {
   show('work'); mountMoves($('work'));
 }
 let kgNow = 0;
-const showKg = () => { const e = exLoc(EXERCISES[curItem().ex]); $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<small>${t('weight')}${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
+const showKg = () => { const e = exLoc(EXERCISES[curItem().ex]); $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<svg class="ico pen" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></svg><small>${t('weight')}${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
 // Ciężar do wpisania: dotknięcie liczby otwiera okienko z suwakiem co 0,25 kg (±10 kg od obecnego) i polem do wpisania.
 // Okienko zamiast stałego suwaka, bo ekran serii na niskich telefonach nie ma już miejsca.
 function askKg() {
@@ -1314,17 +1353,22 @@ function renderRep() {
     ${lbl('repSleep')}${row('sen', REP.sen)}${lbl('repWater')}${row('woda', REP.woda)}${lbl('repEnergy')}${scale('energia')}${lbl('repFull')}${scale('sytosc')}
     ${weightDue() ? `${lbl('repWeight')}<input id="repKg" inputmode="decimal" autocomplete="off" placeholder="${t('repWeightPh')}">` : ''}
     ${meals ? `<p class="stone fine">${t('repEaten', eaten().length, meals)}</p>` : ''}<p id="repMsg" class="err" role="alert"></p>
-    <button id="repSend" class="primary" disabled>${t('repSend')}</button>`;
+    <button id="repSend" class="primary">${t('repSend')}</button>`;
 }
 $('rep').onclick = async e => {
   const b = e.target.closest('[data-v]');
   if (b) {
     const box = b.parentElement; repAns[box.dataset.q] = +b.dataset.v;
     for (const x of box.children) x.setAttribute('aria-pressed', x === b);
-    $('repSend').disabled = ['sen', 'woda', 'energia', 'sytosc'].some(k => repAns[k] == null);
+    box.previousElementSibling.classList.remove('bad');
   }
   if (e.target.id !== 'repSend') return;
+  // Brakujące odpowiedzi: nazwy w komunikacie i czerwone etykiety; waga obowiązkowa, gdy przypada (raz w tygodniu).
+  const brak = [['sen', 'repSleep'], ['woda', 'repWater'], ['energia', 'repEnergy'], ['sytosc', 'repFull']].filter(([k]) => repAns[k] == null);
+  for (const [k] of brak) $('rep').querySelector(`[data-q="${k}"]`).previousElementSibling.classList.add('bad');
   const kgIn = $('repKg')?.value.trim(), waga = kgIn ? Math.round(parseFloat(kgIn.replace(',', '.')) * 10) / 10 : null;
+  if ($('repKg') && !kgIn) { brak.push([, 'repWeight']); $('repKg').previousElementSibling.classList.add('bad'); }
+  if (brak.length) return $('repMsg').textContent = t('repMissing', brak.map(([, k]) => t(k).toLocaleLowerCase(LANG)).join(', '));
   if (kgIn && !(waga >= 30 && waga <= 250)) return $('repMsg').textContent = t('repBadKg');
   const meals = diet?.days[(new Date().getDay() + 6) % 7]?.meals.length;
   const r = { dzien: todayKey(), ...repAns, ...(waga ? { waga } : {}), ...(meals ? { zjedzone: `${Math.min(eaten().length, meals)}/${meals}` } : {}) };
