@@ -261,6 +261,10 @@
   /* Raport dnia: karta na starcie (tylko gdy dziś go nie ma) i na stronie uwag po treningu; zieleń jak „zrobione”. */
   .repcard { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; margin: 12px 0 0; padding: 8px 14px 8px 18px;
     border: 1.5px solid #9DB89A; border-radius: 22px; text-align: left; text-transform: none }
+  /* WhatsApp do trenera: zwykły link w ramce (nie główny przycisk), żeby nie zachęcał do pisania po każdym treningu. */
+  .walink { display: flex; align-items: center; justify-content: center; min-height: 44px; margin: 10px 0 0; padding: 0 16px; border: 1.5px solid var(--line-strong); border-radius: 999px;
+    color: var(--cream); text-decoration: none; text-align: center }
+  .walink.small { min-height: 40px; margin: 0 0 12px; border: 0; color: var(--stone); text-decoration: underline; text-underline-offset: 4px }
   .repcard b { display: block; font-size: 1.05rem; font-weight: 600 } .repcard small { display: block; color: var(--stone); font-size: .84rem }
   .rep .lbl { margin: 16px 0 6px } .rep .opts { flex-wrap: nowrap; gap: 6px } .rep .opts button { flex: 1; padding: 0; min-width: 0 }
   .rep .lbl .hint { margin-left: 6px; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--stone) }
@@ -580,6 +584,7 @@
   <div id="donePage3" class="dpage">
 <button id="doneRep" class="repcard" hidden><span><b data-t="repTitle">raport dnia</b><small data-t="repCardSub">sen, woda, energia · 30 s</small></span><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 12h5m-2-2.5 2.5 2.5-2.5 2.5"/></svg></button>
   <h2 data-t="notes">Uwagi dla trenera</h2>
+  <a id="waDone" class="walink small" target="_blank" rel="noopener" hidden data-t="waDone">coś się stało? napisz do trenera</a>
   <textarea id="doneNote" placeholder="Jak poszło, czy coś bolało, która guma…" data-tp="notesPh"></textarea>
   <details class="how"><summary><span data-t="textForTrainer">Tekst dla trenera</span><svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary><pre id="sum"></pre></details>
   </div>
@@ -613,6 +618,8 @@
     <p id="setWho" class="stone"></p>
     <p class="lbl" data-t="langTitle">język</p>
     <div class="langs"><button data-lang="pl">polski</button><button data-lang="en">english</button></div>
+    <a id="waSet" class="walink" target="_blank" rel="noopener" hidden data-t="waBtn">napisz do trenera (WhatsApp)</a>
+    <p id="waSetHint" class="stone fine" hidden data-t="waHint">Skurcz, ból, pytanie albo zmiana planów? Napisz od razu.</p>
     <button id="soundBtn"></button>
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
     <button id="surveyBtn" data-t="surveyUpdate">zaktualizuj ankietę</button>
@@ -927,7 +934,7 @@ let sheetNow;
 function sheetText() {
   const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : '';
   $('surveyBtn').classList.toggle('alarm', !!load('ankietaBraki', 0)); // braki w ankiecie: przycisk ankiety na czerwono
-  soundBtn();
+  soundBtn(); waLinks();
 }
 function openSheet(k) {
   sheetNow = k; sheetText();
@@ -1302,6 +1309,13 @@ async function sendReport(r, queued) {
   return false;
 }
 $('repCard').onclick = $('doneRep').onclick = () => openSheet('rep');
+// Link do WhatsAppa trenera (numer z serwisu: prowadzący, główny albo administrator) z początkiem wiadomości; bez numeru linków nie ma.
+function waLinks() {
+  const k = load('kontakt', null), href = k ? `https://wa.me/${k}?text=${encodeURIComponent(t('waText', myName() || load('who', '')))}` : '';
+  for (const id of ['waSet', 'waDone']) { $(id).hidden = !k; if (k) $(id).href = href; }
+  $('waSetHint').hidden = !k;
+}
+waLinks();
 // Kalendarz w historii: miesiąc (wstecz strzałką), zielone dni z treningiem, obwiedzione wybrane dni treningowe, kropka przy raporcie dnia.
 // Dotknięcie dnia z treningiem otwiera jego wpis poniżej. Dni treningowe wybiera osoba; idą do serwisu (przypomnienia, widok trenera).
 let calM = 0, daysOpen = false;
@@ -1399,6 +1413,7 @@ async function loadPlans() {
     // Raport i waga wysłane z drugiego telefonu też się liczą; dni treningowe: nowy telefon bierze je z serwisu, zmienione tu idą do serwisu.
     if (d.raport && d.raport > (load('raportDzien', '') || '')) store('raportDzien', d.raport);
     if (d.raport_waga && d.raport_waga > (load('wagaDzien', '') || '')) store('wagaDzien', d.raport_waga);
+    store('kontakt', d.kontakt ?? null); waLinks();
     if (d.dni && load('dni', null) == null) store('dni', d.dni);
     else if (load('dni', null) && JSON.stringify(d.dni) !== JSON.stringify(load('dni', null))) sendDays();
     $('repCard').hidden = !repDue(); netNote();
@@ -1441,7 +1456,7 @@ function notices() {
 }
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
-  auth = null; store('auth', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
+  auth = null; store('auth', null); store('kontakt', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
   store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
   floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = msg || '';
   show('gate');
