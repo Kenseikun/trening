@@ -620,6 +620,8 @@
     <div class="langs"><button data-lang="pl">polski</button><button data-lang="en">english</button></div>
     <a id="waSet" class="walink" target="_blank" rel="noopener" hidden data-t="waBtn">napisz do trenera (WhatsApp)</a>
     <p id="waSetHint" class="stone fine" hidden data-t="waHint">Skurcz, ból, pytanie albo zmiana planów? Napisz od razu.</p>
+    <button id="pushBtn" hidden></button>
+    <p id="pushHint" class="stone fine" hidden></p>
     <button id="soundBtn"></button>
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
     <button id="surveyBtn" data-t="surveyUpdate">zaktualizuj ankietę</button>
@@ -934,7 +936,7 @@ let sheetNow;
 function sheetText() {
   const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : '';
   $('surveyBtn').classList.toggle('alarm', !!load('ankietaBraki', 0)); // braki w ankiecie: przycisk ankiety na czerwono
-  soundBtn(); waLinks();
+  soundBtn(); waLinks(); pushBtn();
 }
 function openSheet(k) {
   sheetNow = k; sheetText();
@@ -1309,6 +1311,34 @@ async function sendReport(r, queued) {
   return false;
 }
 $('repCard').onclick = $('doneRep').onclick = () => openSheet('rep');
+// Powiadomienia (dzień treningowy, raport dnia) włącza się tylko tutaj, w ustawieniach: nigdy samo przy starcie.
+// iPhone: działają dopiero w aplikacji dodanej do ekranu początkowego, wtedy jest tylko wskazówka.
+const canPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const iosBrowser = () => /iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone;
+function pushBtn(msg) {
+  const ok = !!API && !!auth && canPush(), on = ok && load('push', false) && Notification.permission === 'granted';
+  $('pushBtn').hidden = !ok; $('pushBtn').textContent = t(on ? 'pushOn' : 'pushOff');
+  $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (ok ? t('pushHint') : t('pushIos'));
+}
+$('pushBtn').onclick = async () => {
+  const H = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token };
+  $('pushBtn').disabled = true;
+  try {
+    const reg = await navigator.serviceWorker.ready, was = await reg.pushManager.getSubscription();
+    if (load('push', false) && was) {
+      await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
+      await was.unsubscribe(); store('push', false); pushBtn();
+    } else {
+      if (await Notification.requestPermission() !== 'granted') return pushBtn(t('pushDenied'));
+      const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+      const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
+      const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
+      if (!r.ok) throw Error(r.status);
+      store('push', true); pushBtn(); sound('tick');
+    }
+  } catch { pushBtn(t('pushFail')); }
+  finally { $('pushBtn').disabled = false; }
+};
 // Link do WhatsAppa trenera (numer z serwisu: prowadzący, główny albo administrator) z początkiem wiadomości; bez numeru linków nie ma.
 function waLinks() {
   const k = load('kontakt', null), href = k ? `https://wa.me/${k}?text=${encodeURIComponent(t('waText', myName() || load('who', '')))}` : '';
@@ -1662,10 +1692,13 @@ if (API) {
     $('gCode').value = kod; $('gIni').value = inicjaly; activate(inicjaly, kod);
     return true;
   };
+  // Powiadomienie „raport dnia” otwiera aplikację z #raport: od razu formularz raportu (gdy dziś go jeszcze nie ma).
+  const repLink = () => { if (location.hash !== '#raport') return; history.replaceState(null, '', location.pathname); if (repDue() && !$('home').hidden) openSheet('rep'); };
+  addEventListener('hashchange', repLink);
   addEventListener('hashchange', linkCode);
   const activating = linkCode();
   // Braki w ankiecie z ostatniego połączenia blokują od razu, zanim serwis odpowie (i bez zasięgu).
-  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); }
+  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); repLink(); }
   else if (!activating) lock();
 } else { show('home'); renderHome(); loadPlans(); }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

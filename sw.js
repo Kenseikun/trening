@@ -21,3 +21,14 @@ self.addEventListener('fetch', e => {
   if (r.method !== 'GET' || !r.url.startsWith(self.location.origin)) return;
   e.respondWith(fetch(r, FRESH).then(res => put(r, res)).catch(() => caches.match(r, { ignoreSearch: true })));
 });
+
+// Powiadomienia z serwisu (dzień treningowy, raport dnia): treść { t: tytuł, b: treść, u: adres }. Kliknięcie otwiera aplikację.
+self.addEventListener('push', e => {
+  const m = e.data ? e.data.json() : {};
+  e.waitUntil(self.registration.showNotification(m.t || 'trening', { body: m.b || '', icon: 'icons/icon-192px.png', badge: 'icons/icon-192px.png', data: m.u || './' }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL(e.notification.data, self.registration.scope).href;
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(l => l.length ? l[0].navigate(url).then(w => w?.focus()) : clients.openWindow(url)));
+});
