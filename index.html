@@ -302,7 +302,7 @@
   .stepper output { text-align: center; font-size: 2.1rem; font-weight: 500; line-height: 1 }
   .stepper.kg { grid-template-columns: 44px 1fr 44px; margin: 6px 0 2px }
   .stepper.kg button { width: 44px; height: 44px; min-height: 44px }
-  .stepper.kg output { font-size: 1.35rem } .stepper.kg small { display: block; font-size: .72rem; color: var(--stone); margin-top: 2px }
+  .stepper.kg output { font-size: 1.35rem; cursor: pointer; text-decoration: underline dotted rgba(231,232,226,.4); text-underline-offset: 5px } .stepper.kg small { display: block; font-size: .72rem; color: var(--stone); margin-top: 2px }
   .rate { flex: none; margin: 0 0 6px } .rate .lbl { margin: 6px 0 4px } .rate .opts { gap: 6px; align-items: center; flex-wrap: nowrap } .rate .opts button { min-height: 44px; padding: 0 11px; font-size: .9rem; white-space: nowrap }
   /* Liczby na pierwszej stronie wyników rosną z wysokością wiersza (--rows ustawia finish()), żeby nie nachodziły na podpisy na niskich ekranach. */
   #dBlock { container-type: size; min-height: calc(var(--rows, 3) * 52px) }
@@ -371,6 +371,9 @@
   .ask-name input { width: 100%; min-height: 56px; text-align: center; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 600 1.25rem var(--font) }
   .ask-name input:focus { outline: none; border-color: var(--blue) }
   .ask-name input::placeholder { color: var(--stone); opacity: .5 }
+  /* Ciężar do wpisania: duża liczba, suwak co 0,25 kg, pole do wpisania. */
+  .ask-kg output { text-align: center; font-size: 2.4rem; font-weight: 500; line-height: 1 }
+  .ask-kg input[type=range] { min-height: 44px; padding: 0; border: 0; background: none; accent-color: var(--cream) }
   #dlgBody { flex: 1; min-height: 0; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none }
   .pg { min-height: 100%; scroll-snap-align: start; display: flex; flex-direction: column }
   .pg .mv { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 4px 0 }
@@ -500,7 +503,7 @@
     </div>
     <div id="kgBox" class="stepper kg" hidden>
       <button id="kgMinus" aria-label="Mniejszy ciężar" data-ta="lessKg"><svg class="ico" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
-      <output id="kgVal" aria-live="polite"></output>
+      <output id="kgVal" aria-live="polite" role="button" tabindex="0"></output>
       <button id="kgPlus" aria-label="Większy ciężar" data-ta="moreKg"><svg class="ico" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
     </div>
     <button id="doneBtn" class="primary"></button>
@@ -577,6 +580,8 @@
     <p id="setWho" class="stone"></p>
     <p class="lbl" data-t="langTitle">język</p>
     <div class="langs"><button data-lang="pl">polski</button><button data-lang="en">english</button></div>
+    <button id="soundBtn"></button>
+    <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
     <button id="surveyBtn" data-t="surveyUpdate">zaktualizuj ankietę</button>
     <p class="stone fine" data-t="surveyUpdateHint">Zmieniła się waga, cel albo coś boli? Popraw odpowiedzi, trener zobaczy nową ankietę.</p>
     <button id="logoutBtn" data-t="logout">wyloguj się</button>
@@ -829,7 +834,7 @@ function renderHome() {
     $('startBtn').innerHTML = `${t('loadPlan')}${ico('next')}`;
   }
   $('hist').innerHTML = past.length
-    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : t('histRow', day(h.t0), h.name, h.reps))}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + `<button id="histBtn" style="width:100%;margin-top:12px">${t('histSend')}</button><button id="histClr" class="ghost" style="width:100%;margin-top:6px">${t('histClear')}</button>`
+    ? past.map(h => `<details><summary>${esc(typeof h === 'string' ? h.split('\n')[0] : t('histRow', day(h.t0), h.name, h.reps, volume(h.per) && kgTxt(volume(h.per))))}</summary><pre>${esc(pastText(h))}</pre></details>`).join('') + `<button id="histBtn" style="width:100%;margin-top:12px">${t('histSend')}</button><button id="histClr" class="ghost" style="width:100%;margin-top:6px">${t('histClear')}</button>`
     : `<p class="stone">${t('histEmpty')}</p>`;
   if (!plans.length) return;
   sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
@@ -888,6 +893,7 @@ let sheetNow;
 function sheetText() {
   const w = load('who', ''); $('sheetTitle').textContent = t(SHEETS[sheetNow]); $('setWho').textContent = w ? t('signedAs', w) : '';
   $('surveyBtn').classList.toggle('alarm', !!load('ankietaBraki', 0)); // braki w ankiecie: przycisk ankiety na czerwono
+  soundBtn();
 }
 function openSheet(k) {
   sheetNow = k; sheetText();
@@ -1024,6 +1030,23 @@ function renderSet() {
 }
 let kgNow = 0;
 const showKg = () => { const e = exLoc(EXERCISES[curItem().ex]); $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<small>${t('weight')}${e?.kgOpis ? ' ' + esc(e.kgOpis) : ''}</small>`; };
+// Ciężar do wpisania: dotknięcie liczby otwiera okienko z suwakiem co 0,25 kg (±10 kg od obecnego) i polem do wpisania.
+// Okienko zamiast stałego suwaka, bo ekran serii na niskich telefonach nie ma już miejsca.
+function askKg() {
+  const lo = Math.max(0, Math.floor(kgNow) - 10), show = v => $('kgShow').textContent = `${kgTxt(v)} kg`;
+  $('dlgBody').innerHTML = `<div class="ask-name ask-kg"><output id="kgShow"></output>
+    <input id="kgRange" type="range" min="${lo}" max="${lo + 20}" step="0.25" value="${kgNow}" aria-label="${t('weight')}">
+    <input id="kgIn" inputmode="decimal" autocomplete="off" value="${kgTxt(kgNow)}" aria-label="${t('kgType')}" placeholder="${t('kgType')}">
+    <button id="kgOk" class="primary">${t('save')}</button></div>`;
+  floatText($('dlgName'), t('kgTitle')); show(kgNow);
+  $('dlg').classList.add('small'); $('dlg').showModal();
+  $('kgRange').oninput = e => { $('kgIn').value = kgTxt(+e.target.value); show(+e.target.value); };
+  $('kgIn').oninput = e => { const v = kgRound(e.target.value); show(v); if (v >= lo && v <= lo + 20) $('kgRange').value = v; };
+  $('kgOk').onclick = () => { kgNow = kgRound($('kgIn').value); showKg(); $('dlg').close(); };
+  $('kgIn').onkeydown = e => { if (e.key === 'Enter') $('kgOk').click(); };
+}
+$('kgVal').onclick = askKg;
+$('kgVal').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); askKg(); } };
 $('kgMinus').onclick = () => { kgNow = Math.max(0, Math.round((kgNow - EXERCISES[curItem().ex].kg) * 10) / 10); showKg(); };
 $('kgPlus').onclick = () => { kgNow = Math.round((kgNow + EXERCISES[curItem().ex].kg) * 10) / 10; showKg(); };
 $('minus').onclick = () => $('val').value = Math.max(0, +$('val').value - 1);
@@ -1075,7 +1098,7 @@ function tick() {
   const ms = cur.end - Date.now(), left = Math.ceil(ms / 1000);
   if (left <= 0) {
     clearInterval(tInt);
-    beep(880, .6); navigator.vibrate?.([300, 120, 300]);
+    sound(cur.phase === 'rest' && cur.i === S().length - 1 && S().length > 1 ? 'last' : 'go'); navigator.vibrate?.([300, 120, 300]);
     return tDone();
   }
   $('tNum').innerHTML = digits(fmt(left));
@@ -1094,6 +1117,7 @@ $('tSkip').onclick = () => {
 // --- wyniki
 function finish() {
   clearInterval(tInt);
+  const fresh = cur.t1 == null; // dźwięk tylko przy pierwszym pokazaniu wyników, nie po ponownym otwarciu aplikacji
   cur.phase = 'done'; cur.t1 ??= Date.now(); save();
   const s = stats(cur.plan, cur.log, cur.kg), prev = prevOf(cur.plan.name), mins = Math.round((cur.t1 - cur.t0) / 60000);
   cur.rate ??= {}; showRate();
@@ -1101,12 +1125,15 @@ function finish() {
   floatText($('dName'), short(cur.plan.name).toLowerCase(), true);
   // Słowo po treningu: liczby z cheer(), a do tego zdanie na doping; przy 1., 10., 25., 50. i 100. treningu gratulacje za wytrwałość.
   const nr = past.length + 1;
+  if (fresh) sound([1, 10, 25, 50, 100].includes(nr) ? 'record' : 'done');
   $('dCheer').textContent = `${cheer(s, prev, myName(), load('plec', null))} ${[1, 10, 25, 50, 100].includes(nr) ? t('milestone', nr) : pick(t('motDone'), Math.floor(cur.t0 / 1000))}`;
   $('dBlock').innerHTML = cells([
     [t('repsT'), s.reps, prev ? `${signed(delta(s.reps, prev.reps))} vs ${prev.reps}` : t('firstTime')],
-    [t('sets'), `${s.done}/${s.total}`, t('ofPlan', Math.round(s.done / s.total * 100))],
-    [t('time'), mins, t('minutes')],
+    // Czas pod seriami, nie w osobnym wierszu: z ciężarem dochodzi wiersz „podniesione”, a strona ma się zmieścić na niskim ekranie.
+    [t('sets'), `${s.done}/${s.total}`, `${t('ofPlan', Math.round(s.done / s.total * 100))} · ${mins} min`],
     s.hold ? [t('hold'), s.hold, `${t('seconds')}${prev?.hold ? ' · ' + signed(delta(s.hold, prev.hold)) : ''}`] : null,
+    // Łącznie podniesione kg (powtórzenia × ciężar): ciekawostka, która rośnie z tygodnia na tydzień.
+    s.kgTotal ? [t('kgTotalT'), kgTxt(s.kgTotal), volume(prev?.per) ? `kg · ${signed(delta(s.kgTotal, volume(prev.per)))} vs ${kgTxt(volume(prev.per))}` : 'kg'] : null,
   ]);
   $('dBlock').style.setProperty('--rows', $('dBlock').children.length);
   // Dziś i poprzednio w tej samej skali, na wspólnej linii bazowej.
@@ -1205,14 +1232,23 @@ $('resumeBtn').onclick = () => {
 $('dropBtn').onclick = async () => { if (await ask(t('askDiscard'), t('discard'))) { cur = null; save(); renderHome(); } };
 
 // --- dźwięk i ekran (AudioContext tworzony przy dotknięciu Start/Wznów)
-function beep(freq, sec) {
+// at = opóźnienie w s, vol = głośność. Dźwięki można wyłączyć w ustawieniach (wibracja zostaje).
+function beep(freq, sec, at = 0, vol = .4) {
+  if (!load('dzwieki', true)) return;
   try {
-    const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    const t = ac.currentTime + at, o = ac.createOscillator(), g = ac.createGain();
     o.frequency.value = freq;
-    g.gain.setValueAtTime(.4, t); g.gain.exponentialRampToValueAtTime(.001, t + sec);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + sec);
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t + sec);
   } catch {}
 }
+// Krótkie sygnały: [częstotliwość, czas, opóźnienie, głośność]. go = start serii, last = ostatnia seria, done = koniec treningu
+// (trzy rosnące tony), record = kamień milowy albo rekord (akord), tick = cichy klik po zapisie.
+const SOUNDS = { go: [[660, .12], [990, .35, .14]], last: [[880, .1], [880, .1, .14], [1320, .4, .28]],
+  done: [[523, .18], [659, .18, .18], [784, .55, .36]], record: [[523, .9], [659, .9, .05], [784, .9, .1], [1047, .9, .15, .3]], tick: [[1200, .05, 0, .15]] };
+const sound = k => SOUNDS[k].forEach(([f, d, a, v]) => beep(f, d, a, v));
+const soundBtn = () => $('soundBtn').textContent = t(load('dzwieki', true) ? 'soundsOn' : 'soundsOff');
+$('soundBtn').onclick = () => { store('dzwieki', !load('dzwieki', true)); soundBtn(); wake(); sound('tick'); };
 async function wake() {
   try { ac ??= new AudioContext(); ac.resume(); } catch {}
   try { wl = await navigator.wakeLock?.request('screen'); } catch {}
@@ -1303,8 +1339,16 @@ $('gBtn').onclick = () => activate($('gIni').value, $('gCode').value);
 // Enter wysyła kod. Obsługa nie może niczego zwracać: „false” z onkeydown anuluje klawisz i blokuje pisanie.
 $('gCode').onkeydown = $('gIni').onkeydown = e => { if (e.key === 'Enter') $('gBtn').click(); };
 // Inicjały i kod zawsze wielkimi literami: to, co widać w polu, jest tym, co trafia do serwisu.
-$('gIni').oninput = e => e.target.value = e.target.value.toLocaleUpperCase('pl').replace(/[^\p{L}]/gu, '');
-$('gCode').oninput = e => e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+// Pełny kod (12 znaków) wpisany po inicjałach loguje sam, bez „wejdź”: jedno zapytanie, jak po kliknięciu. Ta sama para
+// nie idzie drugi raz (po złym kodzie czeka na poprawkę), bo serwis liczy złe próby (5 na minutę).
+let tried = '';
+function autoEnter() {
+  const ini = $('gIni').value, kod = $('gCode').value.replace(/-/g, '');
+  if (!ini || kod.length !== 12 || $('gBtn').disabled || tried === ini + kod) return;
+  tried = ini + kod; activate(ini, $('gCode').value);
+}
+$('gIni').oninput = e => e.target.value = e.target.value.toLocaleUpperCase('pl').replace(/[^\p{L}]/gu, ''); // inicjały same nie logują: przy pierwszej literze byłyby niepełne
+$('gCode').oninput = e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); autoEnter(); };
 
 // Ankieta po wejściu kodem, dopóki osoba jej nie wypełni, i zawsze wtedy, gdy czegoś w niej brakuje: nowe pytania albo nowa zgoda po
 // zmianie ankiety w serwisie. Braki blokują aplikację przy każdym uruchomieniu (ekran „gap”, bez wyjścia), także bez zasięgu:

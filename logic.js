@@ -92,14 +92,19 @@ function stats(plan, log, kg = {}, lang) {
     kgs: st.flatMap((s, i) => s.item === item && log[i] != null ? [kg[i] ?? null] : []),
   }));
   const sum = f => per.filter(f).flatMap(p => p.vals).reduce((a, b) => a + b, 0);
-  return { per, reps: sum(p => !p.time), hold: sum(p => p.time), done: Object.keys(log).length, total: st.length };
+  return { per, reps: sum(p => !p.time), hold: sum(p => p.time), done: Object.keys(log).length, total: st.length, kgTotal: volume(per) };
 }
+// Łącznie podniesione kg: powtórzenia × ciężar z każdej serii z obciążeniem (ćwiczenia z masą ciała się nie liczą).
+// ponytail: ciężar liczony tak, jak wpisany ("na hantel" to jeden hantel); dwa hantle naraz wymagałyby pola w exercises.js.
+const volume = per => Math.round((per || []).filter(p => !p.time).reduce((a, p) => a + p.vals.reduce((x, v, i) => x + v * (p.kgs?.[i] || 0), 0), 0) * 100) / 100;
+// Ciężar wpisany ręcznie albo suwakiem: co 0,25 kg, od 0 do 500.
+const kgRound = v => Math.round(Math.max(0, Math.min(500, parseFloat(String(v).replace(',', '.')) || 0)) * 4) / 4;
 // Zmiana w % (null, gdy nie ma z czym porównać).
 const delta = (now, before) => before > 0 ? Math.round((now - before) / before * 100) : null;
 const signed = n => n == null ? '—' : `${n > 0 ? '+' : ''}${n}%`;
 
 // Ciężar po polsku z przecinkiem (42,5), po angielsku z kropką (42.5). Największy ciężar w serii ćwiczenia (0, gdy bez obciążenia).
-const kgTxt = (k, lang = globalThis.LANG) => { const s = String(Math.round(k * 10) / 10); return lang === 'en' ? s : s.replace('.', ','); };
+const kgTxt = (k, lang = globalThis.LANG) => { const s = String(Math.round(k * 100) / 100); return lang === 'en' ? s : s.replace('.', ','); };
 const topKg = p => Math.max(0, ...(p?.kgs || []).filter(k => k > 0));
 // Ostatni ciężar ćwiczenia z historii (najnowszy trening pierwszy): { kg, t0 } albo null. kind = tylko ten typ treningu (planKind).
 function lastKg(history, ex, kind) {
@@ -176,7 +181,7 @@ function summaryText(plan, log, note, t0, t1, prev, extra = {}) {
   if (skipped.length) lines.push(`Pominięte: ${skipped.join(', ')}`);
   if (extra.ocena) lines.push(`Ocena: ${OCENA[extra.ocena]}`);
   if (extra.bol) lines.push(`Ból: ${extra.bol.length ? extra.bol.map(b => BOL[b]).join(', ') : 'nie'}`);
-  lines.push(`Serie: ${s.done}/${s.total}, powtórzenia razem: ${s.reps}` + (s.hold ? `, czas w napięciu: ${s.hold} s` : ''));
+  lines.push(`Serie: ${s.done}/${s.total}, powtórzenia razem: ${s.reps}` + (s.hold ? `, czas w napięciu: ${s.hold} s` : '') + (s.kgTotal ? `, łącznie podniesione: ${kgTxt(s.kgTotal, 'pl')} kg` : ''));
   if (prev) lines.push(`Poprzednio (${new Date(prev.t0).toISOString().slice(0, 10)}): powtórzenia ${prev.reps} → ${s.reps} (${signed(delta(s.reps, prev.reps))})`);
   if (note?.trim()) lines.push(`Uwagi: ${note.trim()}`);
   return lines.join('\n');
@@ -350,7 +355,10 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.strictEqual(exName({ ex: 'pompki', name: 'Own name' }, 'en'), 'Own name');
   assert.strictEqual(goal({ reps: 8 }, 'en'), '8 reps');
   assert.strictEqual(muscleName('chest', 'en'), 'chest');
-  assert.deepStrictEqual([kgTxt(42.5, 'en'), kgTxt(42.5, 'pl')], ['42.5', '42,5']);
+  assert.deepStrictEqual([kgTxt(42.5, 'en'), kgTxt(42.5, 'pl'), kgTxt(2.25, 'pl')], ['42.5', '42,5', '2,25']);
+  // Ciężar co 0,25 kg (pole i suwak), łącznie podniesione kg bez ćwiczeń na czas i bez serii bez ciężaru.
+  assert.deepStrictEqual([kgRound('2,3'), kgRound('5.1'), kgRound(-3), kgRound('x'), kgRound(7.125)], [2.25, 5, 0, 0, 7.25]);
+  assert.strictEqual(volume([{ vals: [10, 8], kgs: [20, 22.5] }, { vals: [12], kgs: [null] }, { time: true, vals: [30], kgs: [10] }]), 380);
   const se = stats(p, { 0: 5, 1: 4, 2: 30 }, {}, 'en');
   assert.strictEqual(cheer(se, was, 'Adrian', 'M', 'en'), 'You did it, Adrian! 1 rep more than last time. Keep it up! Biggest progress: push-up (+1).');
   assert.strictEqual(cheer(se, { ...was, reps: 12, per: [] }, '', 'K', 'en'), "Good job. Today 3 reps fewer than last time, and that's normal. Consistency is what counts.");
