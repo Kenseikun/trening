@@ -1540,11 +1540,15 @@ function notices() {
     }
     store('widzianaRozpiska', plansAt); store('cwiczenia', exNow);
   }
+  // Rozpiska zdjęta przez trenera (serwis odpowiedział pustą listą): komunikat raz, potem jak przed pierwszą rozpiską.
+  const planGone = !!API && !netDown && !served.length && seenPlan !== null;
+  if (planGone) store('widzianaRozpiska', null);
   const dietAt = diet ? load('dietaAt', 0) : null, seenDiet = load('widzianaDieta', null), dietNew = !!diet && dietAt !== seenDiet;
   // Trening i dieta naraz: jeden wspólny komunikat zamiast dwóch osobnych (prośba właściciela z 2026-10-07).
   if (dietNew && planNew) msgs[0] = t('noticeBoth', n);
   else if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
-  else if (!diet && seenDiet !== null) msgs.push(t('noticeDietGone'));
+  else if (!diet && seenDiet !== null) msgs.push(planGone ? t('noticeBothGone') : t('noticeDietGone'));
+  if (planGone && !(!diet && seenDiet !== null && !dietNew)) msgs.push(t('noticePlanGone'));
   store('widzianaDieta', dietAt);
   if (msgs.length) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null).then(yes => { if (yes && dietNew) openSheet('diet'); });
 }
