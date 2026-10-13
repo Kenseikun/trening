@@ -249,6 +249,14 @@
   .meal li { padding: 9px 0; border-top: 1px solid var(--line); line-height: 1.3 }
   .meal li b { font-weight: 600 }
   .meal li small { display: block; margin-top: 2px; color: var(--stone); font-size: .84rem }
+  /* Makro posiłku pod nazwą; „zjedzone” to okrągły znacznik przy posiłku (tylko dziś), pasek postępu dnia nad posiłkami. */
+  .meal .mh { display: flex; align-items: center; gap: 12px } .meal .mh h3 { flex: 1 }
+  .meal .macro { margin: 2px 0 0; font-size: .84rem; color: var(--stone) }
+  .eat { flex: none; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50% }
+  .eat[aria-pressed=true] { background: #9DB89A; border-color: #9DB89A; color: var(--ink) }
+  .meal.ate { opacity: .6 }
+  .eaten { margin: 12px 0 0 } .eaten p { display: flex; justify-content: space-between; margin: 0 0 6px; font-size: .9rem; color: var(--stone) }
+  .eaten .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden } .eaten .bar i { display: block; height: 100%; width: var(--p); background: #9DB89A }
   .resume { border: 1px solid var(--blue); border-radius: 22px; padding: 14px 16px; margin: 12px 0 0 }
   .resume p { margin: 0 0 12px }
 
@@ -907,20 +915,34 @@ $('sheetClose').onclick = () => $('sheet').close();
 // Dieta od trenera: dzień tygodnia (na start dziś), cele dnia i posiłki z przykładami do wyboru.
 const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'long' }); // 1.01.2024 to poniedziałek
 // Dieta jest w menu na stałe; bez diety od trenera arkusz mówi, że pojawi się tu sama.
+// Zjedzone posiłki: tylko dzisiejsze, w telefonie ({ d: 'RRRR-MM-DD', m: [numery posiłków] }); wczorajsze znikają same.
+const todayKey = () => new Date().toLocaleDateString('sv');
+const eaten = () => { const z = load('zjedzone', null); return z?.d === todayKey() ? z.m : []; };
+const macroLine = x => [x.protein && `${t('dietProtein')} ${x.protein} g`, x.fat && `${t('dietFat')} ${x.fat} g`, x.carbs && `${t('dietCarbs')} ${x.carbs} g`].filter(Boolean).join(' · ');
 function renderDiet() {
   if (!diet) return $('diet').innerHTML = `<p class="stone">${esc(t('dietNone'))}</p>`;
-  const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, d = diet.days[i], kcal = d.kcal || diet.kcal, protein = d.protein || diet.protein;
+  const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, d = diet.days[i], { kcal, protein, fat, carbs } = dayMacros(diet, d);
+  const isToday = i === today, ate = isToday ? eaten() : [], ateKcal = d.meals.reduce((a, m, j) => a + (ate.includes(j) ? m.kcal : 0), 0);
   $('diet').innerHTML = `<p class="lbl">${esc(diet.name)}</p>
     <div class="days" role="tablist">${t('dietDays').split(' ').map((n, k) => `<button role="tab" data-day="${k}" aria-selected="${k === i}" aria-label="${esc(dayName(k))}">${n}</button>`).join('')}</div>
     <h2>${esc(dayName(i))}${i === today ? ' · ' + t('dietToday') : ''}</h2>
     ${kcal || protein ? `<div class="stats">${cells([kcal && [t('dietKcal'), kcal, 'kcal'], protein && [t('dietProtein'), protein, 'g']])}</div>` : ''}
+    ${fat || carbs ? `<p class="macro stone">${esc(macroLine({ fat, carbs }))}</p>` : ''}
+    ${isToday ? `<div class="eaten"><p><span>${t('dietEaten', ate.length, d.meals.length)}</span>${kcal ? `<span>${ateKcal} / ${kcal} kcal</span>` : ''}</p>
+      <div class="bar"><i style="--p:${Math.round(ate.length / d.meals.length * 100)}%"></i></div></div>` : ''}
     ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}
-    ${d.meals.map(m => `<section class="meal"><h3>${esc(m.name)}<small>${[m.time, m.kcal && m.kcal + ' kcal'].filter(Boolean).map(esc).join(' · ')}</small></h3>
+    ${d.meals.map((m, j) => `<section class="meal${ate.includes(j) ? ' ate' : ''}"><div class="mh"><h3>${esc(m.name)}<small>${[m.time, m.kcal && m.kcal + ' kcal'].filter(Boolean).map(esc).join(' · ')}</small></h3>
+      ${isToday ? `<button class="eat" data-eat="${j}" aria-pressed="${ate.includes(j)}" aria-label="${esc(t('dietAte'))}: ${esc(m.name)}"><svg class="ico" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>` : ''}</div>
+      ${macroLine(m) ? `<p class="macro">${esc(macroLine(m))}</p>` : ''}
       ${m.note ? `<p class="stone">${esc(m.note)}</p>` : ''}<p class="lbl">${t('dietPick')}</p>
       <ul>${m.options.map(o => `<li><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</li>`).join('')}</ul></section>`).join('')}
-    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
+    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${isToday ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
 }
-$('diet').onclick = e => { const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); } };
+$('diet').onclick = e => {
+  const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); }
+  const k = e.target.closest('[data-eat]')?.dataset.eat;
+  if (k != null) { const m = eaten(), j = +k; store('zjedzone', { d: todayKey(), m: m.includes(j) ? m.filter(x => x !== j) : [...m, j] }); renderDiet(); }
+};
 // Zmiana języka (ekran kodu albo ustawienia): napisy z data-t od razu, a to, co składa skrypt, rysuje się od nowa.
 document.addEventListener('click', e => {
   const l = e.target.closest('[data-lang]')?.dataset.lang;

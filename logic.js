@@ -31,18 +31,23 @@ function normalizeDiet(d) {
   if (!txt(d?.name)) throw Error('Dieta: brak "name"');
   if (!Array.isArray(d.days) || d.days.length !== 7) throw Error('Dieta: "days" ma mieć 7 dni, od poniedziałku');
   return {
-    name: txt(d.name), note: txt(d.note), kcal: num(d.kcal), protein: num(d.protein),
+    // Makro (kcal, białko, tłuszcz, węglowodany) przy diecie, dniu i posiłku jest opcjonalne; stare diety mają tylko kcal i białko.
+    name: txt(d.name), note: txt(d.note), kcal: num(d.kcal), protein: num(d.protein), fat: num(d.fat), carbs: num(d.carbs),
     days: d.days.map((day, i) => {
       if (!Array.isArray(day?.meals) || !day.meals.length) throw Error(`Dieta, dzień ${i + 1}: brak "meals"`);
-      return { note: txt(day.note), kcal: num(day.kcal), protein: num(day.protein), meals: day.meals.map((m, j) => {
+      return { note: txt(day.note), kcal: num(day.kcal), protein: num(day.protein), fat: num(day.fat), carbs: num(day.carbs), meals: day.meals.map((m, j) => {
         const options = (Array.isArray(m?.options) ? m.options : []).map(o => o && typeof o === 'object' ? { name: txt(o.name), note: txt(o.note) } : { name: txt(o), note: '' });
         if (!txt(m?.name)) throw Error(`Dieta, dzień ${i + 1}, posiłek ${j + 1}: brak "name"`);
         if (options.length < 2 || options.some(o => !o.name)) throw Error(`Dieta, dzień ${i + 1}, ${txt(m.name)}: potrzeba co najmniej dwóch przykładów z nazwą ("options")`);
-        return { name: txt(m.name), time: txt(m.time), kcal: num(m.kcal), note: txt(m.note), options };
+        return { name: txt(m.name), time: txt(m.time), kcal: num(m.kcal), protein: num(m.protein), fat: num(m.fat), carbs: num(m.carbs), note: txt(m.note), options };
       }) };
     }),
   };
 }
+
+// Makro dnia: cel dnia od trenera, a bez niego suma posiłków, a bez niej cel całej diety (0 = nie podano).
+const MACROS = ['kcal', 'protein', 'fat', 'carbs'];
+const dayMacros = (diet, d) => Object.fromEntries(MACROS.map(k => [k, d[k] || d.meals.reduce((a, m) => a + (m[k] || 0), 0) || diet[k] || 0]));
 
 // Trening → lista serii; rest = przerwa PO serii (po ostatniej 0).
 function steps(plan) {
@@ -302,6 +307,10 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.throws(() => normalizeDiet({ name: 'x', days: [...Array(6).fill(day), { meals: [{ name: 'Obiad', options: ['a', { note: 'b' }] }] }] }), /dwóch/);
   assert.throws(() => normalizeDiet({ days: Array(7).fill(day) }), /name/);
   assert.strictEqual(fmt(125), '2:05');
+  // Makro dnia: cel dnia, potem suma posiłków, potem cel diety.
+  const dm = normalizeDiet({ name: 'x', kcal: 2000, fat: 70, days: Array(7).fill({ meals: [{ name: 'a', kcal: 500, protein: '30', options: ['p', 'q'] }, { name: 'b', kcal: 700, carbs: 80, options: ['p', 'q'] }] }) });
+  assert.deepStrictEqual(dayMacros(dm, dm.days[0]), { kcal: 1200, protein: 30, fat: 70, carbs: 80 });
+  assert.deepStrictEqual(dayMacros(dm, { ...dm.days[0], kcal: 1800 }).kcal, 1800);
   assert.strictEqual(planKind(p.name), planKind('T1 · Góra A (drążek + dipy)'));
   assert.strictEqual(estimate(p), 4); // 40+60+40+60+30 s = 230 s
 
