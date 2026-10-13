@@ -133,6 +133,33 @@ function startKg({ setKg, prevSetKg, planKg, same, any, plansAt = 0 }) {
 const OCENA = { LEKKO: 'za lekko', OK: 'w sam raz', CIEZKO: 'za ciężko' };
 const BOL = { BARKI: 'barki', LOKCIE: 'łokcie', NADGARSTKI: 'nadgarstki', PLECY: 'plecy', KOLANA: 'kolana', BIODRA: 'biodra', INNE: 'coś innego' };
 
+// Rekordy dnia względem całej historii: ciężar (największy w serii), a bez ciężaru powtórzenia albo czas w jednej serii.
+// Liczy się tylko ćwiczenie, które już było wcześniej (pierwszy raz to nie rekord). Najwyżej dwa, najpierw ciężar.
+function records(per, history) {
+  const before = ex => history.filter(h => typeof h === 'object').flatMap(h => h.per?.filter(p => p.ex === ex) || []);
+  const out = [];
+  for (const p of per) {
+    const old = before(p.ex);
+    if (!p.vals.length || !old.length) continue;
+    const kg = topKg(p), oldKg = Math.max(0, ...old.map(topKg));
+    if (kg && oldKg && kg > oldKg) { out.push({ ex: p.ex, name: p.name, kind: 'kg', val: kg }); continue; }
+    const best = Math.max(...p.vals), oldBest = Math.max(0, ...old.flatMap(o => o.vals));
+    if (!kg && oldBest && best > oldBest) out.push({ ex: p.ex, name: p.name, kind: p.time ? 's' : 'reps', val: best });
+  }
+  return out.sort((a, b) => (b.kind === 'kg') - (a.kind === 'kg')).slice(0, 2);
+}
+// Seria tygodni z rzędu (od poniedziałku), w których treningów było co najmniej tyle, ile dni treningowych wybrała osoba.
+// times = początki treningów (ms), także dzisiejszego. Bez wybranych dni: 0.
+function streak(times, perWeek, now = Date.now()) {
+  if (!perWeek) return 0;
+  const monday = ms => { const d = new Date(ms); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); };
+  const count = {};
+  for (const t of times) count[monday(t)] = (count[monday(t)] || 0) + 1;
+  let w = 0;
+  for (let m = monday(now); (count[m] || 0) >= perWeek; m = monday(m - 3 * 864e5)) w++;
+  return w;
+}
+
 // Słowo od trenera po treningu: z liczb, nie ogólnik. name = imię z telefonu (może być puste), sex = płeć z ankiety ('K', 'M' albo brak: forma bezosobowa).
 // Po angielsku bez form zależnych od płci; nazwy ćwiczeń przychodzą w s.per już w języku aplikacji.
 function cheer(s, prev, name, sex, lang = globalThis.LANG) {
@@ -307,6 +334,15 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.throws(() => normalizeDiet({ name: 'x', days: [...Array(6).fill(day), { meals: [{ name: 'Obiad', options: ['a', { note: 'b' }] }] }] }), /dwóch/);
   assert.throws(() => normalizeDiet({ days: Array(7).fill(day) }), /name/);
   assert.strictEqual(fmt(125), '2:05');
+  // Rekordy: ciężar wyżej niż kiedykolwiek, bez ciężaru więcej powtórzeń w serii; pierwszy raz to nie rekord.
+  const hRec = [{ per: [{ ex: 'a', vals: [8, 8], kgs: [20, 22.5] }, { ex: 'b', vals: [10, 12], kgs: [null, null] }] }, 'stary wpis tekstem'];
+  assert.deepStrictEqual(records([{ ex: 'a', name: 'A', vals: [8], kgs: [25] }, { ex: 'b', name: 'B', vals: [13], kgs: [null] }, { ex: 'c', name: 'C', vals: [50], kgs: [null] }], hRec).map(x => [x.ex, x.kind, x.val]), [['a', 'kg', 25], ['b', 'reps', 13]]);
+  assert.deepStrictEqual(records([{ ex: 'a', name: 'A', vals: [8], kgs: [22.5] }], hRec), []);
+  // Seria tygodni: 2 treningi w tygodniu przy 2 wybranych dniach; przerwa w środku ją kończy.
+  const pn = new Date(2026, 9, 12, 10).getTime(), D = 864e5;
+  assert.strictEqual(streak([pn, pn + D, pn - 7 * D, pn - 6 * D, pn - 21 * D, pn - 20 * D], 2, pn + D), 2);
+  assert.strictEqual(streak([pn], 2, pn), 0);
+  assert.strictEqual(streak([pn], 0, pn), 0);
   // Makro dnia: cel dnia, potem suma posiłków, potem cel diety.
   const dm = normalizeDiet({ name: 'x', kcal: 2000, fat: 70, days: Array(7).fill({ meals: [{ name: 'a', kcal: 500, protein: '30', options: ['p', 'q'] }, { name: 'b', kcal: 700, carbs: 80, options: ['p', 'q'] }] }) });
   assert.deepStrictEqual(dayMacros(dm, dm.days[0]), { kcal: 1200, protein: 30, fat: 70, carbs: 80 });
