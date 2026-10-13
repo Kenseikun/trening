@@ -1315,7 +1315,22 @@ $('repCard').onclick = $('doneRep').onclick = () => openSheet('rep');
 // Powiadomienia (dzień treningowy, raport dnia) włącza się tylko tutaj, w ustawieniach: nigdy samo przy starcie.
 // iPhone: działają dopiero w aplikacji dodanej do ekranu początkowego, wtedy jest tylko wskazówka.
 // Aplikacja z pliku APK (opakowanie strony): przy starcie adres poprzedniej strony to android-app://<paczka>. APK 1.0.0 nie obsługiwał powiadomień.
-if (document.referrer.startsWith('android-app://io.github.kenseikun.trening')) store('apk', true);
+// Tylko na czas tego uruchomienia (sessionStorage): APK i Chrome na tym samym telefonie dzielą localStorage, a w Chrome pytanie o plik nie ma sensu.
+const inApk = () => { try { return !!sessionStorage.apk; } catch { return false; } };
+const markApk = () => { try { sessionStorage.apk = 1; } catch {} };
+if (document.referrer.startsWith('android-app://io.github.kenseikun.trening')) markApk();
+// Od APK 1.0.2 paczka otwiera aplikację z ?apk=<wersja>; bez tego (1.0.0, 1.0.1) wersja jest nieznana, czyli starsza.
+const apkParam = new URLSearchParams(location.search).get('apk');
+if (apkParam) { markApk(); store('apkWersja', apkParam); history.replaceState(null, '', location.pathname + location.hash); }
+// Najnowszy APK w Releases. Przy każdym nowym wydaniu APK podbij tę wartość (przypomina o tym trening-apk\wydaj.ps1).
+const APK_LATEST = '1.0.2';
+const older = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
+// Aplikacja z pliku nie aktualizuje się sama (Android instaluje plik tylko po potwierdzeniu): po starcie, na ekranie startowym, pytanie z przyciskiem
+// do pobrania nowego pliku. „Później” odkłada je do następnego uruchomienia.
+function apkCheck() {
+  if (!inApk() || !older(load('apkWersja', '1.0.0'), APK_LATEST) || cur || $('home').hidden || $('ask').open || $('sheet').open || $('dlg').open) return;
+  ask(t('apkNew', APK_LATEST), t('apkGet'), t('later')).then(yes => { if (yes) location.href = `https://github.com/Kenseikun/trening/releases/download/v${APK_LATEST}/Trening-${APK_LATEST}.apk`; });
+}
 const canPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const iosBrowser = () => /iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone;
 function pushBtn(msg) {
@@ -1333,7 +1348,7 @@ $('pushBtn').onclick = async () => {
       await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
       await was.unsubscribe(); store('push', false); pushBtn();
     } else {
-      if (await Notification.requestPermission() !== 'granted') return pushBtn(load('apk', false) ? t('pushApk') : t('pushDenied'));
+      if (await Notification.requestPermission() !== 'granted') return pushBtn(inApk() ? t('pushApk') : t('pushDenied'));
       const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
       const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
       const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
@@ -1702,7 +1717,7 @@ if (API) {
   addEventListener('hashchange', linkCode);
   const activating = linkCode();
   // Braki w ankiecie z ostatniego połączenia blokują od razu, zanim serwis odpowie (i bez zasięgu).
-  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); repLink(); }
+  if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); repLink(); setTimeout(apkCheck, 2500); }
   else if (!activating) lock();
 } else { show('home'); renderHome(); loadPlans(); }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
