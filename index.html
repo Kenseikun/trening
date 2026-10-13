@@ -831,7 +831,7 @@ function askName() {
     <button id="nameOk" class="primary">${t('save')}</button><button id="nameNo" class="ghost">${t('noName')}</button></div>`;
   floatText($('dlgName'), t('nameTitle'));
   $('dlg').classList.add('small'); $('dlg').showModal();
-  const done = v => { store('imie', v); $('dlg').close(); hello(); };
+  const done = v => { store('imie', v); $('dlg').close(); hello(); notices(); }; // komunikat o planie czekał na zamknięcie tego okienka
   $('nameOk').onclick = () => { const v = $('nameIn').value.replace(/[^\p{L}\- ]/gu, '').trim().slice(0, 20); done(v && v[0].toLocaleUpperCase('pl') + v.slice(1)); };
   $('nameNo').onclick = () => done('');
   $('nameIn').onkeydown = e => { if (e.key === 'Enter') $('nameOk').click(); };
