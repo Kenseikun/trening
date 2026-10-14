@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#3F4A46">
 <title>Trening</title>
+<script>
+// Od 14.10.2026 aplikacja jest pod treningapp.com/aplikacja: stary adres przekierowuje tam od razu (z ?apk= i #kod=, żeby działały
+// link aktywacyjny i podpowiedź nowego pliku APK). Dane z telefonu nie przechodzą; po przekierowaniu logowanie kodem od trenera.
+if (location.host === 'kenseikun.github.io') location.replace('https://treningapp.com/aplikacja/' + location.search + location.hash);
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192px.png">
 <link rel="apple-touch-icon" href="icons/icon-192px.png">
@@ -1428,7 +1433,7 @@ if (document.referrer.startsWith('android-app://io.github.kenseikun.trening')) m
 const apkParam = new URLSearchParams(location.search).get('apk');
 if (apkParam) { markApk(); store('apkWersja', apkParam); history.replaceState(null, '', location.pathname + location.hash); }
 // Najnowszy APK w Releases. Przy każdym nowym wydaniu APK podbij tę wartość (przypomina o tym trening-apk\wydaj.ps1).
-const APK_LATEST = '1.0.3';
+const APK_LATEST = '1.0.4';
 const older = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
 // Aplikacja z pliku nie aktualizuje się sama (Android instaluje plik tylko po potwierdzeniu): po starcie, na ekranie startowym, pytanie z przyciskiem
 // do pobrania nowego pliku. „Później” odkłada je do następnego uruchomienia.
