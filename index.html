@@ -260,6 +260,7 @@
   .prog { margin: 18px 0 6px } .prog select { width: 100%; min-height: 48px; padding: 0 16px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .prog select option { color: #1d2124 }
   .progsvg { display: block; width: 100%; height: auto; margin: 10px 0 2px } .progsvg polyline { fill: none; stroke: #9DB89A; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round } .progsvg circle { fill: #9DB89A }
+  .shopbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin: 4px 0 12px } .shopbtn .ico { flex: none }
   .shop { list-style: none; padding: 0; margin: 10px 0 16px } .shop li { display: flex; align-items: center; gap: 12px; padding: 4px 0 }
   .shop li button { flex: none; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50% } .shop li button[aria-pressed=true] { background: #9DB89A; border-color: #9DB89A; color: var(--ink) }
   .shop li button[aria-pressed=true] + span { text-decoration: line-through; color: var(--stone) }
@@ -1017,7 +1018,9 @@ function renderDiet() {
   const today = (new Date().getDay() + 6) % 7, i = dietDay ?? today, d = diet.days[i], { kcal, protein, fat, carbs } = dayMacros(diet, d);
   const dk = eatKey(i), can = !!dk, z = dk ? eatDay(dk) : { m: [], o: {}, w: {} }, ate = z.m, ateKcal = d.meals.reduce((a, m, j) => a + (ate.includes(j) ? m.kcal : 0), 0);
   const pay = dk && JSON.stringify(eatPayload(dk, d)), sent = dk && z.s === pay;
+  // Lista zakupów na górze diety, jako wyraźny przycisk z ikoną koszyka (wcześniej link na dole był niezauważalny).
   $('diet').innerHTML = `<p class="lbl">${esc(diet.name)}</p>
+    <button id="shopBtn" class="shopbtn"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H6.6"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>${t('shopBtn')}</button>
     <div class="days" role="tablist">${t('dietDays').split(' ').map((n, k) => `<button role="tab" data-day="${k}" aria-selected="${k === i}" aria-label="${esc(dayName(k))}">${n}</button>`).join('')}</div>
     <h2>${esc(dayName(i))}${i === today ? ' · ' + t('dietToday') : dk ? ' · ' + t('dietYesterday') : ''}</h2>
     ${kcal || protein ? `<div class="stats">${cells([kcal && [t('dietKcal'), kcal, 'kcal'], protein && [t('dietProtein'), protein, 'g']])}</div>` : ''}
@@ -1032,7 +1035,7 @@ function renderDiet() {
       <ul>${m.options.map((o, k) => `<li${can ? ' class="opt"' : ''}><div><b>${esc(o.name)}</b>${o.note ? `<small>${esc(o.note)}</small>` : ''}</div>${can ? eatBtn(j, k, o.name, ate.includes(j) && z.o[j] === k) : ''}</li>`).join('')}
       ${can ? `<li class="opt own"><input data-own="${j}" value="${esc(z.w[j] || '')}" maxlength="80" placeholder="${esc(t('dietOwn'))}" aria-label="${esc(t('dietOwn'))}">${eatBtn(j, 'w', t('dietOwn'), ate.includes(j) && z.o[j] === 'w')}</li>` : ''}</ul></section>`).join('')}
     ${can && API && auth && (ate.length || z.s) ? `<button id="eatSend" class="primary"${sent ? ' disabled' : ''}>${t(sent ? 'dietSentOk' : z.s ? 'dietUpdate' : 'dietSend')}</button>` : ''}
-    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${can ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<button id="shopBtn" class="ghost">${t('shopBtn')}</button><p class="stone fine">${t('dietFine')}</p>`;
+    ${diet.note ? `<p class="note">${esc(diet.note)}</p>` : ''}${can ? `<p class="stone fine">${t('dietEatHint')}</p>` : ''}<p class="stone fine">${t('dietFine')}</p>`;
 }
 $('diet').onclick = async e => {
   const b = e.target.closest('[data-day]'); if (b) { dietDay = +b.dataset.day; renderDiet(); }
@@ -1043,7 +1046,7 @@ $('diet').onclick = async e => {
     if (k === 'w' && !own.value.trim() && eb.getAttribute('aria-pressed') !== 'true') { own.placeholder = t('dietOwnEmpty'); return own.focus(); }
     eatPick(dk, j, k); renderDiet();
   }
-  if (e.target.id === 'shopBtn') askShop();
+  if (e.target.closest('#shopBtn')) askShop();
   // Wysłanie zjedzonych posiłków trenerowi; po zmianie przycisk zmienia się na „zaktualizuj”.
   if (e.target.id === 'eatSend' && dk) {
     const pay = eatPayload(dk, diet.days[i]);
