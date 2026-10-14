@@ -49,7 +49,7 @@ Można też bez pliku: otwórz https://kenseikun.github.io/trening/ w Chrome, we
 Na iPhonie nie pobiera się pliku. Aplikację dodaje się z Safari:
 
 1. Otwórz w **Safari** adres https://kenseikun.github.io/trening/
-2. Dotknij „Udostępnij” (kwadrat ze strzałką w górę; jeśli go nie widać, jest w menu „···”).
+2. Dotknij „Udostępnij” <img src="icons/udostepnij.svg" height="18" alt=""> (kwadrat ze strzałką w górę; jeśli go nie widać, jest w menu „···”).
 3. Wybierz „Do ekranu początkowego” i potwierdź „Dodaj”.
 
 Ikona „Trening” pojawi się na ekranie początkowym, a aplikacja otworzy się na pełnym ekranie. Na czas treningu wyłącz tryb cichy: sygnał końca przerwy to dźwięk.
@@ -72,7 +72,7 @@ The app starts in Polish. Tap **EN** on the first screen to switch to English; y
 
 **Android:** on your phone open the [Releases](https://github.com/Kenseikun/trening/releases/latest) page and download the `.apk` file. Open it, allow installing apps from this source, then tap "Install" and "Open". Without the file: open https://kenseikun.github.io/trening/ in Chrome, open the menu (⋮) and choose "Add to Home screen" or "Install app".
 
-**iPhone:** open https://kenseikun.github.io/trening/ in **Safari**, tap "Share" (the square with an arrow; if you can't see it, it is in the "···" menu), choose "Add to Home Screen" and confirm with "Add". Turn off silent mode while you train: the end of each rest is signalled with a sound.
+**iPhone:** open https://kenseikun.github.io/trening/ in **Safari**, tap "Share" <img src="icons/udostepnij.svg" height="18" alt=""> (the square with an arrow; if you can't see it, it is in the "···" menu), choose "Add to Home Screen" and confirm with "Add". Turn off silent mode while you train: the end of each rest is signalled with a sound.
 
 **First launch:** enter your initials and the code from your trainer, or open the activation link from your trainer. Then answer a few questions (about your experience, goal and equipment, for example) that your trainer will use to build your plan. You only need to do this once: after that the app also works offline, and each new plan appears on its own. The app updates itself and asks you to reload when a new version is available.
 
