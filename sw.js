@@ -1,5 +1,5 @@
 // Offline: najpierw sieć (świeże rozpiski i aplikacja), a bez sieci ostatnia wersja z cache.
-const C = 'trening-v59';
+const C = 'trening-v60';
 const SHELL = ['./', 'index.html', 'strings.js', 'exercises.js', 'logic.js', 'moves.js', 'manifest.webmanifest', 'icons/icon-192px.png', 'icons/icon-512px.png',
   'fonts/quicksand-latin.woff2', 'fonts/quicksand-latin-ext.woff2'];
 // Sieć zawsze z pytaniem do serwera o aktualną wersję. Bez tego przeglądarka przez 10 minut oddaje pliki z własnej pamięci
@@ -25,7 +25,8 @@ self.addEventListener('fetch', e => {
 // Powiadomienia z serwisu (dzień treningowy, raport dnia): treść { t: tytuł, b: treść, u: adres }. Kliknięcie otwiera aplikację.
 self.addEventListener('push', e => {
   const m = e.data ? e.data.json() : {};
-  e.waitUntil(self.registration.showNotification(m.t || 'trening', { body: m.b || '', icon: 'icons/icon-192px.png', badge: 'icons/icon-192px.png', data: m.u || './', ...(m.g && { tag: m.g, renotify: true }) }));
+  e.waitUntil(Promise.all([self.registration.showNotification(m.t || 'trening', { body: m.b || '', icon: 'icons/icon-192px.png', badge: 'icons/icon-192px.png', data: m.u || './', ...(m.g && { tag: m.g, renotify: true }) }),
+    clients.matchAll({ type: 'window' }).then(l => l.forEach(c => c.postMessage('push')))])); // otwarta aplikacja od razu pobiera nowości
 });
 self.addEventListener('notificationclick', e => {
   e.notification.close();

@@ -1456,10 +1456,11 @@ function pushBtn(msg) {
   $('apkLink').hidden = msg !== t('pushApk');
 }
 // Zapis na powiadomienia: zgoda systemu, subskrypcja i jej adres w serwisie. Cicho (quiet) przy włączaniu samoczynnym.
+// Prośba o zgodę idzie przed pierwszym await: iPhone pokazuje pytanie tylko wtedy, gdy padnie od razu po dotknięciu (inaczej cicha odmowa, poprawka z 2026-10-14).
 async function pushSub(quiet) {
-  const H = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token };
+  const H = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, zgoda = Notification.requestPermission();
   const reg = await navigator.serviceWorker.ready, was = await reg.pushManager.getSubscription();
-  if (await Notification.requestPermission() !== 'granted') return quiet || pushBtn(inApk() && older(load('apkWersja', '1.0.0'), '1.0.1') ? t('pushApk') : t('pushDenied'));
+  if (await zgoda !== 'granted') return quiet || pushBtn(inApk() && older(load('apkWersja', '1.0.0'), '1.0.1') ? t('pushApk') : t('pushDenied'));
   const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
   const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
   const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
@@ -1478,11 +1479,11 @@ $('przyp').onchange = async e => {
 $('pushBtn').onclick = async () => {
   $('pushBtn').disabled = true;
   try {
+    // Włączanie bez czekania (pushSub od razu w dotknięciu, patrz wyżej); wyłączanie, gdy przycisk pokazuje „włączone”.
+    if (!(load('push', null) && Notification.permission === 'granted')) return await pushSub(false);
     const was = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
-    if (load('push', null) && was) {
-      await call('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
-      await was.unsubscribe(); store('push', false); pushBtn();
-    } else await pushSub(false);
+    if (was) await call('/api/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ wylacz: true, endpoint: was.endpoint }) });
+    await was?.unsubscribe(); store('push', false); pushBtn();
   } catch { pushBtn(t('pushFail')); }
   finally { $('pushBtn').disabled = false; }
 };
@@ -1844,6 +1845,8 @@ function checkUpdate() {
 $('updBtn').onclick = () => location.reload();
 $('updLater').onclick = () => $('sheet').close();
 
+// Powiadomienie przyszło przy otwartej aplikacji (np. wiadomość od trenera): od razu pobiera nowości i pokazuje je w okienku.
+navigator.serviceWorker?.addEventListener('message', e => { if (e.data === 'push' && !$('home').hidden) loadPlans(); });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   if (!$('home').hidden) { loadPlans(); checkSurvey(); checkUpdate(); }
