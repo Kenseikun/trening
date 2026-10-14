@@ -1,0 +1,14 @@
+# Po każdej zmianie w aplikacji przebudowuje stronę treningapp.com (aplikacja jest tam pod /aplikacja/).
+# Adres hooka wdrożenia Cloudflare Pages jest w sekrecie CF_DEPLOY_HOOK (Settings → Secrets → Actions).
+name: Przebudowa treningapp.com
+on:
+  push:
+    branches: [main]
+jobs:
+  przebuduj:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wywołaj hook Cloudflare Pages
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$HOOK" > /dev/null
