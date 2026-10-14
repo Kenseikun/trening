@@ -480,6 +480,7 @@
     <label class="lbl" for="gCode" data-t="code">Kod</label>
     <input id="gCode" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX-XXXX-XXXX">
     <p id="gMsg" class="err" role="alert"></p>
+    <button id="gMove" class="ghost" data-t="moveHave" hidden>mam kod przeniesienia</button>
   </div>
   <div class="dock"><button id="gBtn" class="primary" data-t="enter">wejdź</button></div>
 </section>
@@ -1662,6 +1663,52 @@ function lock(msg) {
   floatText($('gTitle'), t('gateTitle')); $('gMsg').textContent = msg || '';
   show('gate');
 }
+// Przeprowadzka na nowy adres (treningapp.com/aplikacja). Na starym adresie, po włączeniu (PRZEPROWADZKA), aplikacja wysyła niewysłane
+// wyniki, zostawia w serwisie dane z telefonu (bez sesji) i pokazuje jednorazowy kod; nowa aplikacja odbiera je kodem („mam kod
+// przeniesienia”) i dostaje od serwisu nową sesję. Próba: localStorage.testStaryAdres = '1' udaje stary adres, testPrzeprowadzka = '1' włącza.
+const NOWY_ADRES = 'https://treningapp.com/aplikacja/', PRZEPROWADZKA = false;
+const staryAdres = () => location.host === 'kenseikun.github.io' || localStorage.testStaryAdres === '1';
+const POMIN = ['auth', 'push', 'api', 'testStaryAdres', 'testPrzeprowadzka'];
+function migawka() {
+  const d = {};
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^[A-Za-z]{1,30}$/.test(k) && !POMIN.includes(k)) d[k] = localStorage.getItem(k); }
+  // Serwis przyjmuje do 190 000 znaków: przy bardzo długiej historii najstarsze treningi zostają w starej aplikacji.
+  while (JSON.stringify(d).length > 180000 && d.history) { const h = JSON.parse(d.history); if (h.length < 2) { delete d.history; break; } d.history = JSON.stringify(h.slice(0, Math.floor(h.length * .8))); }
+  return d;
+}
+async function przeprowadzka() {
+  if (!API || !auth) return ask(t('moveNoAuth'), t('moveGo'), null).then(y => { if (y) location.href = NOWY_ADRES; });
+  let kod = null;
+  try {
+    await flushOutbox();
+    const r = await call('/api/przeprowadzka', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ dane: migawka() }) });
+    if (r.ok) kod = (await r.json()).kod;
+  } catch {}
+  ask(kod ? t('moveText', kod) : t('moveOffline'), t('moveGo'), t('later')).then(y => { if (y) location.href = NOWY_ADRES; });
+}
+// Odbiór na nowym adresie: kod → dane z poprzedniego adresu i nowa sesja; potem aplikacja startuje od nowa z przeniesionymi danymi.
+function askMoveCode() {
+  $('dlgBody').innerHTML = `<div class="ask-name"><p class="stone">${t('moveCodeText')}</p>
+    <input id="moveIn" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXXX" aria-label="${t('moveCodeTitle')}">
+    <p id="moveMsg" class="err" role="alert"></p><button id="moveOk" class="primary">${t('moveSend')}</button></div>`;
+  floatText($('dlgName'), t('moveCodeTitle'));
+  $('dlg').classList.add('small'); $('dlg').showModal();
+  $('moveOk').onclick = async () => {
+    $('moveOk').disabled = true; $('moveMsg').textContent = '';
+    try {
+      const r = await call('/api/przeprowadzka/odbior', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kod: $('moveIn').value }) });
+      if (r.status >= 500) throw Error(r.status);
+      if (!r.ok) { $('moveMsg').textContent = r.status === 429 ? t('errTooMany') : t('moveBad'); return; }
+      const d = await r.json();
+      for (const [k, v] of Object.entries(d.dane || {})) if (!POMIN.includes(k)) localStorage.setItem(k, v);
+      store('auth', { token: d.token, nazwa: d.nazwa }); store('push', null);
+      location.reload();
+    } catch { $('moveMsg').textContent = t('errOffline'); }
+    finally { $('moveOk').disabled = false; }
+  };
+  $('moveIn').onkeydown = e => { if (e.key === 'Enter') $('moveOk').click(); };
+}
+$('gMove').onclick = askMoveCode;
 async function activate(inicjaly, kod) {
   if (!inicjaly.trim() || !kod.trim()) { $('gMsg').textContent = t('errEmpty'); return; }
   $('gBtn').disabled = true; $('gMsg').textContent = '';
@@ -1869,8 +1916,10 @@ if (API) {
   addEventListener('hashchange', linkCode);
   const activating = linkCode();
   // Braki w ankiecie z ostatniego połączenia blokują od razu, zanim serwis odpowie (i bez zasięgu).
+  $('gMove').hidden = !API || staryAdres(); // kod przeniesienia wpisuje się tylko pod nowym adresem
   if (auth) { show('home'); renderHome(); if (load('ankietaBraki', 0)) showGap(); loadPlans(); checkSurvey(); repLink(); setTimeout(apkCheck, 2500); pushAuto(); }
   else if (!activating) lock();
+  if ((PRZEPROWADZKA || localStorage.testPrzeprowadzka === '1') && staryAdres()) setTimeout(przeprowadzka, 1500);
 } else { show('home'); renderHome(); loadPlans(); }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
