@@ -38,7 +38,7 @@ English: [see below](#in-english).
 
 ### Android
 
-1. Otwórz na telefonie stronę [Releases](https://github.com/Kenseikun/trening/releases/latest) i pobierz plik z końcówką `.apk`.
+1. Otwórz na telefonie link https://github.com/Kenseikun/trening/releases/latest/download/Trening.apk: pobierze się najnowszy plik `Trening.apk`.
 2. Otwórz pobrany plik. Telefon zapyta o zgodę na instalowanie aplikacji z tego źródła: zezwól i wróć.
 3. Dotknij „Zainstaluj”, a potem „Otwórz”.
 
@@ -70,7 +70,7 @@ A phone app for training with a trainer. Everyone gets their own plan, built aro
 
 The app starts in Polish. Tap **EN** on the first screen to switch to English; you can change the language later in the settings (the gear icon).
 
-**Android:** on your phone open the [Releases](https://github.com/Kenseikun/trening/releases/latest) page and download the `.apk` file. Open it, allow installing apps from this source, then tap "Install" and "Open". Without the file: open https://treningapp.com/aplikacja/ in Chrome, open the menu (⋮) and choose "Add to Home screen" or "Install app".
+**Android:** on your phone open https://github.com/Kenseikun/trening/releases/latest/download/Trening.apk to download the latest `Trening.apk`. Open it, allow installing apps from this source, then tap "Install" and "Open". Without the file: open https://treningapp.com/aplikacja/ in Chrome, open the menu (⋮) and choose "Add to Home screen" or "Install app".
 
 **iPhone:** open https://treningapp.com/aplikacja/ in **Safari**, tap "Share" <img src="icons/udostepnij.svg" height="18" alt=""> (the square with an arrow; if you can't see it, it is in the "···" menu), choose "Add to Home Screen" and confirm with "Add". Turn off silent mode while you train: the end of each rest is signalled with a sound.
 
