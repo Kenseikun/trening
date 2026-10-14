@@ -1451,14 +1451,15 @@ function pushBtn(msg) {
   $('przyp').innerHTML = [`<option value="">${t('przypOff')}</option>`, ...Array.from({ length: 18 }, (_, k) => `<option value="${k + 5}">${k + 5}:00</option>`)].join('');
   $('przyp').value = h == null ? '' : String(h);
   $('pushBtn').hidden = !ok; $('pushBtn').textContent = t(on ? 'pushOn' : 'pushOff');
-  $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (ok ? t('pushHint') : t('pushIos'));
+  const blok = ok && !on && Notification.permission === 'denied';
+  $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (blok ? t('pushDenied') : ok ? t('pushHint') : t('pushIos'));
   $('apkLink').hidden = msg !== t('pushApk');
 }
 // Zapis na powiadomienia: zgoda systemu, subskrypcja i jej adres w serwisie. Cicho (quiet) przy włączaniu samoczynnym.
 async function pushSub(quiet) {
   const H = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token };
   const reg = await navigator.serviceWorker.ready, was = await reg.pushManager.getSubscription();
-  if (await Notification.requestPermission() !== 'granted') return quiet || pushBtn(inApk() ? t('pushApk') : t('pushDenied'));
+  if (await Notification.requestPermission() !== 'granted') return quiet || pushBtn(inApk() && older(load('apkWersja', '1.0.0'), '1.0.1') ? t('pushApk') : t('pushDenied'));
   const key = (await (await call('/api/push-klucz')).json()).klucz, raw = Uint8Array.from(atob(key.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
   const sub = was || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
   const r = await call('/api/push', { method: 'POST', headers: H, body: JSON.stringify({ subskrypcja: sub.toJSON() }) });
@@ -1488,6 +1489,7 @@ $('pushBtn').onclick = async () => {
 // Powiadomienia są domyślnie włączone (decyzja właściciela z 2026-10-13): po zalogowaniu system pyta o zgodę przy pierwszym dotknięciu
 // ekranu (iPhone i Chrome pozwalają zapytać tylko po geście). Wyłączenie w ustawieniach (push = false) jest trwałe; odmowa w systemie też.
 let pushWaits = false;
+addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { pushAuto(); pushBtn(); } });
 function pushAuto() {
   if (pushWaits || !API || !auth || !canPush() || load('push', null) !== null || Notification.permission === 'denied') return;
   if (Notification.permission === 'granted') return void pushSub(true).catch(() => {});
