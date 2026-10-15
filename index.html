@@ -294,19 +294,16 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .rep .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px }
   .rep input { width: 100%; min-height: 50px; text-align: center; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 600 1.15rem var(--font) }
   .rep .primary { width: 100%; margin-top: 18px }
-  /* Kalendarz w historii: zielone dni z treningiem, obwiedzione wybrane dni treningowe, kropka przy raporcie, dziś pogrubione. */
+  /* Kalendarz w historii: zielone dni z treningiem, kropka przy raporcie, dziś pogrubione (wybór dni treningowych usunięty 2026-10-14). */
   .cal .calh { display: flex; align-items: center; justify-content: space-between } .cal .calh b { font-weight: 600; text-transform: lowercase }
   .cal .calh button { width: 44px; padding: 0 }
   .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; text-align: center }
   .cal .grid span { font-size: .75rem; color: var(--stone); padding: 2px 0 }
   .cal .grid button { position: relative; min-height: 40px; height: 40px; padding: 0; border-color: transparent; font-size: .95rem; color: var(--stone) }
-  .cal .grid button.plan { border-color: var(--line-strong) }
   .cal .grid button.done { background: #9DB89A; border-color: #9DB89A; color: var(--ink); font-weight: 700 }
   .cal .grid button.today { color: var(--cream); font-weight: 700; text-decoration: underline; text-underline-offset: 4px }
   .cal .grid button.rep::after { content: ''; position: absolute; left: 50%; bottom: 4px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--blue) }
   .cal .leg { display: flex; gap: 14px; margin: 8px 0 0; font-size: .8rem; color: var(--stone) } .cal .leg i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50% }
-  .cal .mydays { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; color: var(--stone) } .cal .mydays b { color: var(--cream) }
-  .cal .mydays button { min-height: 40px; padding: 0 14px }
   .resume p { margin: 0 0 12px }
 
   .mus { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0; font-size: .92rem }
@@ -987,7 +984,7 @@ function sheetText() {
 function openSheet(k) {
   sheetNow = k; sheetText();
   if (k === 'diet') { dietDay = null; renderDiet(); } // dieta zawsze otwiera się na dzisiejszym dniu
-  if (k === 'hist') { calM = 0; daysOpen = false; renderCal(); renderProg(); }
+  if (k === 'hist') { calM = 0; renderCal(); renderProg(); }
   if (k === 'rep') renderRep();
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
@@ -1310,7 +1307,7 @@ function finish() {
   // Słowo po treningu: liczby z cheer(), a do tego zdanie na doping; przy 1., 10., 25., 50. i 100. treningu gratulacje za wytrwałość.
   const nr = past.length + 1;
   // Rekordy względem całej historii i seria tygodni z kompletem treningów (przy wybranych dniach treningowych).
-  const recs = records(s.per, past), weeks = streak([cur.t0, ...past.filter(h => typeof h === 'object').map(h => h.t0)], (load('dni', null) || []).length);
+  const recs = records(s.per, past), weeks = streak([cur.t0, ...past.filter(h => typeof h === 'object').map(h => h.t0)], served.length); // tyle treningów w tygodniu, ile w rozpisce (od 2026-10-14 zamiast wybranych dni)
   const extra = [...recs.map(x => t('rec_' + x.kind, lcFirst(x.name), x.kind === 'kg' ? kgTxt(x.val) : x.val)), weeks >= 2 && t('streakW', weeks)].filter(Boolean).join(' ');
   if (fresh) sound([1, 10, 25, 50, 100].includes(nr) || recs.length ? 'record' : 'done');
   $('doneRep').hidden = !repDue();
@@ -1523,21 +1520,20 @@ function waLinks() {
   $('waSetHint').hidden = !k;
 }
 waLinks();
-// Kalendarz w historii: miesiąc (wstecz strzałką), zielone dni z treningiem, obwiedzione wybrane dni treningowe, kropka przy raporcie dnia.
-// Dotknięcie dnia z treningiem otwiera jego wpis poniżej. Dni treningowe wybiera osoba; idą do serwisu (przypomnienia, widok trenera).
-let calM = 0, daysOpen = false;
+// Kalendarz w historii: miesiąc (wstecz strzałką), zielone dni z treningiem, kropka przy raporcie dnia.
+// Dotknięcie dnia z treningiem otwiera jego wpis poniżej.
+let calM = 0;
 function renderCal() {
   const now = new Date(), first = new Date(now.getFullYear(), now.getMonth() + calM, 1), y = first.getFullYear(), m = first.getMonth();
   const done = new Set(past.filter(h => typeof h === 'object').map(h => new Date(h.t0).toLocaleDateString('sv'))), reps = new Set(load('raportyDni', []));
-  const mine = load('dni', null) || [], off = (first.getDay() + 6) % 7, n = new Date(y, m + 1, 0).getDate(), names = t('dietDays').split(' ');
+  const off = (first.getDay() + 6) % 7, n = new Date(y, m + 1, 0).getDate(), names = t('dietDays').split(' ');
   const days = Array.from({ length: n }, (_, k) => { const key = new Date(y, m, k + 1).toLocaleDateString('sv');
-    return `<button data-cd="${key}" class="${[done.has(key) && 'done', mine.includes((off + k) % 7) && 'plan', key === todayKey() && 'today', reps.has(key) && 'rep'].filter(Boolean).join(' ')}"${key > todayKey() ? ' disabled' : ''}>${k + 1}</button>`; });
+    return `<button data-cd="${key}" class="${[done.has(key) && 'done', key === todayKey() && 'today', reps.has(key) && 'rep'].filter(Boolean).join(' ')}"${key > todayKey() ? ' disabled' : ''}>${k + 1}</button>`; });
   $('cal').innerHTML = `<div class="calh"><button data-cm="-1" aria-label="${t('calPrev')}">‹</button><b>${first.toLocaleDateString(locale(), { month: 'long', year: 'numeric' })}</b>
     <button data-cm="1" aria-label="${t('calNext')}"${calM >= 0 ? ' disabled' : ''}>›</button></div>
     <div class="grid">${names.map(d => `<span>${d}</span>`).join('')}${'<i></i>'.repeat(off)}${days.join('')}</div>
-    <p class="leg"><span><i style="background:#9DB89A"></i>${t('calDone')}</span><span><i style="border:1.5px solid var(--line-strong)"></i>${t('calPlan')}</span><span><i style="background:var(--blue);width:6px;height:6px"></i>${t('calRep')}</span></p>
-    <div class="mydays"><span>${t('myDays')}: <b>${mine.length ? mine.map(k => names[k]).join(' ') : t('myDaysNone')}</b></span><button data-cdays>${t('change')}</button></div>
-    ${daysOpen ? `<p class="stone fine">${t('daysHint')}</p><div class="days">${names.map((d, k) => `<button data-wd="${k}" aria-selected="${mine.includes(k)}">${d}</button>`).join('')}</div>` : ''}`;
+    <p class="leg"><span><i style="background:#9DB89A"></i>${t('calDone')}</span><span><i style="background:var(--blue);width:6px;height:6px"></i>${t('calRep')}</span></p>
+`;
 }
 // Postęp ćwiczenia: wybór z ćwiczeń z historii i linia z ostatnich 12 treningów (największy ciężar albo najlepsza seria).
 let progSel = null;
@@ -1556,14 +1552,9 @@ function renderProg() {
       : `<p class="stone fine">${t('progOne')}</p>`}`;
 }
 $('prog').onchange = e => { if (e.target.id === 'progEx') { progSel = e.target.value; renderProg(); } };
-async function sendDays() {
-  try { await call('/api/dni', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ dni: load('dni', null) || [] }) }); } catch {}
-}
 $('cal').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.cm) { calM += +b.dataset.cm; renderCal(); }
-  if ('cdays' in b.dataset) { daysOpen = !daysOpen; renderCal(); }
-  if (b.dataset.wd) { const k = +b.dataset.wd, mine = load('dni', null) || []; store('dni', (mine.includes(k) ? mine.filter(x => x !== k) : [...mine, k]).sort()); renderCal(); if (API && auth) sendDays(); }
   if (b.dataset.cd) { const d = $('hist').querySelector(`[data-day="${b.dataset.cd}"]`); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
 };
 // Na ekranie startowym: ile wyników czeka w telefonie i czy serwis był ostatnio nieosiągalny. Z tą informacją legenda się chowa, jak przy banerze „w toku”.
@@ -1634,12 +1625,10 @@ async function loadPlans() {
     if (!r.ok) throw Error(r.status);
     const d = await r.json(), json = JSON.stringify(d.plans), dj = JSON.stringify(d.dieta ?? null);
     netDown = false; flushOutbox();
-    // Raport i waga wysłane z drugiego telefonu też się liczą; dni treningowe: nowy telefon bierze je z serwisu, zmienione tu idą do serwisu.
+    // Raport i waga wysłane z drugiego telefonu też się liczą.
     if (d.raport && d.raport > (load('raportDzien', '') || '')) store('raportDzien', d.raport);
     if (d.raport_waga && d.raport_waga > (load('wagaDzien', '') || '')) store('wagaDzien', d.raport_waga);
     store('kontakt', d.kontakt ?? null); waLinks(); store('wiadomosc', d.wiadomosc ?? null); if ('przypomnienie' in d) store('przyp', d.przypomnienie);
-    if (d.dni && load('dni', null) == null) store('dni', d.dni);
-    else if (load('dni', null) && JSON.stringify(d.dni) !== JSON.stringify(load('dni', null))) sendDays();
     $('repCard').hidden = !repDue(); netNote();
     // Bez zmian też sprawdza komunikaty: wstrzymany przez trening albo otwarty arkusz pokaże się teraz, a nie dopiero przy następnej zmianie.
     if (json === servedJson && dj === dietJson) return notices();
