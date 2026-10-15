@@ -924,7 +924,7 @@ function renderHome() {
   $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`).join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted);
-  $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · ');
+  $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week), new Date().toLocaleDateString(locale(), { weekday: 'long' })].filter(Boolean).join(' · '); // dzisiejszy dzień tygodnia (prośba właściciela z 2026-10-15)
   drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
   plotted = true;
   $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes', estimate(p))], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
