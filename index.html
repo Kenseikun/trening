@@ -439,7 +439,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   #ask .tmsg #askMsgText { margin: 0; font-size: 1.15rem; font-weight: 600 }
   #ask .row { display: flex; flex-direction: column; gap: 8px }
   #ask .row button { width: 100% }
-  .hrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 0 } .hrow .round { margin-left: auto }
+  .hrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 0 } .hrow .menu { margin-left: auto } /* ustawienia jak pozostałe przyciski menu: kółko 40 px i podpis */
   .hello { display: block; margin: 0; padding: 0; min-height: 44px; border: 0; border-radius: 0; text-align: left; text-transform: none; font-size: 1.25rem; font-weight: 600; color: var(--cream); background: none }
   .cheer { margin: 2px 0 12px; color: var(--cream); line-height: 1.4; text-wrap: pretty }
   .ask-name { display: flex; flex-direction: column; gap: 12px; padding-top: 4px }
@@ -543,7 +543,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     </nav>
   </header>
   <!-- Powitanie i ustawienia w jednym wierszu (od 2026-10-19); pływające kółko w rogu to kontakt z trenerem. -->
-  <div class="hrow"><button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button><button id="setBtn" class="round" hidden aria-label="ustawienia" data-ta="menuSet"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></button></div>
+  <div class="hrow"><button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button><nav class="menu"><button id="setBtn" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></i><span data-t="menuSet">ustawienia</span></button></nav></div>
   <div id="resume" class="resume" hidden>
     <p id="resumeName"></p>
     <div class="row"><button id="resumeBtn" class="primary" data-t="resume">wznów</button><button id="dropBtn" data-t="discard">porzuć</button></div>
