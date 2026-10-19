@@ -423,6 +423,14 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
      wysokość okienka „pod treść” z zera i zostawał sam nagłówek, bez pola i przycisków; Chrome liczył z zawartości.
      Na bardzo niskim ekranie treść może się skurczyć i przewija się w środku, zamiast uciekać pod krawędź. */
   #dlg.small #dlgBody { flex: 0 1 auto }
+  /* Samouczek (od 2026-10-19): zaznaczone miejsce w kółku/ramce, reszta przyciemniona, dymek z jednym zdaniem i dużymi przyciskami. */
+  #tour { position: fixed; inset: 0; z-index: 20 }
+  #tourHole { position: fixed; border-radius: 22px; box-shadow: 0 0 0 9999px rgba(15,17,19,.78); outline: 2.5px solid var(--cream); outline-offset: 4px; transition: all .3s var(--ease); pointer-events: none }
+  #tourHole.none { width: 0 !important; height: 0 !important; outline: 0; left: 50% !important; top: 50% !important }
+  #tourBox { position: fixed; left: 18px; right: 18px; max-width: 524px; margin: 0 auto; padding: 18px 18px 12px; border: 1px solid var(--line-strong); border-radius: 24px; background: #38423E }
+  #tourBox p { margin: 0 0 14px } #tourText { font-size: 1.15rem; line-height: 1.4 } #tourStep { margin-bottom: 6px !important }
+  #tourBox .row { display: flex; flex-direction: column; gap: 6px } #tourBox .row button { width: 100% }
+  @media (prefers-reduced-motion: reduce) { #tourHole { transition: none } }
   #ask { width: min(420px, 88vw); padding: 22px 20px 16px }
   #ask p { margin: 0 0 18px; font-size: 1.05rem; line-height: 1.45; white-space: pre-line } #ask p:empty { display: none }
   /* Wiadomość od trenera: osobna ramka na górze okienka, żeby nie ginęła wśród komunikatów o planie i diecie. */
@@ -669,11 +677,13 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
     <button id="logoutBtn" data-t="logout">wyloguj się</button>
     <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska treningu i wyniki zostają u trenera.</p>
+    <button id="tourBtn" data-t="tourAgain">pokaż samouczek</button>
     <p id="appVer" class="ver"></p>
   </div>
   <div id="p-diet" class="pane"><div id="diet"></div></div>
 </dialog>
 
+<div id="tour" hidden><div id="tourHole"></div><div id="tourBox" role="dialog" aria-modal="true" aria-labelledby="tourText"><p id="tourStep" class="lbl"></p><p id="tourText"></p><div class="row"><button id="tourNext" class="primary"></button><button id="tourSkip" class="ghost" data-t="tourSkip">pomiń</button></div></div></div>
 <dialog id="ask" tabindex="-1"><div id="askMsg" class="tmsg" hidden><p class="lbl"><svg class="ico" viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></svg><span data-t="msgFrom">wiadomość od trenera</span></p><p id="askMsgText"></p></div><p id="askText"></p><div class="row"><button id="askYes" class="primary"></button><button id="askNo"></button></div></dialog>
 
 <dialog id="dlg" tabindex="-1">
@@ -1674,8 +1684,49 @@ function notices() {
   // Wiadomość od trenera: raz, na początku okienka (razem z komunikatem o planie albo diecie, jeśli przyszły naraz).
   const wm = load('wiadomosc', null), tm = wm && wm.id !== load('wiadomoscWidziana', null) ? wm.tekst : null;
   if (tm) store('wiadomoscWidziana', wm.id);
-  if (msgs.length || tm) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null, tm).then(yes => { if (yes && dietNew) openSheet('diet'); });
+  if (msgs.length || tm) ask(msgs.join('\n\n'), dietNew ? t('seeDiet') : t('ok'), dietNew ? t('ok') : null, tm).then(yes => { if (yes && dietNew) openSheet('diet'); else tourOnce(); });
+  else tourOnce();
 }
+// Samouczek: przejście po ekranie startowym, jedno miejsce i jedno zdanie na krok. Sam pokazuje się raz (po ankiecie, imieniu
+// i komunikatach), „pomiń” na każdym kroku, a w ustawieniach „pokaż samouczek” powtarza go w każdej chwili (prośba właściciela z 2026-10-15).
+const TOUR = [[null, 'tour1'], ['#tabs', 'tour2'], ['#hFig .views', 'tour3'], ['#startBtn', 'tour4'], ['.menu', 'tour5'], ['#repCard', 'tour6'], ['#waFab', 'tour7'], ['#setBtn', 'tour8'], [null, 'tour9']];
+let tourAt = -1, tourList = [];
+function tourOnce() { if (!load('samouczek', false) && API && auth) tour(); }
+function tour() {
+  if (!surveyOk || $('home').hidden || training() || document.querySelector('dialog[open]')) return;
+  store('samouczek', true);
+  tourList = TOUR.filter(([sel]) => !sel || (document.querySelector(sel) && !document.querySelector(sel).closest('[hidden]')));
+  scrollTo(0, 0); tourAt = 0; $('tour').hidden = false; tourShow();
+}
+function tourShow() {
+  const [sel, key] = tourList[tourAt], el = sel && document.querySelector(sel), last = tourAt === tourList.length - 1, hole = $('tourHole');
+  $('tourStep').textContent = t('tourStep', tourAt + 1, tourList.length);
+  $('tourText').textContent = t(key);
+  $('tourNext').textContent = t(last ? 'tourDone' : 'tourNext');
+  $('tourSkip').hidden = last;
+  hole.classList.toggle('none', !el);
+  const box = $('tourBox');
+  if (!el) { tourEl = null; box.style.top = '50%'; box.style.bottom = ''; box.style.transform = 'translateY(-50%)'; $('tourNext').focus(); return; }
+  tourEl = el;
+  { const q = el.getBoundingClientRect(); if (q.top < 0 || q.bottom > innerHeight) el.scrollIntoView({ block: 'center', behavior: 'instant' }); } // przyklejony dół zostaje na miejscu
+  // Ekran startowy dociąga przewijanie do granicy strony, więc ramka idzie za zaznaczonym miejscem (pomiar teraz, po chwili i przy przewijaniu).
+  tourPlace(); setTimeout(tourPlace, 150); setTimeout(tourPlace, 450); $('tourNext').focus();
+}
+let tourEl = null;
+function tourPlace() {
+  if (tourAt < 0 || !tourEl) return;
+  const r = tourEl.getBoundingClientRect(), pad = 6, top = Math.max(r.top - pad, 4), bot = Math.min(r.bottom + pad, innerHeight - 4), box = $('tourBox');
+  Object.assign($('tourHole').style, { left: r.left - pad + 'px', top: top + 'px', width: r.width + 2 * pad + 'px', height: Math.max(0, bot - top) + 'px' });
+  // Dymek po przeciwnej stronie niż zaznaczone miejsce, żeby go nie zasłaniał.
+  box.style.transform = '';
+  if ((top + bot) / 2 > innerHeight / 2) { box.style.bottom = ''; box.style.top = '18px'; } else { box.style.top = ''; box.style.bottom = 'calc(18px + env(safe-area-inset-bottom))'; }
+}
+addEventListener('scroll', tourPlace, true); addEventListener('resize', tourPlace);
+function tourEnd() { $('tour').hidden = true; tourAt = -1; tourEl = null; scrollTo(0, 0); }
+$('tourNext').onclick = () => tourAt >= tourList.length - 1 ? tourEnd() : (tourAt++, tourShow());
+$('tourSkip').onclick = tourEnd;
+$('tourBtn').onclick = () => { $('sheet').close(); setTimeout(tour, 250); };
+addEventListener('keydown', e => { if (e.key === 'Escape' && tourAt >= 0) tourEnd(); });
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
 function lock(msg) {
   auth = null; store('auth', null); store('push', null); store('kontakt', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
