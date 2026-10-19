@@ -60,9 +60,9 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .langs button { min-height: 44px; min-width: 48px; padding: 0 12px; font-size: .9rem; text-transform: none; color: var(--stone) }
   .langs button[aria-pressed=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
 
-  /* Tytuł na falującej linii, litery opadają jak krople przy otwarciu */
+  /* Tytuł w prostej linii (od 2026-10-19 bez falowania, prośba właściciela); litery tylko opadają przy otwarciu */
   .float .w { white-space: nowrap }
-  .float .w span { display: inline-block; transform: translateY(calc(sin(var(--k) / var(--n) * var(--wave, 360deg)) * var(--amp, .1em))) }
+  .float .w span { display: inline-block }
   .float.enter .w span { animation: drop .7s var(--ease) calc(var(--k) * 45ms) both }
   @keyframes drop { from { translate: 0 -.45em; opacity: 0 } }
 
@@ -148,11 +148,12 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .body .ld { stroke: var(--red); stroke-opacity: .9; stroke-width: 1.3; stroke-dasharray: 2 4 }
   .body .bl { fill: var(--red); stroke: none }
   .body .hit { fill: var(--cream); stroke: var(--ink); stroke-width: 1.2 }
-  .body .bt { fill: var(--ink); font: 700 var(--bt, 11px) var(--font); text-anchor: middle }
+  .body .lt { fill: var(--cream); font: 600 var(--lt, 11px) var(--font) }
+  .body .ld { animation: flow 1.2s linear infinite } /* deszcz płynie od podpisu do mięśnia */
   .plot path:not(.ld):not(.bl):not(.mu) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both }
   .plot .mu { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both, fillin .9s ease-out 1.9s both }
-  .plot .ld { animation: appear .4s ease-out 2.2s both, flow 1s linear 2.2s 3 }
-  .plot .bl, .plot .bt, .plot .hit { animation: appear .5s ease-out 2s both }
+  .plot .ld { animation: appear .4s ease-out 2.2s both, flow 1.2s linear 2.2s infinite }
+  .plot .lt, .plot .hit { animation: appear .5s ease-out 2s both }
   @keyframes plot { to { stroke-dashoffset: 0 } }
   @keyframes fillin { from { fill-opacity: 0 } }
   @keyframes appear { from { opacity: 0 } }
@@ -242,7 +243,8 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   /* Ustawienia: pływająca okrągła ikonka w prawym dolnym rogu ekranu startowego, nad przyciskiem „zacznij” (decyzja właściciela
      z 2026-10-07: w menu u góry jest miejsce na dietę). Bez rozpiski pasek z „zacznij” znika, więc ikonka schodzi niżej. */
   .fab { position: fixed; right: max(18px, calc(50vw - 262px)); bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 3; width: 44px; height: 44px; min-height: 44px; padding: 0;
-    border-radius: 50%; background: #38423E; border: 1.5px solid var(--line-strong); box-shadow: 0 6px 18px rgba(15,17,19,.45) }
+    border-radius: 50%; background: #38423E; border: 1.5px solid var(--line-strong); box-shadow: 0 6px 18px rgba(15,17,19,.45);
+    display: grid; place-items: center; color: var(--cream) } /* kontakt z trenerem (link do WhatsAppa) */
   #home.noplan .fab { bottom: calc(18px + env(safe-area-inset-bottom)) }
   /* Dieta: dni tygodnia w jednym rzędzie (domyślnie dziś), posiłki jako karty z przykładami do wyboru. */
   .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 0 }
@@ -429,7 +431,8 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   #ask .tmsg #askMsgText { margin: 0; font-size: 1.15rem; font-weight: 600 }
   #ask .row { display: flex; flex-direction: column; gap: 8px }
   #ask .row button { width: 100% }
-  .hello { display: block; margin: 2px 0 0; padding: 0; min-height: 44px; border: 0; border-radius: 0; text-align: left; text-transform: none; font-size: 1.25rem; font-weight: 600; color: var(--cream); background: none }
+  .hrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 0 } .hrow .round { margin-left: auto }
+  .hello { display: block; margin: 0; padding: 0; min-height: 44px; border: 0; border-radius: 0; text-align: left; text-transform: none; font-size: 1.25rem; font-weight: 600; color: var(--cream); background: none }
   .cheer { margin: 2px 0 12px; color: var(--cream); line-height: 1.4; text-wrap: pretty }
   .ask-name { display: flex; flex-direction: column; gap: 12px; padding-top: 4px }
   .ask-name p { margin: 0 }
@@ -474,7 +477,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   }
   @media (max-height: 600px) { #work .mus, .mot, #work .mv figcaption { display: none } } /* legenda animacji jest w karcie ćwiczenia */
   @media (prefers-reduced-motion: reduce) {
-    .plot *, .float span, .strip i, .bump { animation: none !important }
+    .plot *, .float span, .strip i, .bump, .body .ld { animation: none !important }
     .primary .ico { transition: none; translate: none !important }
     .breath .lung { animation: none; fill-opacity: .6 }
   }
@@ -531,7 +534,8 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
       <button data-sheet="diet" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M8 3v18M5.5 3v4.5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-1.9 1.3-3 4.2-3 7.6 0 1.6 1 2.9 3 2.9"/></svg></i><span data-t="menuDiet">dieta</span></button>
     </nav>
   </header>
-  <button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button>
+  <!-- Powitanie i ustawienia w jednym wierszu (od 2026-10-19); pływające kółko w rogu to kontakt z trenerem. -->
+  <div class="hrow"><button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button><button id="setBtn" class="round" hidden aria-label="ustawienia" data-ta="menuSet"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></button></div>
   <div id="resume" class="resume" hidden>
     <p id="resumeName"></p>
     <div class="row"><button id="resumeBtn" class="primary" data-t="resume">wznów</button><button id="dropBtn" data-t="discard">porzuć</button></div>
@@ -553,7 +557,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     <button class="pos" data-for="hParts" hidden></button>
   </div>
   <div id="empty" class="gate" hidden><h1 class="float" id="eTitle"></h1><p class="stone" id="eText"></p></div>
-  <button id="setFab" class="fab" hidden aria-label="ustawienia" data-ta="menuSet"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></button>
+  <a id="waFab" class="fab" hidden target="_blank" rel="noopener" aria-label="napisz do trenera (WhatsApp)" data-ta="waBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M4.5 18.5 5.6 15A7.5 7.5 0 1 1 9 18.4Z"/><path d="M9 10.5h6M9 13.5h4"/></svg></a>
   <div class="dock"><button id="startBtn" class="primary"></button></div>
 </main>
 
@@ -727,11 +731,6 @@ function floatText(el, text, enter) {
   let k = 0;
   el.setAttribute('aria-label', text);
   el.classList.toggle('enter', !!enter);
-  const n = text.replace(/ /g, '').length;
-  el.style.setProperty('--n', Math.max(4, n));
-  // Krótki tytuł: pół fali i mniejsza amplituda, żeby litery układały się w łuk, a nie w schodek.
-  el.style.setProperty('--wave', n < 9 ? '180deg' : '360deg');
-  el.style.setProperty('--amp', n < 9 ? '-.05em' : '.1em');
   el.innerHTML = text.split(' ').map(w => `<span class="w" aria-hidden="true">${[...w].map(c => `<span style="--k:${k++}">${esc(c)}</span>`).join('')}</span>`).join(' ');
 }
 
@@ -802,7 +801,11 @@ const ANCHOR = {
   lats: ['B', 62, 134], midback: ['B', 70, 100], lowerback: ['B', 80, 154], glutes: ['B', 68, 190], hamstrings: ['B', 66, 232], calves: ['B', 64, 294],
 };
 
-// u = skala kropel z numerami: na małej postaci krople rosną, żeby numer dało się przeczytać (patrz fitDrops).
+// Nazwy mięśni przy postaci (od 2026-10-19 zamiast kropel z numerami i listy z procentami, które nic osobie nie mówiły):
+// przód ma podpisy po lewej, tył po prawej; od podpisu do mięśnia płynie czerwona przerywana kreska. u = skala podpisu,
+// dobierana w drawFigure tak, żeby napis miał na ekranie ok. 13 px. Długa nazwa łamie się na dwie linie.
+const LAB = 104;
+const labLines = name => { const n = name.replace(/\u00AD/g, ''); if (n.length <= 11 || !n.includes(' ')) return [n]; const i = n.indexOf(' ', Math.floor(n.length / 2) - 3); const j = i < 0 ? n.lastIndexOf(' ') : i; return [n.slice(0, j), n.slice(j + 1)]; };
 function figure(load, { plot = false, legend = true, u = 1 } = {}) {
   const share = muscleShare(load), max = share[0]?.load || 1, top = legend ? share.slice(0, 6) : [];
   const cls = m => !load[m] ? '' : load[m] > max / 2 ? ' p' : ' s';
@@ -810,27 +813,29 @@ function figure(load, { plot = false, legend = true, u = 1 } = {}) {
   const view = v => {
     const half = [], mid = [];
     for (const [m, d, center] of (SEX === 'K' ? BODY_K : BODY)[v]) (center ? mid : half).push(`<path pathLength="1" style="--i:${k++}" class="${m ? 'mu' + cls(m) : 'dt'}" d="${d}"/>`);
-    const bx = v === 'F' ? 11 : 189;
+    const front = v === 'F', bx = front ? 46 : 154, fs = 11 * u, lh = fs * 1.12; // sylwetka zajmuje x 53–147, podpisy tuż obok
     let lastY = -99;
-    // Kropla z numerem przy krawędzi; czerwony deszcz spada z niej łukiem i ląduje na mięśniu (jasny punkt).
-    const drops = top.map((s, n) => ({ n: n + 1, a: ANCHOR[s.m] })).filter(b => b.a[0] === v).sort((a, b) => a.a[2] - b.a[2]).map(b => {
-      const ax = v === 'F' ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(330, Math.max(16 * u, ay - 30, lastY + 26 * u));
-      lastY = y;
-      const d = k => k * u, drop = `M${bx},${y - d(12)}C${bx + d(5)},${y - d(5)} ${bx + d(9)},${y - d(1)} ${bx + d(9)},${y + d(3)}A${d(9)},${d(9)} 0 0 1 ${bx - d(9)},${y + d(3)}C${bx - d(9)},${y - d(1)} ${bx - d(5)},${y - d(5)} ${bx},${y - d(12)}Z`;
-      return `<path class="ld" d="M${bx},${y + d(13)}Q${bx},${ay} ${ax},${ay}"/><circle class="hit" cx="${ax}" cy="${ay}" r="2.6"/><path class="bl" d="${drop}"/><text class="bt" style="--bt:${d(11)}px" x="${bx}" y="${y + d(7)}">${b.n}</text>`;
+    // Podpis przy krawędzi; czerwona kreska spływa od niego łukiem i ląduje na mięśniu (jasny punkt).
+    const labels = top.map(s => ({ m: s.m, a: ANCHOR[s.m] })).filter(b => b.a[0] === v).sort((a, b) => a.a[2] - b.a[2]).map(b => {
+      const lines = labLines(muscleName(b.m)), hgt = lines.length * lh;
+      const ax = front ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(352 - hgt, Math.max(fs, ay - hgt / 2, lastY + 6 * u));
+      lastY = y + hgt;
+      const ly = y + hgt / 2, lx = front ? bx + 2 : bx - 2;
+      return `<path class="ld" d="M${lx},${ly}Q${(lx + ax) / 2},${ly} ${ax},${ay}"/><circle class="hit" cx="${ax}" cy="${ay}" r="2.6"/>` +
+        `<text class="lt" style="--lt:${fs}px" text-anchor="${front ? 'end' : 'start'}" x="${front ? bx - 2 : bx + 2}" y="${y + fs * .9}">${lines.map((l, i) => `<tspan x="${front ? bx - 2 : bx + 2}"${i ? ` dy="${lh}"` : ''}>${esc(l)}</tspan>`).join('')}</text>`;
     }).join('');
-    return `<svg viewBox="0 0 200 360" class="body${plot ? ' plot' : ''}" aria-hidden="true">
-      <g transform="translate(20 0)">${half.join('')}${mid.join('')}</g><g transform="translate(180 0) scale(-1 1)">${half.join('')}</g>${drops}</svg>`;
+    return `<svg viewBox="${front ? 46 - LAB : 48} 0 ${106 + LAB} 360" class="body${plot ? ' plot' : ''}" aria-hidden="true">
+      <g transform="translate(20 0)">${half.join('')}${mid.join('')}</g><g transform="translate(180 0) scale(-1 1)">${half.join('')}</g>${labels}</svg>`;
   };
-  const leg = top.length ? `<ol class="legend">${top.map((s, n) => `<li><i class="bn">${n + 1}</i><span>${muscleName(s.m)}</span><b>${s.pct}%</b></li>`).join('')}</ol>
-    <p class="key"><span><i class="sw"></i>${t('mainWork')}</span><span><i class="sw s"></i>${t('assist')}</span></p>` : '';
+  // Lista z procentami usunięta (2026-10-19); zostaje klucz wzoru (pełne = główna praca, kropki = pomocniczo).
+  const leg = top.length ? `<p class="key"><span><i class="sw"></i>${t('mainWork')}</span><span><i class="sw s"></i>${t('assist')}</span></p>` : '';
   return `<div class="views"><figure>${view('F')}<figcaption>${t('front')}</figcaption></figure><figure>${view('B')}<figcaption>${t('back')}</figcaption></figure></div>${leg}`;
 }
-// Rysuje postać, mierzy ją i w razie potrzeby rysuje drugi raz z większymi kroplami: numer ma mieć ok. 10 px na ekranie.
+// Rysuje postać, mierzy ją i rysuje drugi raz z podpisem tej wielkości, żeby na ekranie miał ok. 13 px.
 function drawFigure(box, load, opt = {}) {
   box.innerHTML = figure(load, opt);
-  const hgt = box.querySelector('.body').getBoundingClientRect().height, u = hgt ? Math.min(3, 10 * 360 / hgt / 11) : 1;
-  if (u > 1.1) box.innerHTML = figure(load, { ...opt, u });
+  const hgt = box.querySelector('.body').getBoundingClientRect().height, u = hgt ? Math.min(3, 13 * 360 / hgt / 11) : 1;
+  if (Math.abs(u - 1) > .05) box.innerHTML = figure(load, { ...opt, u });
 }
 
 // --- ćwiczenie
@@ -990,7 +995,7 @@ function openSheet(k) {
   $('sheet').showModal(); $('sheet').focus();
 }
 document.querySelector('.menu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); };
-$('setFab').onclick = () => openSheet('set');
+$('setBtn').onclick = () => openSheet('set');
 $('sheetClose').onclick = () => $('sheet').close();
 // Dieta od trenera: dzień tygodnia (na start dziś), cele dnia i posiłki z przykładami do wyboru.
 const dayName = i => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'long' }); // 1.01.2024 to poniedziałek
@@ -1516,7 +1521,7 @@ function pushAuto() {
 // Link do WhatsAppa trenera (numer z serwisu: prowadzący, główny albo administrator) z początkiem wiadomości; bez numeru linków nie ma.
 function waLinks() {
   const k = load('kontakt', null), href = k ? `https://wa.me/${k}?text=${encodeURIComponent(t('waText', myName() || load('who', '')))}` : '';
-  for (const id of ['waSet', 'waDone']) { $(id).hidden = !k; if (k) $(id).href = href; }
+  for (const id of ['waSet', 'waDone', 'waFab']) { $(id).hidden = !k; if (k) $(id).href = href; }
   $('waSetHint').hidden = !k;
 }
 waLinks();
@@ -1868,7 +1873,7 @@ history.scrollRestoration = 'manual';
 if (API) {
   document.querySelector('[data-sheet=imp]').hidden = true; // rozpiski przychodzą z serwisu
   document.querySelector('[data-sheet=diet]').hidden = false; // dieta przychodzi z serwisu
-  $('setFab').hidden = false;
+  $('setBtn').hidden = false;
   setPlans(load('plans', []) || []); setDiet(load('dieta', null));
   // Link aktywacyjny od trenera: adres aplikacji z dopiskiem #kod=XXXX-XXXX-XXXX&inicjaly=JK. Dopisek znika z adresu od razu po odczytaniu.
   // Działa też w już otwartej aplikacji (hashchange). Ważna przepustka zostaje, dopóki serwis nie potwierdzi nowego kodu.
