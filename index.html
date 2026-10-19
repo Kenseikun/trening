@@ -1457,7 +1457,7 @@ if (document.referrer.startsWith('android-app://io.github.kenseikun.trening')) m
 const apkParam = new URLSearchParams(location.search).get('apk');
 if (apkParam) { markApk(); store('apkWersja', apkParam); history.replaceState(null, '', location.pathname + location.hash); }
 // Najnowszy APK w Releases. Przy każdym nowym wydaniu APK podbij tę wartość (przypomina o tym trening-apk\wydaj.ps1).
-const APK_LATEST = '1.0.4';
+const APK_LATEST = '1.0.5';
 const older = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
 // Aplikacja z pliku nie aktualizuje się sama (Android instaluje plik tylko po potwierdzeniu): po starcie, na ekranie startowym, pytanie z przyciskiem
 // do pobrania nowego pliku. „Później” odkłada je do następnego uruchomienia.
