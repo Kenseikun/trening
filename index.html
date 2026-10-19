@@ -222,6 +222,9 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .lbl.bad, .lbl.bad .hint { color: var(--red) } .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
   .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
+  /* Zieleń z aplikacji (od 2026-10-19, decyzja właściciela): kontakt z trenerem w rogu i „zaktualizuj ankietę”. Braki w ankiecie (.alarm) zostają czerwone. */
+  #waFab { background: var(--gear); border-color: var(--gear); color: var(--ink) }
+  #surveyBtn { background: var(--gear); border-color: var(--gear); color: var(--ink); font-weight: 700 } #surveyBtn:active { background: #b3c9b0 } #surveyBtn.alarm { background: var(--red); border-color: var(--red) }
   .alarm { background: var(--red); border-color: var(--red); color: var(--ink); font-weight: 700 }
   .alarm:active { background: #ff8a8a }
   .fine { margin: 22px 0 8px; font-size: .84rem; line-height: 1.4 }
