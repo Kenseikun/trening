@@ -236,6 +236,7 @@ globalThis.SURVEY_EN = {
   posilki: ['How many meals a day suit you?', { DOWOLNIE: "doesn't matter" }],
   nie_lubi: ["Is there anything you don't eat or don't like?", { NIE: 'no', TAK: 'yes' }],
   nie_lubi_co: ["What don't you eat or don't like?"],
+  uwagi: ['Would you like to add anything?', null, 'Optional. For example: other activities during the week (e.g. football on Tuesdays, volleyball on Wednesdays), exercises you like (e.g. CrossFit style) or anything else your trainer should know.'],
   zgoda: ['I agree that my trainer may store these answers, including information about my health and eating, and use them only to plan my training and diet.', { '2026-10': 'agree' }],
 };
 globalThis.UNIT_EN = { lat: 'years', cm: 'cm', kg: 'kg' };

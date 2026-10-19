@@ -218,6 +218,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .txt { display: flex; flex-direction: column; gap: 8px; margin-top: 18px }
   .txt input { width: 100%; min-height: 48px; padding: 0 18px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .txt input:focus { outline: none; border-color: var(--blue) }
+  .txt.long .fine { margin: -2px 0 0 } .txt.long textarea { min-height: 120px; font-size: 1rem }
   .lbl.bad, .lbl.bad .hint { color: var(--red) } .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
   .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
@@ -1771,7 +1772,8 @@ $('gCode').oninput = e => { e.target.value = e.target.value.toUpperCase().replac
 let survey, surveyOk = false;
 // Pytanie z warunkiem (gdy: [pytanie, odpowiedź], np. „inne uczulenie”) obowiązuje tylko przy tej odpowiedzi.
 const warunek = (p, odp) => !p.gdy || [].concat(odp[p.gdy[0]] ?? []).includes(p.gdy[1]);
-const valid = (p, v) => p.typ === 'liczba' ? Number.isInteger(v) && v >= p.min && v <= p.max
+// Pytanie nieobowiązkowe (opcja, np. własne uwagi): puste też jest w porządku.
+const valid = (p, v) => p.opcja && !String(v ?? '').trim() ? true : p.typ === 'liczba' ? Number.isInteger(v) && v >= p.min && v <= p.max
   : p.typ === 'tekst' ? typeof v === 'string' && !!v.trim() && v.trim().length <= p.max
   : p.typ === 'wiele' ? Array.isArray(v) && v.length > 0 && v.every(x => p.opcje.some(o => o[0] === x)) : p.opcje.some(o => o[0] === v);
 const answered = p => !warunek(p, survey.odp) || valid(p, survey.odp[p.id]);
@@ -1819,7 +1821,10 @@ function renderSurvey() {
   for (let i = 0; i < qs.length; i++) {
     if (qs[i].typ === 'tekst') {
       const p = qs[i];
-      html.push(`<label class="txt" data-q="${p.id}"${warunek(p, survey.odp) ? '' : ' hidden'}><span class="lbl">${esc(qText(p))}</span>
+      // Pole nieobowiązkowe (własne uwagi) jest większe i ma podpowiedź, co można wpisać.
+      html.push(p.opcja ? `<label class="txt long" data-q="${p.id}"><span class="lbl">${esc(qText(p))}</span><span class="stone fine">${esc((LANG === 'en' && SURVEY_EN[p.id]?.[2]) || p.podp || '')}</span>
+        <textarea maxlength="${p.max}" rows="4">${esc(survey.odp[p.id] ?? '')}</textarea></label>`
+        : `<label class="txt" data-q="${p.id}"${warunek(p, survey.odp) ? '' : ' hidden'}><span class="lbl">${esc(qText(p))}</span>
         <input maxlength="${p.max}" autocomplete="off" value="${esc(survey.odp[p.id] ?? '')}"></label>`);
       continue;
     }
