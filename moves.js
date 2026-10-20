@@ -274,6 +274,47 @@ const MOVES = {
     B: { ...STAND, E: [151, 70], ea: -62 },
   },
   // Wspięcie na palce: czubki palców zostają na ziemi, pięta i całe ciało idą w górę; końce gumy w dłoniach przy barkach.
+  // --- Kettlebell (od 2026-10-20). Martwy ciąg: kula stoi na podłodze między stopami, pod barkami; najpierw prostują się kolana
+  // (biodra i barki idą w górę razem, kula prosto w górę przy nogach), potem biodra idą do przodu. W dół ta sama droga: biodra w tył.
+  kbdl: (() => {
+    const A = { h: [105.9, 130.9], t: -26, a: [90, 90], F: [150, 184], fa: 12 }, M = { h: [113.6, 111.3], t: -40, a: [90, 90], F: [150, 184], fa: 12 };
+    const B = { h: [150, 98], t: -90, a: [90, 90], F: [150, 184], fa: 12 };
+    return { props: [['ground', 190], ['kb', 'down']], A, B, seq: [[A, 0, 0, 1], [M, .6, .6], [B, 1.2, 1, 1], [B, 1.7, 1, 1], [M, 2.3, .6], [A, 2.9, .1, 1], [A, 3.4, 0, 1]] };
+  })(),
+  // Swing: z tyłu między udami (biodra w tył, plecy proste, kolana lekko ugięte) do stania z prostymi rękami na wysokości klatki;
+  // kula leci w przedłużeniu rąk. Tempo 'swing': z rozpędu, bez zatrzymania.
+  kbswing: {
+    props: [['ground', 190], ['kb', 'arm']],
+    A: { h: [128, 106], t: -35, a: [128, 128], F: [150, 184], fa: 12 },
+    B: { h: [150, 98], t: -90, a: [-2, -2], F: [150, 184], fa: 12 },
+  },
+  // Goblet z kettlebellem: jak z hantlem, kettlebell za rogi przy mostku, kula pod dłońmi.
+  kbgoblet: {
+    props: [['ground', 190], ['kb', 'down']],
+    A: { ...STAND, H: [168, 60] },
+    B: { h: [114, 150], t: -62, H: [160, 104], F: [150, 184], fa: 12 },
+  },
+  // Martwy ciąg ze sztangą: talerz (promień 22, jak prawdziwy) stoi na podłodze, sztanga nad środkiem stóp, barki trochę przed nią.
+  // Najpierw prostują się kolana (sztanga prosto w górę przy goleniach), potem biodra idą do przodu; w dół ta sama droga.
+  bbdl: (() => {
+    const A = { h: [106.8, 129], t: -30, a: [90, 90], F: [150, 184], fa: 12 }, M = { h: [116, 115], t: -45, a: [90, 90], F: [150, 184], fa: 12 };
+    const B = { h: [150, 98], t: -90, a: [90, 90], F: [150, 184], fa: 12 };
+    return { props: [['ground', 190], ['bb', 22]], A, B, seq: [[A, 0, 0, 1], [M, .7, .6], [B, 1.4, 1, 1], [B, 1.9, 1, 1], [M, 2.6, .6], [A, 3.3, .1, 1], [A, 3.8, 0, 1]] };
+  })(),
+  // Przysiad bułgarski: palce tylnej stopy oparte o krawędź ławki i nieruchome (kostka obraca się wokół nich), przednia stopa płasko.
+  // Zejście, aż przednie udo jest poziomo, a tylne kolano nisko nad podłogą (przy ławce 45 cm goleń nie sięga niżej); tułów prawie pionowo.
+  bulgarian: {
+    props: [['ground', 190], ['box', 20, 144, 62, 46]], // ławka ok. 45 cm
+    A: { h: [150, 104], t: -86, Hs: [-50, 8], F: [[180, 184], [91.2, 134.1]], fa: [12, 140] },
+    B: { h: [138, 140], t: -80, Hs: [-50, 8], F: [[180, 184], [91.2, 134.1]], fa: [12, 140] },
+  },
+  // Bird dog w klęku podpartym: dłonie pod barkami, kolana pod biodrami. Bliższa ręka idzie do przodu, a dalsza (przeciwna) noga
+  // prostuje się do tyłu, obie w linii z tułowiem; biodra nie ruszają się. Palce stopy na ziemi lekko w dół (kostka w zakresie).
+  birddog: {
+    props: [['ground', 190]],
+    A: { h: [110, 140], t: -18.1, a: [90, 90], F: [68, 180], fa: 158 },
+    B: { h: [110, 140], t: -18.1, a: [-15, 90], F: [[68, 180], [24, 138]], fa: [158, 90] },
+  },
   calf: {
     props: [['ground', 190], ['band2', 'an0', 'wr0']],
     A: { h: [150, 98], t: -90, Hs: [2, 20], F: [150, 184], fa: 12 },
@@ -281,6 +322,15 @@ const MOVES = {
   },
 };
 
+// Kettlebell (od 2026-10-20): rączka w dłoni (kółko), pod nią kula. 'down': wisi pionowo pod dłońmi (martwy ciąg, goblet za rogi),
+// 'arm': w przedłużeniu prostych rąk (swing, kula leci za dłońmi). Zwraca [środek rączki, środek kuli]; KB_R = promień kuli.
+const KB_R = 8.5;
+function kbAt(J, mode) {
+  const W = J.wr0;
+  if (mode === 'down') return [[W[0], W[1] + 1], [W[0], W[1] + 12]];
+  const d = ang(J.el0, W), G = at(W, d, 4);
+  return [at(G, d, 1), at(G, d, 12)];
+}
 // Ćwiczenie → [ruch, tempo]; 'neg' = powolne opuszczanie z napięciem przez cały ruch w dół, 'band' = guma od drążka do stóp.
 const EX_MOVE = {
   'podciaganie': ['pullup'], 'podciaganie-podchwyt': ['chinup'], 'podciaganie-guma': ['pullup', 'band'], 'podciaganie-negatyw': ['pullup', 'neg'],
@@ -296,6 +346,8 @@ const EX_MOVE = {
   'przysiad-sztanga': ['bbsquat'], 'przysiad-goblet': ['goblet'], 'martwy-rumunski': ['rdl'], 'hip-thrust': ['hipthrust'], 'wyciskanie-lezac': ['bench'],
   'wyciskanie-hantli-nad-glowe': ['ohp'], 'wioslowanie-hantlem': ['dbrow'], 'sciaganie-drazka': ['pulldown'], 'wioslowanie-wyciag': ['cablerow'],
   'wykroki-hantle': ['dblunge'], 'unoszenie-bokiem': ['lateral'], 'uginanie-hantle': ['curl'],
+  'martwy-ciag': ['bbdl'], 'przysiad-bulgarski': ['bulgarian'], 'bird-dog': ['birddog'],
+  'martwy-ciag-kettlebell': ['kbdl'], 'swing-kettlebell': ['kbswing', 'swing'], 'goblet-kettlebell': ['kbgoblet'],
 };
 // Czy ruch używa gumy / innego sprzętu (do legendy pod animacją).
 const moveGear = id => {
@@ -488,8 +540,9 @@ function joints(m, p) {
   return J;
 }
 
-// Tempo: spięcie 1,2 s, zatrzymanie 0,5 s, powrót 1,2 s, pauza 0,5 s; negatyw 0,8/0,4/3/0,6. Ruch z sekwencją (seq) ma własny cykl.
-const tempoOf = tempo => tempo === 'neg' ? [.8, .4, 3, .6] : [1.2, .5, 1.2, .5];
+// Tempo: spięcie 1,2 s, zatrzymanie 0,5 s, powrót 1,2 s, pauza 0,5 s; negatyw 0,8/0,4/3/0,6; swing (ruch z rozpędu, bez zatrzymania
+// na górze, od 2026-10-20) 0,6/0,15/0,7/0,15. Ruch z sekwencją (seq) ma własny cykl.
+const tempoOf = tempo => tempo === 'neg' ? [.8, .4, 3, .6] : tempo === 'swing' ? [.6, .15, .7, .15] : [1.2, .5, 1.2, .5];
 const ease = x => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
 function cycleOf(m, tempo) { return m.seq ? m.seq[m.seq.length - 1][1] : tempoOf(tempo).reduce((a, b) => a + b); }
 // Klatka w chwili ms: stawy J, spięcie act i kamera cam (o ile w x przesunął się obraz, bo kamera idzie za biodrem idącej postaci).
@@ -614,7 +667,8 @@ function mountMove(svg, fixed) {
     else if (pr[0] === 'bench') pts.push([pr[1], pr[2]], [pr[1] + pr[3], pr[2]]);
     else if (pr[0] === 'path') pts.push(pr[2].slice(0, 2), pr[2].slice(2));
     else if (pr[0] === 'pulley') pts.push([pr[1], pr[2] - 6]);
-    else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4); pts.push([G[0] - 14, G[1] - 14], [G[0] + 14, G[1] + 14]); }
+    else if (pr[0] === 'kb') for (const p of [0, .5, 1]) { const C = kbAt(joints(m, p), pr[1])[1]; pts.push([C[0] - 10, C[1] - 10], [C[0] + 10, C[1] + 10]); }
+    else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4), r = (pr[1] || 13) + 1; pts.push([G[0] - r, G[1] - r], [G[0] + r, G[1] + r]); }
     else if (typeof pr[1] === 'number' && pr[0] !== 'ground' && pr[0] !== 'strap') {
       pts.push([pr[1], pr[2]]);
       if (pr[0] === 'box') pts.push([pr[1] + pr[3], pr[2] + pr[4]]);
@@ -676,7 +730,8 @@ function mountMove(svg, fixed) {
   const held = [];
   for (const pr of m.props) {
     if (pr[0] === 'pull') held.push(['pull', mk('line', { class: 'pc' }), [pr[1], pr[2]], mk('circle', { r: 3.2, class: 'pb' })]);
-    if (pr[0] === 'bb') held.push(['bb', mk('circle', { r: 13, class: 'pw' }), mk('circle', { r: 2.6, class: 'pb' })]);
+    if (pr[0] === 'bb') held.push(['bb', mk('circle', { r: pr[1] || 13, class: 'pw' }), mk('circle', { r: 2.6, class: 'pb' })]); // pr[1]: promień talerza
+    if (pr[0] === 'kb') held.push(['kb', pr[1], mk('circle', { r: 5, class: 'pc', 'stroke-width': 2.6 }), mk('circle', { r: KB_R, class: 'pt' })]);
     if (pr[0] === 'db') for (const i of pr[2] || (m.front ? [0, 1] : [0])) held.push(['db', pr[1], i, ...(pr[1] === 'end' ? [mk('circle', { r: 5.6, class: 'pw' }), mk('circle', { r: 1.8, class: 'pb' })] : [mk('line', { class: 'pbl', 'stroke-width': 2.4 }), mk('rect', { class: 'pt', rx: 1 }), mk('rect', { class: 'pt', rx: 1 })])]);
   }
   const L0 = cable && Math.hypot(grip(joints(m, 0))[0] - cable.px, grip(joints(m, 0))[1] - cable.py);
@@ -695,6 +750,7 @@ function mountMove(svg, fixed) {
     for (const [k, a, b, c, d, e2] of held) {
       if (k === 'pull') { const G = grip(J); a.setAttribute('x1', G[0]); a.setAttribute('y1', G[1]); a.setAttribute('x2', b[0]); a.setAttribute('y2', b[1]); c.setAttribute('cx', G[0]); c.setAttribute('cy', G[1]); }
       if (k === 'bb') { const G = grip(J); for (const el of [a, b]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); } }
+      if (k === 'kb') kbAt(J, a).forEach((C, i) => { const el = i ? c : b; el.setAttribute('cx', C[0]); el.setAttribute('cy', C[1]); });
       if (k === 'db') {
         const G = grip(J, b);
         if (a === 'end') for (const el of [c, d]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); }
@@ -777,4 +833,4 @@ if (typeof requestAnimationFrame !== 'undefined') (function loop(ms) {
   for (const [svg, draw] of moving) { if (!svg.isConnected) moving.delete(svg); else if (svg.getClientRects().length) draw(ms); }
   requestAnimationFrame(loop);
 })(0);
-if (typeof module !== 'undefined') module.exports = { EX_MOVE, MOVES, SEG, joints, norm, setSex, frameAt, cycleOf };
+if (typeof module !== 'undefined') module.exports = { EX_MOVE, MOVES, SEG, joints, norm, setSex, frameAt, cycleOf, kbAt, KB_R };
