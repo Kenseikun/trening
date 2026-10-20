@@ -343,6 +343,13 @@ const MOVES = {
     A: { h: [160, 117], t: 180, H: [104, 55], F: [204, 184], fa: 12 },
     B: { h: [160, 117], t: 180, H: [114, 98], F: [204, 184], fa: 12 },
   },
+  // Wyciskanie hantli leżąc na podłodze (prośba Asystenta AI z 2026-10-20): plecy na podłodze, kolana ugięte, stopy płasko;
+  // hantle z prostych rąk nad klatką w dół, aż ramiona dotkną podłogi (krótszy zakres niż na ławce), przedramiona pionowo.
+  floorpress: {
+    props: [['ground', 190], ['db', 'end']],
+    A: { h: [160, 180], t: 180, H: [102, 117], F: [194, 184], fa: 20 },
+    B: { h: [160, 180], t: 180, H: [112, 150], F: [194, 184], fa: 20 },
+  },
   // Wyciskanie hantli nad głowę od przodu: z wysokości barków do prostych rąk nad głową.
   ohp: {
     front: true, props: [['ground', 199], ['db', 'h']],
@@ -656,7 +663,7 @@ const EX_MOVE = {
   'rozciaganie-zginaczy-biodra': ['hipflexor', 'hold'], 'rozciaganie-czworoglowych': ['quadstretch', 'hold'], 'rozciaganie-dwuglowych': ['hamstretch', 'hold'],
   'pozycja-dziecka': ['childpose', 'hold'], 'pies-z-glowa-w-dol': ['downdog', 'hold'], 'rozciaganie-lydki': ['calfwall', 'hold'], 'gleboki-przysiad': ['deepsquat', 'hold'],
   'rozciaganie-klatki': ['doorchest', 'hold'], 'rozciaganie-barku': ['crossbody', 'hold'], 'krazenia-ramion': ['armcircle'], 'wymachy-nog': ['legswing'],
-  'sciaganie-waskie': ['closepulldown'],
+  'sciaganie-waskie': ['closepulldown'], 'wyciskanie-hantli-podloga': ['floorpress'],
   'martwy-ciag': ['bbdl'], 'przysiad-bulgarski': ['bulgarian'], 'bird-dog': ['birddog'],
   'martwy-ciag-kettlebell': ['kbdl'], 'swing-kettlebell': ['kbswing', 'swing'], 'goblet-kettlebell': ['kbgoblet'],
 };

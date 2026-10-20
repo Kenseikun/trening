@@ -904,6 +904,16 @@ globalThis.EXERCISES = {
       'Wróć powoli do prostych rąk.'],
     tips: ['Nie odchylaj się mocno do tyłu: ruch robią ręce i plecy, nie tułów.', 'Na dole ściągnij łopatki w dół.'],
   },
+  'wyciskanie-hantli-podloga': {
+    sprzet: ['HANTLE'],
+    kg: 1, kgOpis: 'na hantel',
+    name: 'Wyciskanie hantli leżąc na podłodze', p: ['chest'], s: ['triceps', 'shoulders'],
+    steps: ['Połóż się na plecach na podłodze, kolana ugięte, stopy płasko. Hantle w dłoniach nad klatką, ręce proste.',
+      'Opuszczaj hantle powoli, łokcie ok. 45° od tułowia, aż ramiona dotkną podłogi.',
+      'Krótka pauza z łokciami na podłodze, bez odbijania.',
+      'Wypchnij hantle w górę nad klatkę do prostych rąk.'],
+    tips: ['Łopatki ściągnięte, nadgarstki proste nad łokciami.', 'Dobra wersja wyciskania w domu, gdy nie masz ławki.'],
+  },
 };
 
 // Wersja angielska (aplikacja po angielsku): nazwy mięśni oraz nazwa, kroki i wskazówki każdego ćwiczenia; kgOpis jak wyżej.
@@ -1675,5 +1685,13 @@ Object.entries({
       'Pull the handle down to your upper chest, elbows down along your sides.',
       'Return slowly to straight arms.'],
     tips: ["Don't lean far back: your arms and back do the work, not your torso.", 'At the bottom, pull your shoulder blades down.'],
+  },
+  'wyciskanie-hantli-podloga': {
+    name: 'Dumbbell floor press', kgOpis: 'per dumbbell',
+    steps: ['Lie on your back on the floor, knees bent, feet flat. Hold the dumbbells above your chest, arms straight.',
+      'Lower the dumbbells slowly, elbows about 45° from your body, until your upper arms touch the floor.',
+      'Pause briefly with your elbows on the floor, without bouncing.',
+      'Press the dumbbells back up above your chest until your arms are straight.'],
+    tips: ['Shoulder blades squeezed together, wrists straight above your elbows.', "A good way to press at home when you don't have a bench."],
   },
 }).forEach(([id, en]) => { EXERCISES[id].en = en; });
