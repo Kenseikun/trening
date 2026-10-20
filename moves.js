@@ -317,24 +317,102 @@ const MOVES = {
     A: { h: [110, 140], t: -18.1, a: [90, 90], F: [68, 180], fa: 158 },
     B: { h: [110, 140], t: -18.1, a: [-15, 90], F: [[68, 180], [24, 138]], fa: [158, 90] },
   },
+  // --- Partia 3 (2026-10-20): kondycja i trening w domu.
+  // Pajacyki od przodu: z rozpędu, ręce bokiem nad głowę i nogi w rozkrok, potem z powrotem.
+  jacks: {
+    front: true, props: [['ground', 199]],
+    A: { h: [150, 98], a: [84, 96], F: [[160, 184], [140, 184]] },
+    B: { h: [150, 102], a: [-78, 258], F: [[184, 184], [116, 184]] }, // 258 = -102 przez bok (druga ręka nie przechodzi przez tułów)
+  },
+  // Wspinaczka: podpór na prostych rękach (deska z pompki), kolana na zmianę szybko pod klatkę; stopa na ziemi stoi w miejscu.
+  climber: (() => {
+    const H = [188, 184], G = [49.1, 175.6], P = { h: [128.4, 142.4], t: -22.7, H, F: [G, G], fa: [72.3, 72.3] };
+    // Noga 0 (i lustrzanie 1): stopa odrywa się (L), idzie łukiem (M) i kolano dochodzi pod klatkę (K). Biodra unoszą się lekko,
+    // tak jak u prawdziwej osoby: inaczej udo zwisa prawie do podłogi, a kolano szoruje po ziemi.
+    // Biodro idzie po łuku wokół stopy na ziemi (noga podporowa ma stałą długość), a tułów lekko się wypłaszcza, żeby barki zostały nad dłońmi.
+    const leg = (i, h, t, F, fa) => ({ h, t, H, F: i ? [G, F] : [F, G], fa: i ? [72.3, fa] : [fa, 72.3] });
+    const up = i => [leg(i, [127.6, 140.7], -20, [56, 166], 80), leg(i, [123.5, 132.6], -12, [80, 148], 110), leg(i, [123.5, 132.6], -12, [120, 158], 110)];
+    const [[L0, M0, K0], [L1, M1, K1]] = [up(0), up(1)];
+    return { props: [['ground', 190]], A: P, B: K0, seq: [[P, 0, 0, 1], [L0, .07, .3], [M0, .17, .7], [K0, .3, 1, 1], [M0, .43, .7], [L0, .53, .3], [P, .6, 0, 1],
+      [L1, .67, .3], [M1, .77, .7], [K1, .9, 1, 1], [M1, 1.03, .7], [L1, 1.13, .3], [P, 1.2, 0, 1]] };
+  })(),
+  // Krzesełko: plecy płasko na ścianie, uda poziomo, golenie pionowo; pozycja trzymana (oddech w mięśniach).
+  wallsit: {
+    props: [['ground', 190], ['path', 'M112 0V190', [108, 0, 116, 190]]],
+    A: { h: [126, 140], t: -90, H: [160, 134], F: [170, 184], fa: 12 },
+    B: { h: [126, 140], t: -90, H: [160, 134], F: [170, 184], fa: 12 },
+  },
+  // Pompki „V” (pike): biodra wysoko, ciało w odwróconą literę V, na palcach; głowa schodzi w stronę podłogi przed dłońmi.
+  pike: {
+    props: [['ground', 190]],
+    A: { h: [120, 100], t: 30, H: [186, 184], F: [80, 178], fa: 70 },
+    B: { h: [120, 100], t: 50, H: [186, 184], F: [80, 178], fa: 70 },
+  },
+  // Superman: leżenie na brzuchu, proste ręce przed głową; ręce, klatka i nogi unoszą się kilka centymetrów nad podłogę.
+  superman: {
+    props: [['ground', 190]],
+    A: { h: [110, 180], t: 0, a: [0, 0], F: [24, 180], fa: 155 },
+    B: { h: [110, 178], t: -8, a: [-14, -14], F: [24, 166], fa: 150 },
+  },
+  // Wykrok boczny od przodu: szeroki rozkrok, ciężar na jedną nogę, która się zgina (biodra w tył i w dół), druga prosta.
+  sidelunge: {
+    front: true, props: [['ground', 199]],
+    A: { h: [150, 108], H: [[160, 84], [140, 84]], F: [[196, 184], [104, 184]], eb: [-1, 1] }, // dłonie złączone, łokcie na zewnątrz
+    B: { h: [176, 126], H: [[186, 104], [166, 104]], F: [[196, 184], [104, 184]] }, // druga noga prawie prosta (85,6 z 86)
+  },
+  // Wejścia na podwyższenie: noga w górę i na stopień, wejście z wyprostem, druga noga dostawiona, zejście tyłem tą samą drogą.
+  stepup: (() => {
+    const S = { h: [130, 98], t: -90, H: [130, 104], F: [[130, 184], [130, 184]], fa: [12, 12] };
+    const L = { h: [132, 100], t: -88, H: [132, 106], F: [[168, 126], [130, 184]], fa: [4, 12] };
+    const P = { h: [142, 106], t: -80, H: [146, 112], F: [[178, 138], [130, 184]], fa: [12, 12] };
+    const U = { h: [174, 56], t: -88, H: [176, 62], F: [[178, 138], [158, 124]], fa: [12, 40] };
+    const T = { h: [178, 52], t: -90, H: [178, 58], F: [[178, 138], [178, 138]], fa: [12, 12] };
+    const D0 = { h: [176, 56], t: -88, H: [177, 62], F: [[178, 138], [148, 126]], fa: [12, 50] }; // stopa najpierw w górę ze stopnia
+    const D = { h: [172, 60], t: -86, H: [174, 66], F: [[178, 138], [134, 166]], fa: [12, 60] };
+    return { props: [['ground', 190], ['box', 160, 144, 70, 46]], A: S, B: T,
+      seq: [[S, 0, 0, 1], [L, .45, .3], [P, .8, .5, 1], [U, 1.35, .9], [T, 1.7, 1, 1], [T, 2.0, 1, 1], [D0, 2.2, .85], [D, 2.45, .7], [P, 2.85, .5, 1], [L, 3.2, .3], [S, 3.6, 0, 1], [S, 3.9, 0, 1]] };
+  })(),
+  // Burpees: z przysiadu dłonie na podłogę, wyskok nogami do podporu, z powrotem do przysiadu i wyskok w górę z rękami nad głową.
+  burpee: (() => {
+    const S = { h: [150, 98], t: -90, H: [150, 104], F: [[150, 184], [150, 184]], fa: [12, 12] };
+    const Q = { h: [126, 140], t: -36, H: [184, 184], F: [[150, 184], [150, 184]], fa: [12, 12] };
+    const J1 = { h: [118, 128], t: -24, H: [184, 184], F: [[96, 160], [96, 160]], fa: [115, 115] };
+    const P = { h: [124.4, 142.4], t: -22.7, H: [184, 184], F: [[45.1, 175.6], [45.1, 175.6]], fa: [72.3, 72.3] };
+    const UP = { h: [150, 88], t: -90, H: [156, -16], F: [[150, 172], [150, 172]], fa: [60, 60] };
+    // Wybicie i lądowanie przez palce: pięta w górze, czubki palców stoją w miejscu (kostka obraca się wokół nich).
+    const R = { h: [151, 90], t: -90, H: [196, 56], F: [[154.8, 175.9], [154.8, 175.9]], fa: [50, 50] };
+    // Stopy najpierw odrywają się od ziemi (Q1), a przed lądowaniem w podporze są tuż nad nią (P0): nie suną po podłodze.
+    const Q1 = { ...Q, h: [126, 134], F: [[148, 174], [148, 174]], fa: [40, 40] };
+    const P0 = { ...P, h: [126.4, 138], F: [[50, 168], [50, 168]], fa: [85, 85] };
+    return { props: [['ground', 190]], A: S, B: P,
+      seq: [[S, 0, 0, 1], [Q, .5, .4, 1], [Q1, .58, .5], [J1, .7, .6], [P0, .84, .9], [P, .9, 1, 1], [P, 1.1, 1, 1], [P0, 1.16, .9], [J1, 1.3, .6], [Q1, 1.42, .5], [Q, 1.5, .5, 1],
+        [S, 1.9, .5], [R, 2.02, .8], [UP, 2.15, 1, 1], [R, 2.3, .6], [S, 2.45, .2, 1], [S, 2.8, 0, 1]] };
+  })(),
+  // Skakanka od przodu: niskie podskoki na palcach, dłonie przy biodrach; skakanka przechodzi pod stopami, gdy są w górze.
+  rope: (() => {
+    const G = { h: [150, 98], H: [[176, 112], [124, 112]], F: [[158, 184], [142, 184]], fa: [80, 100] };
+    const U = { h: [150, 90], H: [[176, 104], [124, 104]], F: [[158, 176], [142, 176]], fa: [70, 110] };
+    return { front: true, props: [['ground', 199], ['rope', .5, .15]], A: G, B: U, seq: [[G, 0, 0, 1], [U, .15, .6, 1], [G, .3, 0, 1], [G, .5, 0, 1]] };
+  })(),
   // --- Partia 2b (2026-10-20): kolejne maszyny. Siedzenie od przodu: uda idą w stronę widza, więc są skrócone (sl).
   // Motylek: siedząc, przedramiona pionowo przy uchwytach; łokcie z boków schodzą się przed klatką (ramię skrócone, bo idzie do przodu).
   pecdeck: {
-    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174', [100, 130, 200, 199]], ['db', 'v']],
+    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174M150 -6V136M112 -6H188', [100, -10, 200, 199]], ['fpad', [174, -2], [126, -2]]],
     A: { h: [150, 136], H: [[199, 44], [101, 44]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
     B: { h: [150, 136], H: [[160, 48], [140, 48]], s: [[.35, 1], [.35, 1]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
   },
-  // Odwodzenie nóg: siedząc, wałki na zewnątrz kolan; kolana rozchodzą się na boki (udo mniej skrócone, bo obraca się w bok).
+  // Odwodzenie nóg od tyłu (od przodu pośladków nie widać): siedząc wysoko (uda widać na długość), wałki na zewnątrz kolan; kolana rozchodzą się na boki,
+  // dłonie na uchwytach przy siedzisku. Mięśnie: boczna część pośladków przy biodrach.
   abduction: {
-    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174', [100, 130, 200, 199]], ['pad', .12, 1, 0], ['pad', .12, -1, 1]],
-    A: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]], eb: [-1, 1] },
-    B: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[189, 190], [111, 190]], sl: [[.72, 1], [.72, 1]] },
+    front: true, back: true, props: [['ground', 199], ['path', 'M104 126H196M104 130H196M150 130V199M126 199H174', [100, 120, 200, 199]], ['pad', .12, 1, 0], ['pad', .12, -1, 1]],
+    A: { h: [150, 120], H: [[182, 128], [118, 128]], F: [[166, 193], [134, 193]], sl: [[.75, 1], [.75, 1]] },
+    B: { h: [150, 120], H: [[182, 128], [118, 128]], F: [[192, 186], [108, 186]], sl: [[.75, 1], [.75, 1]] },
   },
-  // Przywodzenie nóg: odwrotnie, wałki po wewnętrznej stronie kolan; kolana z boków schodzą się do środka.
+  // Przywodzenie nóg: odwrotnie, wałki po wewnętrznej stronie kolan; kolana z boków schodzą się do środka (przywodziciele po wewnętrznej stronie ud).
   adduction: {
-    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174', [100, 130, 200, 199]], ['pad', .12, -1, 0], ['pad', .12, 1, 1]],
-    A: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[189, 190], [111, 190]], sl: [[.72, 1], [.72, 1]], eb: [-1, 1] },
-    B: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+    front: true, props: [['ground', 199], ['path', 'M104 126H196M104 130H196M150 130V199M126 199H174', [100, 120, 200, 199]], ['pad', .12, -1, 0], ['pad', .12, 1, 1]],
+    A: { h: [150, 120], H: [[182, 128], [118, 128]], F: [[192, 186], [108, 186]], sl: [[.75, 1], [.75, 1]] },
+    B: { h: [150, 120], H: [[182, 128], [118, 128]], F: [[166, 193], [134, 193]], sl: [[.75, 1], [.75, 1]] },
   },
   // Uginanie ramion na wyciągu dolnym: jak z hantlami, linka z bloczka przy podłodze do dłoni.
   cablecurl: {
@@ -457,6 +535,8 @@ const EX_MOVE = {
   'przysiad-sztanga': ['bbsquat'], 'przysiad-goblet': ['goblet'], 'martwy-rumunski': ['rdl'], 'hip-thrust': ['hipthrust'], 'wyciskanie-lezac': ['bench'],
   'wyciskanie-hantli-nad-glowe': ['ohp'], 'wioslowanie-hantlem': ['dbrow'], 'sciaganie-drazka': ['pulldown'], 'wioslowanie-wyciag': ['cablerow'],
   'wykroki-hantle': ['dblunge'], 'unoszenie-bokiem': ['lateral'], 'uginanie-hantle': ['curl'],
+  'pajacyki': ['jacks', 'swing'], 'wspinaczka': ['climber'], 'krzeselko': ['wallsit'], 'pompki-v': ['pike'], 'superman': ['superman'],
+  'wykrok-boczny': ['sidelunge'], 'wejscia-na-podwyzszenie': ['stepup'], 'burpees': ['burpee'], 'skakanka': ['rope'],
   'motylek': ['pecdeck'], 'odwodzenie-nog': ['abduction'], 'przywodzenie-nog': ['adduction'], 'uginanie-wyciag': ['cablecurl'],
   'unoszenie-bokiem-wyciag': ['cablelateral'], 'przysiad-smith': ['smith'],
   'uginanie-mlotkowe': ['hammer'], 'wspiecia-hantle': ['calfdb'], 'prostowanie-nad-glowa': ['ohext'], 'face-pull': ['facepull'],
@@ -527,7 +607,8 @@ const AMUS_FRONT = {
   chest: [['torso', .72, .97, 'l', .08, .82], ['torso', .72, .97, 'r', .08, .82]], abs: [['torso', .12, .64, 'c', -.36, .36]],
   obliques: [['torso', .1, .5, 'l', .45, .85], ['torso', .1, .5, 'r', .45, .85]], lats: [['torso', .36, .9, 'l', .62, .97], ['torso', .36, .9, 'r', .62, .97]],
   midback: [['torso', .62, .92, 'l', .1, .6], ['torso', .62, .92, 'r', .1, .6]], traps: [['neck', -.2, .9, 'c', -.95, .95]],
-  lowerback: [['torso', .04, .32, 'c', -.3, .3]], glutes: [['torso', -.1, .14, 'l', .3, .9], ['torso', -.1, .14, 'r', .3, .9]],
+  // Pośladków od przodu nie widać (plamy wychodziły w kroczu, uwaga właściciela z 2026-10-20): ich udział pokazuje opis mięśni pod animacją.
+  lowerback: [['torso', .04, .32, 'c', -.3, .3]],
   shoulders: [['ua', -.14, .32, 'c', -.97, .97]], biceps: [['ua', .25, .9, 'c', -.6, .6]], triceps: [['ua', .2, .9, 'c', -.6, .6]],
   forearms: [['fa', .02, .65, 'c', -.85, .85]],
   quads: [['th', .06, .88, 'c', -.75, .75]], hamstrings: [['th', .12, .88, 'c', -.6, .6]], adductors: [['th', .08, .55, 'c', -.9, -.3]],
@@ -784,6 +865,7 @@ function mountMove(svg, fixed) {
     else if (pr[0] === 'bench') pts.push([pr[1], pr[2]], [pr[1] + pr[3], pr[2]]);
     else if (pr[0] === 'path') pts.push(pr[2].slice(0, 2), pr[2].slice(2));
     else if (pr[0] === 'pulley') pts.push([pr[1], pr[2] - 6]);
+    else if (pr[0] === 'fpad') pts.push(pr[1], pr[2]);
     else if (pr[0] === 'sole' || pr[0] === 'pad') for (const p of [0, .5, 1]) { const J = joints(m, p); pts.push(...(pr[0] === 'sole' ? soleAt(J) : [padAt(J, pr[1], pr[2], pr[3])])); }
     else if (pr[0] === 'kb') for (const p of [0, .5, 1]) { const C = kbAt(joints(m, p), pr[1])[1]; pts.push([C[0] - 10, C[1] - 10], [C[0] + 10, C[1] + 10]); }
     else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4), r = (pr[1] || 13) + 1; pts.push([G[0] - r, G[1] - r], [G[0] + r, G[1] + r]); }
@@ -835,6 +917,8 @@ function mountMove(svg, fixed) {
   const fig = moveFigure(svg, m, e, mk, ground?.[1]);
   // Sprzęt trzymany w dłoniach i gumy rysowane nad postacią, żeby były widoczne.
   const dyn = [], machine = [];
+  let ropeEl = null;
+  const fpads = [];
   for (const pr of m.props) {
     if (pr[0] === 'bar') mk('circle', { cx: pr[1], cy: pr[2], r: 4.5, class: 'pb' });
     if (pr[0] === 'hbar') mk('line', { x1: pr[1], x2: pr[2], y1: pr[3], y2: pr[3], class: 'pbl' });
@@ -842,6 +926,9 @@ function mountMove(svg, fixed) {
     if (pr[0] === 'band2') dyn.push([mk('line', { class: 'pg' }), pr[1], pr[2]]);
     // Wałek ma ramię maszyny: od osi przy kolanie do wałka (oś obrotu leży na wysokości kolana, jak w prawdziwej maszynie).
     if (pr[0] === 'pad' && pr[1] > .3) machine.push([['arm', pr[1], pr[2], pr[3]], mk('line', { class: 'pq' })]);
+    if (pr[0] === 'rope') ropeEl = [pr, mk('path', { class: 'pq', 'stroke-width': 1.6 })];
+    // Motylek: ramię maszyny od osi nad barkiem do dłoni i poduszka wzdłuż przedramienia (rysowane nad postacią).
+    if (pr[0] === 'fpad') for (const i of [0, 1]) fpads.push([i, pr[1 + i], mk('line', { class: 'pq' }), mk('line', { class: 'pt', style: 'stroke-width:9;stroke-linecap:round' })]);
     if (pr[0] === 'sole' || pr[0] === 'pad') machine.push([pr, pr[0] === 'sole' ? mk('line', { class: 'pbl', 'stroke-width': 5 }) : mk('circle', { r: 5.5, class: 'pt' })]);
   }
   if (tempo === 'band') for (const foot of ['an0', 'an1']) dyn.push([mk('line', { class: 'pg' }), [150, 16], foot]);
@@ -867,6 +954,16 @@ function mountMove(svg, fixed) {
     for (const [el, a, b] of dyn) {
       const A = typeof a === 'string' ? J[a] : a, B = typeof b === 'string' ? J[b] : b;
       el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
+    }
+    if (ropeEl) {
+      // Łuk krzywej Béziera: najniższy punkt = (dłoń + 2·kontrolny + dłoń) / 4. Na dole łuk przechodzi pod stopami, na górze nad głową.
+      const [[, T, bottom], el] = ropeEl, ph = ((ms / 1000 - bottom) / T) * 2 * Math.PI, w0 = J.wr0, w1 = J.wr1, wy = (w0[1] + w1[1]) / 2;
+      const low = Math.max(J.to0[1], J.to1[1]) + 6, high = J.hd[1] - 22, y = (low + high) / 2 + (low - high) / 2 * Math.cos(ph), cy = 2 * y - wy;
+      el.setAttribute('d', `M${w1[0].toFixed(1)} ${w1[1].toFixed(1)}Q150 ${cy.toFixed(1)} ${w0[0].toFixed(1)} ${w0[1].toFixed(1)}`);
+    }
+    for (const [i, pv, arm, pad] of fpads) {
+      const e = J['el' + i], w = J['wr' + i];
+      for (const [el, a, b] of [[arm, w, pv], [pad, e, w]]) { el.setAttribute('x1', a[0]); el.setAttribute('y1', a[1]); el.setAttribute('x2', b[0]); el.setAttribute('y2', b[1]); }
     }
     for (const [pr, el] of machine) {
       if (pr[0] === 'sole') { const [A, B] = soleAt(J); el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]); }
