@@ -317,6 +317,43 @@ const MOVES = {
     A: { h: [110, 140], t: -18.1, a: [90, 90], F: [68, 180], fa: 158 },
     B: { h: [110, 140], t: -18.1, a: [-15, 90], F: [[68, 180], [24, 138]], fa: [158, 90] },
   },
+  // --- Partia 2b (2026-10-20): kolejne maszyny. Siedzenie od przodu: uda idą w stronę widza, więc są skrócone (sl).
+  // Motylek: siedząc, przedramiona pionowo przy uchwytach; łokcie z boków schodzą się przed klatką (ramię skrócone, bo idzie do przodu).
+  pecdeck: {
+    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174', [100, 130, 200, 199]], ['db', 'v']],
+    A: { h: [150, 136], H: [[199, 44], [101, 44]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+    B: { h: [150, 136], H: [[160, 48], [140, 48]], s: [[.35, 1], [.35, 1]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+  },
+  // Odwodzenie nóg: siedząc, wałki na zewnątrz kolan; kolana rozchodzą się na boki (udo mniej skrócone, bo obraca się w bok).
+  abduction: {
+    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174', [100, 130, 200, 199]], ['pad', .12, 1, 0], ['pad', .12, -1, 1]],
+    A: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]], eb: [-1, 1] },
+    B: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[189, 190], [111, 190]], sl: [[.72, 1], [.72, 1]] },
+  },
+  // Przywodzenie nóg: odwrotnie, wałki po wewnętrznej stronie kolan; kolana z boków schodzą się do środka.
+  adduction: {
+    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174', [100, 130, 200, 199]], ['pad', .12, -1, 0], ['pad', .12, 1, 1]],
+    A: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[189, 190], [111, 190]], sl: [[.72, 1], [.72, 1]], eb: [-1, 1] },
+    B: { h: [150, 136], H: [[180, 134], [120, 134]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+  },
+  // Uginanie ramion na wyciągu dolnym: jak z hantlami, linka z bloczka przy podłodze do dłoni.
+  cablecurl: {
+    props: [['ground', 190], ['path', 'M212 120V190M200 190H226', [196, 114, 230, 190]], ['pulley', 212, 182], ['pull', 212, 182]],
+    A: { ...STAND, E: [151, 70], ea: 86 },
+    B: { ...STAND, E: [151, 70], ea: -62 },
+  },
+  // Unoszenie bokiem na wyciągu, od przodu: linka z bloczka przy podłodze z drugiej strony ciała, prosta ręka do wysokości barku.
+  cablelateral: {
+    front: true, props: [['ground', 199], ['path', 'M100 120V199M92 199H112', [88, 114, 116, 199]], ['pulley', 104, 192], ['pull', 104, 192]],
+    A: { ...FSTAND, a: [84, 110] },
+    B: { ...FSTAND, a: [6, 110] },
+  },
+  // Przysiad w maszynie Smitha: sztanga na prowadnicach jedzie idealnie pionowo (x 136), stopy trochę z przodu.
+  smith: {
+    props: [['ground', 190], ['path', 'M136 -8V190M126 -8H146', [120, -12, 152, 190]], ['bb']],
+    A: { h: [150, 98], t: -90, Hs: [0, -12], s: [[.6, .6], [.6, .6]], F: [156, 184], fa: 12, eb: [-1, -1] },
+    B: { h: [126, 146], t: -68, Hs: [0, -12], s: [[.6, .6], [.6, .6]], F: [156, 184], fa: 12, eb: [-1, -1] },
+  },
   // --- Partia 2 przeglądu bazy (2026-10-20): maszyny i siłownia.
   // Uginanie młotkowe: jak zwykłe uginanie, ale chwyt neutralny (kciuki w górę), więc z boku widać całą rączkę hantla, obróconą z przedramieniem.
   hammer: {
@@ -395,8 +432,8 @@ function soleAt(J) {
   return [[A[0] + n[0] * sg, A[1] + n[1] * sg], [B[0] + n[0] * sg, B[1] + n[1] * sg]];
 }
 // Wałek na goleni: punkt na ułamku u od kolana do kostki, odsunięty od osi goleni o 10 na stronę side (1 = przód nogi, -1 = łydka).
-function padAt(J, u, side) {
-  const kn = J.kn0, an = J.an0, P = [kn[0] + (an[0] - kn[0]) * u, kn[1] + (an[1] - kn[1]) * u], d = ang(kn, an);
+function padAt(J, u, side, i = 0) {
+  const kn = J['kn' + i], an = J['an' + i], P = [kn[0] + (an[0] - kn[0]) * u, kn[1] + (an[1] - kn[1]) * u], d = ang(kn, an);
   return at(P, d - 90 * side, 10);
 }
 function kbAt(J, mode) {
@@ -420,6 +457,8 @@ const EX_MOVE = {
   'przysiad-sztanga': ['bbsquat'], 'przysiad-goblet': ['goblet'], 'martwy-rumunski': ['rdl'], 'hip-thrust': ['hipthrust'], 'wyciskanie-lezac': ['bench'],
   'wyciskanie-hantli-nad-glowe': ['ohp'], 'wioslowanie-hantlem': ['dbrow'], 'sciaganie-drazka': ['pulldown'], 'wioslowanie-wyciag': ['cablerow'],
   'wykroki-hantle': ['dblunge'], 'unoszenie-bokiem': ['lateral'], 'uginanie-hantle': ['curl'],
+  'motylek': ['pecdeck'], 'odwodzenie-nog': ['abduction'], 'przywodzenie-nog': ['adduction'], 'uginanie-wyciag': ['cablecurl'],
+  'unoszenie-bokiem-wyciag': ['cablelateral'], 'przysiad-smith': ['smith'],
   'uginanie-mlotkowe': ['hammer'], 'wspiecia-hantle': ['calfdb'], 'prostowanie-nad-glowa': ['ohext'], 'face-pull': ['facepull'],
   'wyciskanie-hantli-skos': ['inclinepress'], 'wypychanie-nog': ['legpress'], 'prostowanie-nog': ['legext'], 'uginanie-nog-maszyna': ['legcurl'],
   'wyciskanie-maszyna': ['chestpress'], 'wioslowanie-maszyna': ['machinerow'],
@@ -585,14 +624,14 @@ const pair = v => Array.isArray(v[0]) ? v : [v, v];
 function norm(P, front) {
   const two = (v, d) => Array.isArray(v) ? v : [v ?? d[0], v ?? d[1]];
   return { h: P.h, t: P.t ?? -90, E: P.E, ea: P.ea, H: P.H && pair(P.H), Hs: P.Hs && pair(P.Hs), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
-    s: P.s || [[1, 1], [1, 1]], eb: P.eb || (front ? [1, -1] : [1, 1]), kb: P.kb || (front ? [-1, 1] : [-1, -1]) };
+    s: P.s || [[1, 1], [1, 1]], sl: P.sl || [[1, 1], [1, 1]], eb: P.eb || (front ? [1, -1] : [1, 1]), kb: P.kb || (front ? [-1, 1] : [-1, -1]) };
 }
 const lerp = (a, b, p) => typeof a === 'number' ? a + (b - a) * p : a.map((x, i) => lerp(x, b[i], p));
 
 // Stawy dla pozy pośredniej p (0 = A, 1 = B).
 function joints(m, p) {
   const A = m.nA, B = m.nB, mix = k => A[k] && lerp(A[k], B[k], p);
-  const P = { t: lerp(A.t, B.t, p), E: mix('E'), ea: mix('ea'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p) };
+  const P = { t: lerp(A.t, B.t, p), E: mix('E'), ea: mix('ea'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p), sl: lerp(A.sl, B.sl, p) };
   // Poza bez h: ciało proste od kostek do barków (deska, pompka, wiosłowanie). Biodro idzie wtedy po łuku i kolana się nie uginają.
   P.h = mix('h') || at(P.F[0], P.t, SEG.th + SEG.sh);
   const J = { hip: P.h, sh: at(P.h, P.t, SEG.torso) };
@@ -611,7 +650,8 @@ function joints(m, p) {
       const T = P.Hs ? at(at(J['s' + i], P.t, P.Hs[i][0]), P.t + (m.sup ? -90 : 90), P.Hs[i][1]) : P.H[i];
       [J['el' + i], J['wr' + i]] = ik(J['s' + i], T, SEG.ua * P.s[i][0], SEG.fa * P.s[i][1], A.eb[i]);
     }
-    [J['kn' + i], J['an' + i]] = ik(J['h' + i], P.F[i], SEG.th, SEG.sh, A.kb[i]);
+    // sl: skrót udo/goleń (widok od przodu na siedzącą postać: uda idą w stronę widza i wyglądają na krótsze).
+    [J['kn' + i], J['an' + i]] = ik(J['h' + i], P.F[i], SEG.th * P.sl[i][0], SEG.sh * P.sl[i][1], A.kb[i]);
     J['to' + i] = at(J['an' + i], P.fa[i], SEG.ft);
   }
   return J;
@@ -744,7 +784,7 @@ function mountMove(svg, fixed) {
     else if (pr[0] === 'bench') pts.push([pr[1], pr[2]], [pr[1] + pr[3], pr[2]]);
     else if (pr[0] === 'path') pts.push(pr[2].slice(0, 2), pr[2].slice(2));
     else if (pr[0] === 'pulley') pts.push([pr[1], pr[2] - 6]);
-    else if (pr[0] === 'sole' || pr[0] === 'pad') for (const p of [0, .5, 1]) { const J = joints(m, p); pts.push(...(pr[0] === 'sole' ? soleAt(J) : [padAt(J, pr[1], pr[2])])); }
+    else if (pr[0] === 'sole' || pr[0] === 'pad') for (const p of [0, .5, 1]) { const J = joints(m, p); pts.push(...(pr[0] === 'sole' ? soleAt(J) : [padAt(J, pr[1], pr[2], pr[3])])); }
     else if (pr[0] === 'kb') for (const p of [0, .5, 1]) { const C = kbAt(joints(m, p), pr[1])[1]; pts.push([C[0] - 10, C[1] - 10], [C[0] + 10, C[1] + 10]); }
     else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4), r = (pr[1] || 13) + 1; pts.push([G[0] - r, G[1] - r], [G[0] + r, G[1] + r]); }
     else if (typeof pr[1] === 'number' && pr[0] !== 'ground' && pr[0] !== 'strap') {
@@ -801,7 +841,7 @@ function mountMove(svg, fixed) {
     if (pr[0] === 'strap' || pr[0] === 'band') dyn.push([mk('line', { class: pr[0] === 'strap' ? 'ps' : 'pg' }), [pr[1], pr[2]], pr[3]]);
     if (pr[0] === 'band2') dyn.push([mk('line', { class: 'pg' }), pr[1], pr[2]]);
     // Wałek ma ramię maszyny: od osi przy kolanie do wałka (oś obrotu leży na wysokości kolana, jak w prawdziwej maszynie).
-    if (pr[0] === 'pad') machine.push([['arm', pr[1], pr[2]], mk('line', { class: 'pq' })]);
+    if (pr[0] === 'pad' && pr[1] > .3) machine.push([['arm', pr[1], pr[2], pr[3]], mk('line', { class: 'pq' })]);
     if (pr[0] === 'sole' || pr[0] === 'pad') machine.push([pr, pr[0] === 'sole' ? mk('line', { class: 'pbl', 'stroke-width': 5 }) : mk('circle', { r: 5.5, class: 'pt' })]);
   }
   if (tempo === 'band') for (const foot of ['an0', 'an1']) dyn.push([mk('line', { class: 'pg' }), [150, 16], foot]);
@@ -830,8 +870,8 @@ function mountMove(svg, fixed) {
     }
     for (const [pr, el] of machine) {
       if (pr[0] === 'sole') { const [A, B] = soleAt(J); el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]); }
-      else if (pr[0] === 'arm') { const A = padAt(J, 0, pr[2]), B = padAt(J, pr[1], pr[2]); el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]); }
-      else { const C = padAt(J, pr[1], pr[2]); el.setAttribute('cx', C[0]); el.setAttribute('cy', C[1]); }
+      else if (pr[0] === 'arm') { const A = padAt(J, 0, pr[2], pr[3]), B = padAt(J, pr[1], pr[2], pr[3]); el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]); }
+      else { const C = padAt(J, pr[1], pr[2], pr[3]); el.setAttribute('cx', C[0]); el.setAttribute('cy', C[1]); }
     }
     for (const [k, a, b, c, d, e2] of held) {
       if (k === 'pull') { const G = grip(J); a.setAttribute('x1', G[0]); a.setAttribute('y1', G[1]); a.setAttribute('x2', b[0]); a.setAttribute('y2', b[1]); c.setAttribute('cx', G[0]); c.setAttribute('cy', G[1]); }
