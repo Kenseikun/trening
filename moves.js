@@ -105,6 +105,32 @@ const MOVES = {
     A: { ...FSTAND, a: [0, 180], s: [[.3, .3], [.3, .3]] },
     B: { ...FSTAND, a: [0, 180] },
   },
+  // Partia maszyn 3 (20.10). Wyciskanie na barki na maszynie od przodu: siedzisko z oparciem, uchwyty jadą po skośnych prowadnicach
+  // w górę i do środka; na dole łokcie w dół z boków, dłonie na wysokości uszu (z boku dłonie zasłaniałyby twarz).
+  machineohp: {
+    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174M130 140V50H170V140M206 60L160 14M94 60L140 14M206 60V199M94 60V199', [90, 8, 210, 199]]],
+    A: { h: [150, 136], H: [[198, 52], [102, 52]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+    B: { h: [150, 136], H: [[166, 20], [134, 20]], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+  },
+  // Prostowanie nad głową na wyciągu: tyłem do wyciągu, linka z bloczka na wysokości głowy (za plecami) do dłoni; łokcie w górę i nieruchomo.
+  cableohext: {
+    props: [['ground', 190], ['path', 'M104 190V-6M92 190H116', [88, -10, 226, 190]], ['pulley', 104, 2], ['pull', 104, 2]],
+    A: { h: [150, 98], t: -90, E: [154, 12], ea: -230, F: [150, 184], fa: 12 },
+    B: { h: [150, 98], t: -90, E: [154, 12], ea: -88, F: [150, 184], fa: 12 },
+  },
+  // Modlitewnik (maszyna): pochylony tułów, ramię leży na skośnej poduszce (rysowanej nad postacią, między ramieniem a klatką),
+  // łokieć nieruchomo na osi dźwigni; przedramię z prawie prostej ręki w stronę barku.
+  preacher: {
+    props: [['ground', 190], ['path', 'M84 150H130M108 150V190M96 190H120M144 122V190M132 190H156', [80, 60, 226, 190]], ['path', 'M121 92L149 119L144 124L116 97Z', [110, 84, 150, 128], 'top'], ['pull', 148, 107, 'lever']],
+    A: { h: [112, 142], t: -75, E: [148, 107], ea: 50, F: [156, 184], fa: 12 },
+    B: { h: [112, 142], t: -75, E: [148, 107], ea: -95, F: [156, 184], fa: 12 },
+  },
+  // Odwrotne rozpiętki z gumą: jak rozciąganie gumy, ale ręce lekko ugięte w łokciach przez cały ruch (opis ćwiczenia, poprawka z 20.10).
+  revfly: {
+    front: true, back: true, props: [['ground', 199], ['band2', 'wr1', 'wr0']],
+    A: { ...FSTAND, H: [[184, 47], [116, 47]], s: [[.35, .35], [.35, .35]] },
+    B: { ...FSTAND, H: [[222, 47], [78, 47]] },
+  },
   // Rotacja zewnętrzna od przodu: łokieć przy boku, przedramię obraca się na zewnątrz, guma zaczepiona do słupka z drugiej strony.
   extrot: {
     front: true, props: [['ground', 199], ['post', 64, 36, 199], ['band', 64, 70, 'wr0']],
@@ -184,9 +210,10 @@ const MOVES = {
   },
   // Skłon z gumą: guma pod stopami i za karkiem na barkach, dłonie przytrzymują ją z przodu barków i pochylają się razem z tułowiem.
   goodmorning: {
-    props: [['ground', 190], ['band2', 'an0', 'sh']],
-    A: { h: [150, 98], t: -90, Hs: [2, 20], F: [150, 184], fa: 12 },
-    B: { h: [128, 104], t: -12, Hs: [2, 20], F: [150, 184], fa: 12 },
+    // Guma spod stóp za kark, dłonie trzymają ją przy barkach (poprawka z 20.10: wcześniej guma szła do barku, a dłonie były przed klatką).
+    props: [['ground', 190], ['band2', 'an0', 'nk']],
+    A: { h: [150, 98], t: -90, Hs: [-3, 16], F: [150, 184], fa: 12 },
+    B: { h: [128, 104], t: -12, Hs: [-3, 16], F: [150, 184], fa: 12 },
   },
   // Siad na ławce, guma na kostkach: przy wyproście stopa w luzie palcami w górę, przy zgięciu pięta idzie pod ławkę.
   hamcurl: {
@@ -215,8 +242,9 @@ const MOVES = {
   // Przysiad z hantlem (goblet): hantel pionowo przy mostku, tułów wyprostowany, głęboko między kolana.
   goblet: {
     props: [['ground', 190], ['db', 'v']],
-    A: { ...STAND, H: [163, 62] },
-    B: { h: [114, 150], t: -62, H: [154, 110], F: [150, 184], fa: 12 },
+    // Hantel przy mostku, łokcie w dół przed tułowiem (poprawka z 20.10: wcześniej łokcie uciekały za plecy, a hantel był odsunięty).
+    A: { ...STAND, H: undefined, Hs: [0, 17] },
+    B: { h: [114, 150], t: -62, Hs: [0, 17], F: [150, 184], fa: 12 },
   },
   // Martwy ciąg rumuński: kolana lekko ugięte i nieruchome, biodra w tył, hantle blisko nóg do połowy goleni.
   rdl: {
@@ -293,8 +321,8 @@ const MOVES = {
   // Goblet z kettlebellem: jak z hantlem, kettlebell za rogi przy mostku, kula pod dłońmi.
   kbgoblet: {
     props: [['ground', 190], ['kb', 'down']],
-    A: { ...STAND, H: [168, 60] },
-    B: { h: [114, 150], t: -62, H: [160, 104], F: [150, 184], fa: 12 },
+    A: { ...STAND, H: undefined, Hs: [0, 17] }, // kettlebell za rączkę przy klatce, łokcie w dół
+    B: { h: [114, 150], t: -62, Hs: [0, 17], F: [150, 184], fa: 12 },
   },
   // Martwy ciąg ze sztangą: talerz (promień 22, jak prawdziwy) stoi na podłodze, sztanga nad środkiem stóp, barki trochę przed nią.
   // Najpierw prostują się kolana (sztanga prosto w górę przy goleniach), potem biodra idą do przodu; w dół ta sama droga.
@@ -357,8 +385,8 @@ const MOVES = {
   // Wykrok boczny od przodu: szeroki rozkrok, ciężar na jedną nogę, która się zgina (biodra w tył i w dół), druga prosta.
   sidelunge: {
     front: true, props: [['ground', 199]],
-    A: { h: [150, 108], H: [[160, 84], [140, 84]], F: [[196, 184], [104, 184]], eb: [-1, 1] }, // dłonie złączone, łokcie na zewnątrz
-    B: { h: [176, 126], H: [[186, 104], [166, 104]], F: [[196, 184], [104, 184]] }, // druga noga prawie prosta (85,6 z 86)
+    A: { h: [150, 108], H: [[158, 64], [142, 64]], F: [[196, 184], [104, 184]], eb: [-1, 1] }, // dłonie złączone przed klatką, łokcie na zewnątrz
+    B: { h: [176, 126], H: [[184, 82], [168, 82]], F: [[196, 184], [104, 184]], eb: [-1, 1] }, // druga noga prawie prosta (85,6 z 86)
   },
   // Wejścia na podwyższenie: noga w górę i na stopień, wejście z wyprostem, druga noga dostawiona, zejście tyłem tą samą drogą.
   stepup: (() => {
@@ -465,7 +493,8 @@ const MOVES = {
   },
   // Wypychanie nóg na maszynie (poziomej): plecy na oparciu, stopy na płycie; płyta jedzie razem ze stopami, kolana nie prostują się do końca.
   legpress: {
-    props: [['ground', 190], ['path', 'M70 154H118M90 150L66 98M100 154V190M166 140H214M214 96V190', [62, 92, 216, 190]], ['sole']],
+    // Płyta pod stopami jedzie po prowadnicy (linia tuż pod nią, od płyty do ramy), żeby nie wisiała w powietrzu (poprawka z 20.10).
+    props: [['ground', 190], ['path', 'M70 154H118M90 150L66 98M100 154V190M150 139H214M214 96V190M150 139V146', [62, 92, 216, 190]], ['sole']],
     A: { h: [100, 146], t: -115, H: [104, 156], F: [158, 130], fa: -70 },
     B: { h: [100, 146], t: -115, H: [104, 156], F: [181, 130], fa: -70 },
   },
@@ -481,11 +510,13 @@ const MOVES = {
     A: { h: [122, 136], t: -98, H: [128, 146], F: [208, 136], fa: -80 },
     B: { h: [122, 136], t: -98, H: [128, 146], F: [166, 178], fa: 8 },
   },
-  // Wyciskanie na maszynie siedząc: plecy na oparciu, uchwyty na wysokości klatki; dźwignia maszyny obraca się wokół osi u góry.
+  // Wyciskanie na maszynie siedząc: plecy na oparciu, uchwyty przy środku klatki, łokcie z tyłu; ręce prostują się do przodu.
+  // Dźwignia (gruba linia) wisi z osi nad głową, na ramie za oparciem, i odchyla się do przodu razem z uchwytami (poprawka z 20.10:
+  // wcześniej linka szła do kolumny przed osobą, więc pchanie w jej stronę nie dawało oporu).
   chestpress: {
-    props: [['ground', 190], ['path', 'M84 150H130M96 150L92 66M108 150V190M206 20V190M190 190H222', [80, 14, 226, 190]], ['pulley', 206, 26], ['pull', 206, 26]],
-    A: { h: [112, 142], t: -92, H: [150, 88], F: [156, 184], fa: 12 },
-    B: { h: [112, 142], t: -92, H: [172, 86], F: [156, 184], fa: 12 },
+    props: [['ground', 190], ['path', 'M84 150H130M96 150L92 66M108 150V190M78 190V14H124M66 190H90', [62, 8, 226, 190]], ['pulley', 124, 18], ['pull', 124, 18, 'lever']],
+    A: { h: [112, 142], t: -92, H: [130, 98], F: [156, 184], fa: 12 },
+    B: { h: [112, 142], t: -92, H: [170, 92], F: [156, 184], fa: 12 },
   },
   // Wiosłowanie na maszynie z oparciem: klatka oparta o poduszkę, uchwyty z prostych rąk do boków tułowia, łokcie w tył.
   machinerow: {
@@ -526,7 +557,7 @@ const EX_MOVE = {
   'podciaganie-lopatek': ['scap'], 'zwis': ['hang'], 'trx-wioslowanie': ['row'], 'wioslowanie-australijskie': ['invrow'],
   'dipy': ['dip'], 'dipy-negatyw': ['dip', 'neg'], 'podpor-porecze': ['support'],
   'pompki': ['pushup'], 'pompki-waskie': ['pushup'], 'pompki-trx': ['trxpush'], 'pompki-nogi-wyzej': ['declpush'], 'pompki-na-podwyzszeniu': ['inclpush'],
-  'guma-rozciaganie': ['pullapart'], 'guma-odwrotne-rozpietki': ['pullapart'], 'guma-rotacja': ['extrot'],
+  'guma-rozciaganie': ['pullapart'], 'guma-odwrotne-rozpietki': ['revfly'], 'guma-rotacja': ['extrot'],
   'kolana-porecze': ['kneebars'], 'kolana-zwis': ['kneehang'], 'plank': ['plank'], 'deska-bokiem': ['sideplank'],
   'trx-rollout': ['rollout'], 'trx-kolana': ['trxknees'], 'dead-bug': ['deadbug'],
   'przysiad': ['squat'], 'przysiad-guma': ['bandsquat'], 'trx-przysiad-wykroczny': ['trxsplit'], 'przysiad-jednonoz': ['boxpistol'],
@@ -542,6 +573,7 @@ const EX_MOVE = {
   'uginanie-mlotkowe': ['hammer'], 'wspiecia-hantle': ['calfdb'], 'prostowanie-nad-glowa': ['ohext'], 'face-pull': ['facepull'],
   'wyciskanie-hantli-skos': ['inclinepress'], 'wypychanie-nog': ['legpress'], 'prostowanie-nog': ['legext'], 'uginanie-nog-maszyna': ['legcurl'],
   'wyciskanie-maszyna': ['chestpress'], 'wioslowanie-maszyna': ['machinerow'],
+  'wyciskanie-barki-maszyna': ['machineohp'], 'prostowanie-nad-glowa-wyciag': ['cableohext'], 'uginanie-modlitewnik': ['preacher'],
   'martwy-ciag': ['bbdl'], 'przysiad-bulgarski': ['bulgarian'], 'bird-dog': ['birddog'],
   'martwy-ciag-kettlebell': ['kbdl'], 'swing-kettlebell': ['kbswing', 'swing'], 'goblet-kettlebell': ['kbgoblet'],
 };
@@ -868,6 +900,8 @@ function mountMove(svg, fixed) {
     else if (pr[0] === 'fpad') pts.push(pr[1], pr[2]);
     else if (pr[0] === 'sole' || pr[0] === 'pad') for (const p of [0, .5, 1]) { const J = joints(m, p); pts.push(...(pr[0] === 'sole' ? soleAt(J) : [padAt(J, pr[1], pr[2], pr[3])])); }
     else if (pr[0] === 'kb') for (const p of [0, .5, 1]) { const C = kbAt(joints(m, p), pr[1])[1]; pts.push([C[0] - 10, C[1] - 10], [C[0] + 10, C[1] + 10]); }
+    // Skakanka: liczby to okres i chwila przejścia pod stopami, nie punkt rysunku; kadr obejmuje łuk nad głową i pod stopami.
+    else if (pr[0] === 'rope') for (const p of [0, 1]) { const J = joints(m, p); pts.push([150, J.hd[1] - 24], [150, Math.max(J.to0[1], J.to1[1]) + 8]); }
     else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4), r = (pr[1] || 13) + 1; pts.push([G[0] - r, G[1] - r], [G[0] + r, G[1] + r]); }
     else if (typeof pr[1] === 'number' && pr[0] !== 'ground' && pr[0] !== 'strap') {
       pts.push([pr[1], pr[2]]);
@@ -903,7 +937,7 @@ function mountMove(svg, fixed) {
     if (pr[0] === 'hbar') for (const x of [pr[1] + 6, pr[2] - 6]) mk('line', { x1: x, x2: x, y1: pr[3] - 8, y2: pr[3] + 600, class: 'pq' });
     // Ławka: siedzisko na dwóch nogach do ziemi; rama maszyny i bloczek pod postacią.
     if (pr[0] === 'bench') { for (const x of [pr[1] + 8, pr[1] + pr[3] - 8]) mk('line', { x1: x, x2: x, y1: pr[2] + 6, y2: ground?.[1] ?? pr[2] + 40, class: 'pp' }); mk('rect', { x: pr[1], y: pr[2], width: pr[3], height: 7, rx: 3, class: 'px' }); }
-    if (pr[0] === 'path') mk('path', { class: 'pq', d: pr[1] });
+    if (pr[0] === 'path' && pr[3] !== 'top') mk('path', { class: 'pq', d: pr[1] });
     if (pr[0] === 'pulley') mk('circle', { cx: pr[1], cy: pr[2], r: 5, class: 'pw' });
     // Wyciąg: rama z dwóch słupów, belka, dwa bloczki i stos płytek; linka z uchwytem i ruchome płytki w draw.
     if (pr[0] === 'cable') {
@@ -927,6 +961,8 @@ function mountMove(svg, fixed) {
     // Wałek ma ramię maszyny: od osi przy kolanie do wałka (oś obrotu leży na wysokości kolana, jak w prawdziwej maszynie).
     if (pr[0] === 'pad' && pr[1] > .3) machine.push([['arm', pr[1], pr[2], pr[3]], mk('line', { class: 'pq' })]);
     if (pr[0] === 'rope') ropeEl = [pr, mk('path', { class: 'pq', 'stroke-width': 1.6 })];
+    // ['path', d, kadr, 'top']: część maszyny przed postacią (np. poduszka modlitewnika pod ramieniem), rysowana nad nią.
+    if (pr[0] === 'path' && pr[3] === 'top') mk('path', { class: 'pt', d: pr[1] });
     // Motylek: ramię maszyny od osi nad barkiem do dłoni i poduszka wzdłuż przedramienia (rysowane nad postacią).
     if (pr[0] === 'fpad') for (const i of [0, 1]) fpads.push([i, pr[1 + i], mk('line', { class: 'pq' }), mk('line', { class: 'pt', style: 'stroke-width:9;stroke-linecap:round' })]);
     if (pr[0] === 'sole' || pr[0] === 'pad') machine.push([pr, pr[0] === 'sole' ? mk('line', { class: 'pbl', 'stroke-width': 5 }) : mk('circle', { r: 5.5, class: 'pt' })]);
@@ -937,7 +973,9 @@ function mountMove(svg, fixed) {
   // Sprzęt w dłoniach: sztanga (talerz), hantle, linka do bloczka; rysowane nad postacią.
   const held = [];
   for (const pr of m.props) {
-    if (pr[0] === 'pull') held.push(['pull', mk('line', { class: 'pc' }), [pr[1], pr[2]], mk('circle', { r: 3.2, class: 'pb' })]);
+    // ['pull', x, y, 'lever']: sztywna dźwignia maszyny od osi do uchwytu (gruba linia), bez 'lever' cienka linka wyciągu.
+    // Od przodu dźwignia maszyny ('lever') jest przy obu dłoniach, linka wyciągu zostaje przy jednej; druga oś w lustrzanym odbiciu względem środka postaci (x 150).
+    if (pr[0] === 'pull') for (const i of m.front && pr[3] === 'lever' ? [0, 1] : [0]) held.push(['pull', mk('line', { class: pr[3] === 'lever' ? 'pq' : 'pc' }), [i ? 300 - pr[1] : pr[1], pr[2]], mk('circle', { r: 3.2, class: 'pb' }), i]);
     if (pr[0] === 'bb') held.push(['bb', mk('circle', { r: pr[1] || 13, class: 'pw' }), mk('circle', { r: 2.6, class: 'pb' })]); // pr[1]: promień talerza
     if (pr[0] === 'kb') held.push(['kb', pr[1], mk('circle', { r: 5, class: 'pc', 'stroke-width': 2.6 }), mk('circle', { r: KB_R, class: 'pt' })]);
     if (pr[0] === 'db') for (const i of pr[2] || (m.front ? [0, 1] : [0])) held.push(['db', pr[1], i, ...(pr[1] === 'end' ? [mk('circle', { r: 5.6, class: 'pw' }), mk('circle', { r: 1.8, class: 'pb' })] : [mk('line', { class: 'pbl', 'stroke-width': 2.4 }), mk('rect', { class: 'pt', rx: 1 }), mk('rect', { class: 'pt', rx: 1 })])]);
@@ -971,7 +1009,7 @@ function mountMove(svg, fixed) {
       else { const C = padAt(J, pr[1], pr[2], pr[3]); el.setAttribute('cx', C[0]); el.setAttribute('cy', C[1]); }
     }
     for (const [k, a, b, c, d, e2] of held) {
-      if (k === 'pull') { const G = grip(J); a.setAttribute('x1', G[0]); a.setAttribute('y1', G[1]); a.setAttribute('x2', b[0]); a.setAttribute('y2', b[1]); c.setAttribute('cx', G[0]); c.setAttribute('cy', G[1]); }
+      if (k === 'pull') { const G = grip(J, d); a.setAttribute('x1', G[0]); a.setAttribute('y1', G[1]); a.setAttribute('x2', b[0]); a.setAttribute('y2', b[1]); c.setAttribute('cx', G[0]); c.setAttribute('cy', G[1]); }
       if (k === 'bb') { const G = grip(J); for (const el of [a, b]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); } }
       if (k === 'kb') kbAt(J, a).forEach((C, i) => { const el = i ? c : b; el.setAttribute('cx', C[0]); el.setAttribute('cy', C[1]); });
       if (k === 'db') {

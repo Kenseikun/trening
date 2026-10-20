@@ -763,6 +763,37 @@ globalThis.EXERCISES = {
     tips: ['Ciężar z przodu pomaga trzymać plecy prosto, więc to dobry przysiad na początek.',
       'Kolana idą w tę samą stronę co palce stóp.'],
   },
+  // Partia maszyn 3 (20.10): ruchy z bazy (wyciskanie nad głowę, prostowanie nad głową, uginanie) w wersji na maszynie i wyciągu.
+  'wyciskanie-barki-maszyna': {
+    sprzet: ['SILOWNIA'],
+    kg: 2.5,
+    name: 'Wyciskanie na barki na maszynie siedząc', p: ['shoulders'], s: ['triceps'],
+    steps: ['Ustaw siedzisko tak, żeby uchwyty były na wysokości uszu. Oprzyj plecy.',
+      'Chwyć uchwyty, łokcie w dół i trochę w bok.',
+      'Wypchnij uchwyty w górę do prawie prostych rąk.',
+      'Opuść powoli, aż dłonie wrócą na wysokość uszu.'],
+    tips: ['Plecy cały czas na oparciu, bez wyginania w łuk.', 'Dobre na początek: maszyna prowadzi ruch, więc łatwiej o technikę niż z hantlami.'],
+  },
+  'prostowanie-nad-glowa-wyciag': {
+    sprzet: ['SILOWNIA'],
+    kg: 2.5,
+    name: 'Prostowanie ramion nad głową na wyciągu', p: ['triceps'], s: [],
+    steps: ['Ustaw bloczek na wysokości głowy i załóż linę. Chwyć jej końce i stań tyłem do wyciągu.',
+      'Zrób mały krok w przód, żeby linka była napięta. Łokcie w górę, blisko głowy, dłonie za głową.',
+      'Wyprostuj ręce w górę i do przodu, zginając tylko łokcie.',
+      'Wróć powoli, aż dłonie będą za głową.'],
+    tips: ['Ramiona nieruchome: pracują tylko przedramiona.', 'Napnij brzuch, żeby plecy nie wyginały się w łuk.'],
+  },
+  'uginanie-modlitewnik': {
+    sprzet: ['SILOWNIA'],
+    kg: 2.5,
+    name: 'Uginanie ramion na modlitewniku (maszyna)', p: ['biceps'], s: ['forearms'],
+    steps: ['Ustaw siedzisko tak, żeby pachy opierały się o górną krawędź poduszki.',
+      'Połóż ramiona na poduszce i chwyć uchwyty podchwytem, ręce prawie proste.',
+      'Zegnij łokcie i przyciągnij uchwyty w stronę barków.',
+      'Opuść powoli do prawie prostych rąk.'],
+    tips: ['Łokcie cały czas na poduszce: nie odrywaj ich i nie bujaj tułowiem.', 'Nie prostuj rąk do końca na dole, żeby nie przeciążać łokci.'],
+  },
 };
 
 // Wersja angielska (aplikacja po angielsku): nazwy mięśni oraz nazwa, kroki i wskazówki każdego ćwiczenia; kgOpis jak wyżej.
@@ -1415,5 +1446,29 @@ Object.entries({
       'Stand up, pushing the floor away with your whole foot.'],
     tips: ['The weight in front helps keep your back straight, so it is a good squat to start with.',
       'Your knees point the same way as your toes.'],
+  },
+  'wyciskanie-barki-maszyna': {
+    name: 'Seated machine shoulder press',
+    steps: ['Set the seat so the handles are level with your ears. Back against the backrest.',
+      'Grab the handles, elbows pointing down and slightly out.',
+      'Push the handles up until your arms are almost straight.',
+      'Lower slowly until your hands are back at ear level.'],
+    tips: ["Keep your back against the backrest, don't arch it.", 'Good for beginners: the machine guides the movement, so good form is easier than with dumbbells.'],
+  },
+  'prostowanie-nad-glowa-wyciag': {
+    name: 'Overhead cable triceps extension',
+    steps: ['Set the pulley at head height and attach a rope. Hold its ends and stand with your back to the machine.',
+      'Take a small step forward so the cable is tight. Elbows up, close to your head, hands behind your head.',
+      'Straighten your arms up and forward, bending only your elbows.',
+      'Return slowly until your hands are behind your head.'],
+    tips: ['Upper arms stay still: only your forearms move.', 'Brace your abs so your back does not arch.'],
+  },
+  'uginanie-modlitewnik': {
+    name: 'Machine preacher curl',
+    steps: ['Set the seat so your armpits rest against the top edge of the pad.',
+      'Lay your upper arms on the pad and grab the handles with an underhand grip, arms almost straight.',
+      'Bend your elbows and pull the handles towards your shoulders.',
+      'Lower slowly until your arms are almost straight.'],
+    tips: ["Keep your elbows on the pad: don't lift them or swing your body.", "Don't lock your arms out at the bottom, to spare your elbows."],
   },
 }).forEach(([id, en]) => { EXERCISES[id].en = en; });
