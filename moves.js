@@ -201,7 +201,9 @@ const MOVES = {
     A: { h: [150, 98], t: -84, E: [154, 70], ea: -32, F: [150, 184], fa: 12 },
     B: { h: [150, 98], t: -84, E: [154, 70], ea: 78, F: [150, 184], fa: 12 },
   },
-  // --- Siłownia. Sprzęt: 'bb' sztanga (z boku widać talerz), 'db' hantle ('end' z boku od czoła, 'v' pionowo, 'h' poziomo), 'bench' ławka [x, y, szer.],
+  // --- Siłownia. Sprzęt: 'bb' sztanga (z boku widać talerz), 'db' hantle ('end' z boku od czoła, 'v' pionowo, 'h' poziomo, 'n' chwyt młotkowy:
+  // rączka prostopadle do przedramienia i obraca się razem z nim), 'bench' ławka [x, y, szer.], 'sole' płyta maszyny pod stopami (jedzie z nimi),
+  // 'pad' wałek maszyny na goleni ['pad', ułamek od kolana do kostki, strona 1 przód / -1 tył],
   // 'path' rama maszyny [d, ramka kadru], 'pulley' bloczek [x, y], 'pull' linka od dłoni do bloczka [x, y].
   // Przysiad ze sztangą: sztanga na górze pleców, biodra w tył i w dół do uda poniżej poziomu, plecy proste.
   // Ręce idą do sztangi bokiem, więc z boku są skrócone (s); łokcie w dół i w tył.
@@ -315,6 +317,67 @@ const MOVES = {
     A: { h: [110, 140], t: -18.1, a: [90, 90], F: [68, 180], fa: 158 },
     B: { h: [110, 140], t: -18.1, a: [-15, 90], F: [[68, 180], [24, 138]], fa: [158, 90] },
   },
+  // --- Partia 2 przeglądu bazy (2026-10-20): maszyny i siłownia.
+  // Uginanie młotkowe: jak zwykłe uginanie, ale chwyt neutralny (kciuki w górę), więc z boku widać całą rączkę hantla, obróconą z przedramieniem.
+  hammer: {
+    props: [['ground', 190], ['db', 'n']],
+    A: { ...STAND, E: [151, 70], ea: 86 },
+    B: { ...STAND, E: [151, 70], ea: -62 },
+  },
+  // Wspięcia na palce z hantlami w opuszczonych rękach: czubki palców na ziemi, pięty i całe ciało w górę.
+  calfdb: {
+    props: [['ground', 190], ['db', 'end']],
+    A: { h: [150, 98], t: -90, a: [90, 90], F: [150, 184], fa: 12 },
+    B: { h: [150, 91], t: -90, a: [90, 90], F: [150, 177], fa: 61 },
+  },
+  // Prostowanie ramion z hantlem nad głową: łokcie nieruchomo w górze przy głowie, hantel (oburącz, pionowo) schodzi za głowę i wraca.
+  ohext: {
+    props: [['ground', 190], ['db', 'v']],
+    A: { h: [150, 98], t: -90, E: [154, 12], ea: -88, F: [150, 184], fa: 12 },
+    B: { h: [150, 98], t: -90, E: [154, 12], ea: -230, F: [150, 184], fa: 12 },
+  },
+  // Face pull: linka z bloczka na wysokości twarzy, z prostych rąk do twarzy; łokcie wysoko i na boki (z boku ramię jest skrócone).
+  facepull: {
+    props: [['ground', 190], ['cable', 214, 34, 246, 190]],
+    A: { h: [150, 98], t: -90, H: [196, 40], F: [150, 184], fa: 12 },
+    B: { h: [150, 98], t: -90, H: [162, 30], s: [[.6, .9], [.6, .9]], F: [150, 184], fa: 12 },
+  },
+  // Wyciskanie hantli na ławce skośnej (ok. 40°): plecy na oparciu, stopy na ziemi; hantle z wysokości klatki do prostych rąk nad barkami.
+  inclinepress: {
+    props: [['ground', 190], ['path', 'M150 140H196M150 140L102 101M178 140V190M124 120L136 190', [98, 96, 200, 190]], ['db', 'end']],
+    A: { h: [160, 132], t: 218.7, H: [118, 82], s: [[.55, .95], [.55, .95]], F: [212, 184], fa: 12 }, // łokcie odwiedzione w bok: z boku ramię krótsze
+    B: { h: [160, 132], t: 218.7, H: [116, 33], F: [212, 184], fa: 12 },
+  },
+  // Wypychanie nóg na maszynie (poziomej): plecy na oparciu, stopy na płycie; płyta jedzie razem ze stopami, kolana nie prostują się do końca.
+  legpress: {
+    props: [['ground', 190], ['path', 'M70 154H118M90 150L66 98M100 154V190M166 140H214M214 96V190', [62, 92, 216, 190]], ['sole']],
+    A: { h: [100, 146], t: -115, H: [104, 156], F: [158, 130], fa: -70 },
+    B: { h: [100, 146], t: -115, H: [104, 156], F: [181, 130], fa: -70 },
+  },
+  // Prostowanie nóg na maszynie: siedząc, wałek na przodzie goleni przy kostkach; goleń z pionu do poziomu, uda leżą na siedzisku.
+  legext: {
+    props: [['ground', 190], ['path', 'M96 146H170M100 146L92 80M120 146V190M178 118V190', [88, 76, 216, 190]], ['pad', .82, 1]],
+    A: { h: [122, 136], t: -98, H: [128, 146], F: [166, 178], fa: 8 },
+    B: { h: [122, 136], t: -98, H: [128, 146], F: [208, 136], fa: -80 },
+  },
+  // Uginanie nóg na maszynie siedząc: wałek za kostkami, uda przytrzymane z góry; goleń z poziomu pod siedzisko.
+  legcurl: {
+    props: [['ground', 190], ['path', 'M96 146H170M100 146L92 80M120 146V190M178 118V190M146 124H172', [88, 76, 216, 190]], ['pad', .82, -1]],
+    A: { h: [122, 136], t: -98, H: [128, 146], F: [208, 136], fa: -80 },
+    B: { h: [122, 136], t: -98, H: [128, 146], F: [166, 178], fa: 8 },
+  },
+  // Wyciskanie na maszynie siedząc: plecy na oparciu, uchwyty na wysokości klatki; dźwignia maszyny obraca się wokół osi u góry.
+  chestpress: {
+    props: [['ground', 190], ['path', 'M84 150H130M96 150L92 66M108 150V190M206 20V190M190 190H222', [80, 14, 226, 190]], ['pulley', 206, 26], ['pull', 206, 26]],
+    A: { h: [112, 142], t: -92, H: [150, 88], F: [156, 184], fa: 12 },
+    B: { h: [112, 142], t: -92, H: [172, 86], F: [156, 184], fa: 12 },
+  },
+  // Wiosłowanie na maszynie z oparciem: klatka oparta o poduszkę, uchwyty z prostych rąk do boków tułowia, łokcie w tył.
+  machinerow: {
+    props: [['ground', 190], ['path', 'M84 150H130M108 150V190M136 76V114M206 120V190M190 190H222', [80, 70, 226, 190]], ['pulley', 206, 132], ['pull', 206, 132]],
+    A: { h: [112, 142], t: -92, H: [172, 92], F: [156, 184], fa: 12 },
+    B: { h: [112, 142], t: -92, H: [130, 98], F: [156, 184], fa: 12 },
+  },
   calf: {
     props: [['ground', 190], ['band2', 'an0', 'wr0']],
     A: { h: [150, 98], t: -90, Hs: [2, 20], F: [150, 184], fa: 12 },
@@ -325,6 +388,17 @@ const MOVES = {
 // Kettlebell (od 2026-10-20): rączka w dłoni (kółko), pod nią kula. 'down': wisi pionowo pod dłońmi (martwy ciąg, goblet za rogi),
 // 'arm': w przedłużeniu prostych rąk (swing, kula leci za dłońmi). Zwraca [środek rączki, środek kuli]; KB_R = promień kuli.
 const KB_R = 8.5;
+// Płyta maszyny pod podeszwą (wypychanie nóg): od pięty za kostką do czubków palców, przesunięta o 3 na stronę podeszwy (od goleni).
+function soleAt(J) {
+  const an = J.an0, to = J.to0, d = ang(an, to), kn = J.kn0, n = [Math.cos(rad(d + 90)), Math.sin(rad(d + 90))];
+  const sg = (kn[0] - an[0]) * n[0] + (kn[1] - an[1]) * n[1] > 0 ? -3 : 3, A = at(an, d + 180, 6), B = at(to, d, 6);
+  return [[A[0] + n[0] * sg, A[1] + n[1] * sg], [B[0] + n[0] * sg, B[1] + n[1] * sg]];
+}
+// Wałek na goleni: punkt na ułamku u od kolana do kostki, odsunięty od osi goleni o 10 na stronę side (1 = przód nogi, -1 = łydka).
+function padAt(J, u, side) {
+  const kn = J.kn0, an = J.an0, P = [kn[0] + (an[0] - kn[0]) * u, kn[1] + (an[1] - kn[1]) * u], d = ang(kn, an);
+  return at(P, d - 90 * side, 10);
+}
 function kbAt(J, mode) {
   const W = J.wr0;
   if (mode === 'down') return [[W[0], W[1] + 1], [W[0], W[1] + 12]];
@@ -346,6 +420,9 @@ const EX_MOVE = {
   'przysiad-sztanga': ['bbsquat'], 'przysiad-goblet': ['goblet'], 'martwy-rumunski': ['rdl'], 'hip-thrust': ['hipthrust'], 'wyciskanie-lezac': ['bench'],
   'wyciskanie-hantli-nad-glowe': ['ohp'], 'wioslowanie-hantlem': ['dbrow'], 'sciaganie-drazka': ['pulldown'], 'wioslowanie-wyciag': ['cablerow'],
   'wykroki-hantle': ['dblunge'], 'unoszenie-bokiem': ['lateral'], 'uginanie-hantle': ['curl'],
+  'uginanie-mlotkowe': ['hammer'], 'wspiecia-hantle': ['calfdb'], 'prostowanie-nad-glowa': ['ohext'], 'face-pull': ['facepull'],
+  'wyciskanie-hantli-skos': ['inclinepress'], 'wypychanie-nog': ['legpress'], 'prostowanie-nog': ['legext'], 'uginanie-nog-maszyna': ['legcurl'],
+  'wyciskanie-maszyna': ['chestpress'], 'wioslowanie-maszyna': ['machinerow'],
   'martwy-ciag': ['bbdl'], 'przysiad-bulgarski': ['bulgarian'], 'bird-dog': ['birddog'],
   'martwy-ciag-kettlebell': ['kbdl'], 'swing-kettlebell': ['kbswing', 'swing'], 'goblet-kettlebell': ['kbgoblet'],
 };
@@ -667,6 +744,7 @@ function mountMove(svg, fixed) {
     else if (pr[0] === 'bench') pts.push([pr[1], pr[2]], [pr[1] + pr[3], pr[2]]);
     else if (pr[0] === 'path') pts.push(pr[2].slice(0, 2), pr[2].slice(2));
     else if (pr[0] === 'pulley') pts.push([pr[1], pr[2] - 6]);
+    else if (pr[0] === 'sole' || pr[0] === 'pad') for (const p of [0, .5, 1]) { const J = joints(m, p); pts.push(...(pr[0] === 'sole' ? soleAt(J) : [padAt(J, pr[1], pr[2])])); }
     else if (pr[0] === 'kb') for (const p of [0, .5, 1]) { const C = kbAt(joints(m, p), pr[1])[1]; pts.push([C[0] - 10, C[1] - 10], [C[0] + 10, C[1] + 10]); }
     else if (pr[0] === 'bb') for (const p of [0, 1]) { const G = at(joints(m, p).wr0, ang(joints(m, p).el0, joints(m, p).wr0), 4), r = (pr[1] || 13) + 1; pts.push([G[0] - r, G[1] - r], [G[0] + r, G[1] + r]); }
     else if (typeof pr[1] === 'number' && pr[0] !== 'ground' && pr[0] !== 'strap') {
@@ -716,12 +794,15 @@ function mountMove(svg, fixed) {
 
   const fig = moveFigure(svg, m, e, mk, ground?.[1]);
   // Sprzęt trzymany w dłoniach i gumy rysowane nad postacią, żeby były widoczne.
-  const dyn = [];
+  const dyn = [], machine = [];
   for (const pr of m.props) {
     if (pr[0] === 'bar') mk('circle', { cx: pr[1], cy: pr[2], r: 4.5, class: 'pb' });
     if (pr[0] === 'hbar') mk('line', { x1: pr[1], x2: pr[2], y1: pr[3], y2: pr[3], class: 'pbl' });
     if (pr[0] === 'strap' || pr[0] === 'band') dyn.push([mk('line', { class: pr[0] === 'strap' ? 'ps' : 'pg' }), [pr[1], pr[2]], pr[3]]);
     if (pr[0] === 'band2') dyn.push([mk('line', { class: 'pg' }), pr[1], pr[2]]);
+    // Wałek ma ramię maszyny: od osi przy kolanie do wałka (oś obrotu leży na wysokości kolana, jak w prawdziwej maszynie).
+    if (pr[0] === 'pad') machine.push([['arm', pr[1], pr[2]], mk('line', { class: 'pq' })]);
+    if (pr[0] === 'sole' || pr[0] === 'pad') machine.push([pr, pr[0] === 'sole' ? mk('line', { class: 'pbl', 'stroke-width': 5 }) : mk('circle', { r: 5.5, class: 'pt' })]);
   }
   if (tempo === 'band') for (const foot of ['an0', 'an1']) dyn.push([mk('line', { class: 'pg' }), [150, 16], foot]);
   if (cable) Object.assign(cable, { rod: mk('line', { class: 'pc' }), line: mk('path', { class: 'pc' }), handle: mk('line', { class: 'pbl', 'stroke-width': 2.6 }) });
@@ -747,6 +828,11 @@ function mountMove(svg, fixed) {
       const A = typeof a === 'string' ? J[a] : a, B = typeof b === 'string' ? J[b] : b;
       el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]);
     }
+    for (const [pr, el] of machine) {
+      if (pr[0] === 'sole') { const [A, B] = soleAt(J); el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]); }
+      else if (pr[0] === 'arm') { const A = padAt(J, 0, pr[2]), B = padAt(J, pr[1], pr[2]); el.setAttribute('x1', A[0]); el.setAttribute('y1', A[1]); el.setAttribute('x2', B[0]); el.setAttribute('y2', B[1]); }
+      else { const C = padAt(J, pr[1], pr[2]); el.setAttribute('cx', C[0]); el.setAttribute('cy', C[1]); }
+    }
     for (const [k, a, b, c, d, e2] of held) {
       if (k === 'pull') { const G = grip(J); a.setAttribute('x1', G[0]); a.setAttribute('y1', G[1]); a.setAttribute('x2', b[0]); a.setAttribute('y2', b[1]); c.setAttribute('cx', G[0]); c.setAttribute('cy', G[1]); }
       if (k === 'bb') { const G = grip(J); for (const el of [a, b]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); } }
@@ -756,6 +842,8 @@ function mountMove(svg, fixed) {
         if (a === 'end') for (const el of [c, d]) { el.setAttribute('cx', G[0]); el.setAttribute('cy', G[1]); }
         else {
           const v = a === 'v', [dx, dy] = v ? [0, 7] : [7, 0];
+          const rot = a === 'n' ? `rotate(${(ang(J['el' + b], J['wr' + b]) - 90).toFixed(1)} ${G[0].toFixed(1)} ${G[1].toFixed(1)})` : '';
+          for (const el of [c, d, e2]) el.setAttribute('transform', rot);
           c.setAttribute('x1', G[0] - dx); c.setAttribute('y1', G[1] - dy); c.setAttribute('x2', G[0] + dx); c.setAttribute('y2', G[1] + dy);
           for (const [el, sg] of [[d, -1], [e2, 1]]) { const [w, h] = v ? [10, 4] : [4, 10]; el.setAttribute('x', G[0] + sg * dx - w / 2); el.setAttribute('y', G[1] + sg * dy - h / 2); el.setAttribute('width', w); el.setAttribute('height', h); }
         }
@@ -833,4 +921,4 @@ if (typeof requestAnimationFrame !== 'undefined') (function loop(ms) {
   for (const [svg, draw] of moving) { if (!svg.isConnected) moving.delete(svg); else if (svg.getClientRects().length) draw(ms); }
   requestAnimationFrame(loop);
 })(0);
-if (typeof module !== 'undefined') module.exports = { EX_MOVE, MOVES, SEG, joints, norm, setSex, frameAt, cycleOf, kbAt, KB_R };
+if (typeof module !== 'undefined') module.exports = { EX_MOVE, MOVES, SEG, joints, norm, setSex, frameAt, cycleOf, kbAt, KB_R, soleAt, padAt };
