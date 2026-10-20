@@ -3,7 +3,7 @@
 // Każda funkcja zwraca listę { poziom: 'blad' | 'uwaga', tekst }. Błąd trzeba poprawić przed wysłaniem; uwagę trzeba świadomie sprawdzić.
 // Dieta jest sprawdzana słowami kluczowymi (początek słowa): fałszywy alarm (np. mleczko kokosowe) jest lepszy niż przeoczone uczulenie.
 globalThis.ZGODNOSC = (() => {
-  const SPRZET = { DRAZEK: 'drążek', PORECZE: 'poręcze', HANTLE: 'hantle', KETTLE: 'kettlebell', TRX: 'TRX', GUMY: 'gumy', SILOWNIA: 'siłownia' };
+  const SPRZET = { PARK: 'park do kalisteniki', DRAZEK: 'drążek', PORECZE: 'poręcze', HANTLE: 'hantle', KETTLE: 'kettlebell', TRX: 'TRX', GUMY: 'gumy', SILOWNIA: 'siłownia' };
   const RODZAJ = { SILOWNIA: 'siłownia', KALISTENIKA: 'kalistenika', DOM: 'trening w domu', OBA: 'różnie' };
   // Ból z ankiety → mięśnie główne ćwiczeń, które go obciążają (do przypomnienia, nie do blokady).
   const BOL = { BARKI: ['barki', ['shoulders', 'chest']], LOKCIE: ['łokcie', ['triceps', 'biceps']], NADGARSTKI: ['nadgarstki', ['forearms', 'chest', 'triceps']],
@@ -44,7 +44,9 @@ globalThis.ZGODNOSC = (() => {
   function plan(plans, odp, EX = globalThis.EXERCISES || {}) {
     if (!odp) return [{ poziom: 'blad', tekst: 'Brak ankiety: nie da się sprawdzić, czy rozpiska do niej pasuje.' }];
     const out = [], blad = tekst => out.push({ poziom: 'blad', tekst }), uwaga = tekst => out.push({ poziom: 'uwaga', tekst });
-    const silownia = ['SILOWNIA', 'OBA'].includes(odp.rodzaj), ma = new Set(lista(odp.sprzet));
+    // Park do kalisteniki ma drążki i poręcze; sprzęt „siłownia” daje pełną siłownię, chyba że osoba woli kalistenikę albo dom.
+    const ma = new Set(lista(odp.sprzet).flatMap(s => s === 'PARK' ? ['DRAZEK', 'PORECZE'] : [s]));
+    const silownia = ['SILOWNIA', 'OBA'].includes(odp.rodzaj) || ma.has('SILOWNIA') && !['KALISTENIKA', 'DOM'].includes(odp.rodzaj);
     for (const p of plans) for (const it of p.items || []) {
       const e = EX[it.ex], need = e?.sprzet || [], nazwa = `${p.name}: ${e?.name || it.ex}`;
       if (!e) continue;

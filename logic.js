@@ -301,6 +301,11 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.deepStrictEqual(zle.map(u => u.poziom), ['blad', 'blad', 'uwaga'], JSON.stringify(zle));
   assert.match(zle[0].tekst, /siłowni/); assert.match(zle[1].tekst, /drążek/); assert.match(zle[2].tekst, /kolana.*Przysiad/);
   assert.deepStrictEqual(ZGODNOSC.plan([{ name: 'T1', items: [{ ex: 'pompki', sets: 3, reps: 10 }, { ex: 'guma-rozciaganie', sets: 3, reps: 15 }] }], { ...kal, bol: ['NIE'] }), []);
+  // Park do kalisteniki daje drążek i poręcze; sprzęt „siłownia” przy rodzaju „różnie” daje siłownię, przy kalistenice nie.
+  const sil = [{ name: 'T1', items: [{ ex: 'podciaganie', sets: 3, reps: 5 }, { ex: 'przysiad-sztanga', sets: 3, reps: 5 }] }];
+  assert.deepStrictEqual(ZGODNOSC.plan([sil[0]].map(p => ({ ...p, items: [p.items[0]] })), { ...kal, sprzet: ['PARK'], bol: ['NIE'] }), []);
+  assert.deepStrictEqual(ZGODNOSC.plan(sil, { ...kal, rodzaj: 'OBA', sprzet: ['SILOWNIA', 'GUMY'], bol: ['NIE'] }), []);
+  assert.match(ZGODNOSC.plan(sil, { ...kal, sprzet: ['SILOWNIA'], bol: ['NIE'] }).map(u => u.tekst).join(' '), /sztangą wymaga siłowni/);
   const zlaDieta = ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Śniadanie', options: [{ name: 'Skyr z migdałami', note: '15 g migdałów' }, 'Tofu z warzywami'] }] }) }, kal);
   assert.deepStrictEqual(zlaDieta.map(u => u.tekst.split(':')[0]), ['Uczulenie (orzechy)', 'Sposób odżywiania (wegańsko)'], JSON.stringify(zlaDieta));
   assert.deepStrictEqual(ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Obiad', options: ['Tofu z ryżem', 'Ciecierzyca z warzywami'] }] }) }, kal), []);

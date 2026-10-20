@@ -215,7 +215,7 @@ globalThis.SURVEY_EN = {
   cel: ['Main goal', { SILA: 'strength', MASA: 'muscle mass', SYLWETKA: 'better physique', REDUKCJA: 'weight loss', KONDYCJA: 'fitness and health', UMIEJETNOSCI: 'skills, e.g. pull-ups' }],
   partie: ['Which body parts matter most to you? (up to 2)', { KLATKA: 'chest', PLECY: 'back', BARKI: 'shoulders', RECE: 'arms', BRZUCH: 'abs', POSLADKI: 'glutes', NOGI: 'legs', CALE: 'whole body equally' }],
   rodzaj: ['What kind of training do you prefer?', { SILOWNIA: 'gym', KALISTENIKA: 'calisthenics', DOM: 'at home', OBA: 'varied, no preference' }],
-  sprzet: ['What do you have access to?', { DRAZEK: 'pull-up bar', PORECZE: 'parallel bars', HANTLE: 'dumbbells', KETTLE: 'kettlebell', TRX: 'TRX', GUMY: 'resistance bands', BRAK: 'none of these' }],
+  sprzet: ['What do you have access to?', { SILOWNIA: 'gym', PARK: 'outdoor calisthenics park with bars', DRAZEK: 'pull-up bar', PORECZE: 'parallel bars', HANTLE: 'dumbbells', KETTLE: 'kettlebell', TRX: 'TRX', GUMY: 'resistance bands', BRAK: 'none of these' }],
   dni: ['How many days a week can you train?'],
   czas: ['How much time do you have for one workout?'],
   pora: ['What time of day do you usually train?', { RANO: 'in the morning', POLUDNIE: 'around midday', WIECZOR: 'in the evening', ROZNIE: 'it varies' }],
