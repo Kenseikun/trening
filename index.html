@@ -21,7 +21,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   /* Ogród deszczu: czerwony deszcz = wysiłek i pracujące mięśnie, niebieski = regeneracja, jasne kropki = zrobione serie. */
   :root {
     --ground: #3F4A46; --deep: #333C39; --ink: #0F1113; --cream: #E7E8E2; --stone: #CDD1CE; --moss: #8DA38D;
-    --blue: #6AA7FF; --red: #FF6B6B; --gear: #9DB89A; --panel: #37413D; --line: rgba(231,232,226,.2); --line-strong: rgba(231,232,226,.5);
+    --blue: #6AA7FF; --red: #FF6B6B; --red-txt: #FF9A9A; /* czerwony tekst (błędy, braki): 4,5:1 na tle, czytelny w słońcu */ --gear: #9DB89A; --panel: #37413D; --line: rgba(231,232,226,.2); --line-strong: rgba(231,232,226,.5);
     --font: 'Quicksand', system-ui, sans-serif; --ease: cubic-bezier(.22,.8,.2,1);
     color-scheme: dark;
   }
@@ -198,7 +198,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .gate .err { min-height: 1.5em; margin: 0; text-align: center }
   textarea::placeholder { color: var(--stone) }
   pre { white-space: pre-wrap; font: 500 .85rem/1.5 var(--font); margin: 6px 0 14px; color: var(--stone) }
-  .err { color: var(--red) }
+  .err { color: var(--red-txt) }
   /* Ankieta po wejściu kodem: jedna strona, odpowiedzi to pastylki (wybrana jest kremowa) i trzy pola na liczby obok siebie. */
   .ask { margin: 24px 0 0; padding: 0; border: 0; min-width: 0 }
   .ask legend { padding: 0; margin-bottom: 10px; font-weight: 600; line-height: 1.3 }
@@ -210,7 +210,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .num > span:last-child { display: flex; align-items: center; gap: 6px; color: var(--stone) }
   .num input { width: 100%; min-width: 0; min-height: 48px; text-align: center; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 600 1.2rem var(--font) }
   .num input:focus { outline: none; border-color: var(--blue) }
-  .ask.bad legend, .num.bad .lbl { color: var(--red) }
+  .ask.bad legend, .num.bad .lbl { color: var(--red-txt) }
   .ask.bad legend::after { content: ' (uzupełnij)'; font-weight: 500 }
   html[lang=en] .ask.bad legend::after { content: ' (required)' }
   .num.bad input { border-color: var(--red) }
@@ -219,7 +219,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .txt input { width: 100%; min-height: 48px; padding: 0 18px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .txt input:focus { outline: none; border-color: var(--blue) }
   .txt.long .fine { margin: -2px 0 0 } .txt.long textarea { min-height: 120px; font-size: 1rem }
-  .lbl.bad, .lbl.bad .hint { color: var(--red) } .txt.bad .lbl { color: var(--red) } .txt.bad input { border-color: var(--red) }
+  .lbl.bad, .lbl.bad .hint { color: var(--red-txt) } .txt.bad .lbl { color: var(--red-txt) } .txt.bad input { border-color: var(--red) }
   .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
   /* Zieleń z aplikacji (od 2026-10-19, decyzja właściciela): kontakt z trenerem w rogu i „zaktualizuj ankietę”. Braki w ankiecie (.alarm) zostają czerwone. */
@@ -365,7 +365,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   /* Liczby na pierwszej stronie wyników rosną z wysokością wiersza (--rows ustawia finish()), żeby nie nachodziły na podpisy na niskich ekranach. */
   #dBlock { container-type: size; min-height: calc(var(--rows, 3) * 52px) }
   #dBlock b { font-size: clamp(1.3rem, calc(100cqh / var(--rows, 3) * .48), 3.4rem) }
-  #rWhere { color: var(--red); font-size: .9rem }
+  #rWhere { color: var(--red-txt); font-size: .9rem }
 
   /* Przerwa: tors z płucami (płeć z ankiety). Płuca oddychają: jaśnieją i ciemnieją w rytmie 3 s wdech, 3 s wydech.
      Niebieskie w przerwie, czerwone w ostatnich sekundach odliczania (.hot) i w serii na czas (.work). */
@@ -475,7 +475,9 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     .stepper.kg { grid-template-columns: 44px 1fr 44px }
     #work .dock > * + * { margin-top: 8px }
     /* Pasek celu w jednej linii (liczba i jednostka obok siebie): miejsce idzie do animacji. */
-    #work .stats > div { padding: 5px 12px 6px } #work .stats b { display: inline; font-size: 1.15rem } #work .stats i { display: inline; margin-left: 4px }
+    /* Gdy jednostka się nie mieści (większa czcionka systemowa), schodzi do drugiej linii zamiast wchodzić na sąsiednią kolumnę. */
+    #work .stats > div { padding: 5px 12px 6px; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 4px }
+    #work .stats small { flex-basis: 100% } #work .stats b { display: inline; font-size: 1.15rem } #work .stats i { display: inline }
     #work .wsub .chip { min-height: 36px }
     #work .primary { min-height: 48px }
   }
@@ -1219,18 +1221,23 @@ function renderSet() {
 }
 let kgNow = 0;
 const showKg = () => { const e = exLoc(EXERCISES[curItem().ex]); $('kgVal').innerHTML = `${kgTxt(kgNow)} kg<svg class="ico pen" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></svg>${e?.kgOpis ? `<small>${esc(e.kgOpis)}</small>` : ''}`; $('kgVal').setAttribute('aria-label', `${t('weight')}: ${kgTxt(kgNow)} kg`); }; // bez napisu „ciężar” (prośba właściciela z 2026-10-14), zostaje tylko „na hantel” itp.
-// Ciężar do wpisania: dotknięcie liczby otwiera okienko z suwakiem co 0,25 kg (±10 kg od obecnego) i polem do wpisania.
+// Ciężar do wpisania: dotknięcie liczby otwiera okienko z suwakiem co 0,25 kg i polem do wpisania. Zakres suwaka: co najmniej ±10 kg,
+// przy dużych ciężarach ±50% (sztanga), a dociągnięty do końca sam się poszerza (zgłoszenie właściciela z 2026-10-20: przy 50 kg suwak kończył się na 60).
 // Okienko zamiast stałego suwaka, bo ekran serii na niskich telefonach nie ma już miejsca.
 function askKg() {
-  const lo = Math.max(0, Math.floor(kgNow) - 10), show = v => $('kgShow').textContent = `${kgTxt(v)} kg`;
+  const span = Math.max(10, Math.ceil(kgNow / 2 / 5) * 5), show = v => $('kgShow').textContent = `${kgTxt(v)} kg`;
+  let lo = Math.max(0, Math.floor(kgNow) - span), hi = Math.min(500, Math.ceil(kgNow) + span);
   $('dlgBody').innerHTML = `<div class="ask-name ask-kg"><output id="kgShow"></output>
-    <input id="kgRange" type="range" min="${lo}" max="${lo + 20}" step="0.25" value="${kgNow}" aria-label="${t('weight')}">
+    <input id="kgRange" type="range" min="${lo}" max="${hi}" step="0.25" value="${kgNow}" aria-label="${t('weight')}">
     <input id="kgIn" inputmode="decimal" autocomplete="off" value="${kgTxt(kgNow)}" aria-label="${t('kgType')}" placeholder="${t('kgType')}">
     <button id="kgOk" class="primary">${t('save')}</button></div>`;
   floatText($('dlgName'), t('kgTitle')); show(kgNow);
   $('dlg').classList.add('small'); $('dlg').showModal();
-  $('kgRange').oninput = e => { $('kgIn').value = kgTxt(+e.target.value); show(+e.target.value); };
-  $('kgIn').oninput = e => { const v = kgRound(e.target.value); show(v); if (v >= lo && v <= lo + 20) $('kgRange').value = v; };
+  // Na końcu zakresu suwak dostaje kolejne kilogramy w tę stronę (aż do 0 albo 500 kg).
+  const grow = v => { if (v >= hi && hi < 500) hi = Math.min(500, hi + span); if (v <= lo && lo > 0) lo = Math.max(0, lo - span); Object.assign($('kgRange'), { min: lo, max: hi }); $('kgRange').value = v; };
+  $('kgRange').oninput = e => { const v = +e.target.value; $('kgIn').value = kgTxt(v); show(v); };
+  $('kgRange').onchange = e => grow(+e.target.value);
+  $('kgIn').oninput = e => { const v = kgRound(e.target.value); show(v); if (v > hi) hi = Math.min(500, Math.ceil(v) + span); if (v < lo) lo = Math.max(0, Math.floor(v) - span); grow(v); };
   $('kgOk').onclick = () => { kgNow = kgRound($('kgIn').value); showKg(); $('dlg').close(); };
   $('kgIn').onkeydown = e => { if (e.key === 'Enter') $('kgOk').click(); };
 }

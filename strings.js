@@ -103,7 +103,7 @@ globalThis.STR = {
     motDone: ['Znowu udało Ci się ukończyć trening! Osiągasz swoje cele, a Twój organizm jest coraz silniejszy.', 'Kolejny trening za Tobą. Kondycja rośnie z każdym tygodniem, nie poddawaj się!',
       'Brawo za wytrwałość! To właśnie regularność daje największe efekty.', 'Dzisiejszy trening się liczy. Odpocznij, nawodnij się i wracaj po więcej!',
       'Świetna robota! Każdy taki dzień zbliża Cię do formy, na którą pracujesz.'],
-    milestone: n => n === 1 ? 'To Twój pierwszy trening w aplikacji. Świetny start!' : `To Twój ${n}. trening w aplikacji, wielkie brawa! Regularność to Twoja supermoc.`,
+    milestone: n => n === 1 ? 'Świetny start!' : `To Twój ${n}. trening w aplikacji, wielkie brawa! Regularność to Twoja supermoc.`,
   },
   en: {
     brand: 'training', brandResults: 'results', yes: 'yes', cancel: 'cancel', ok: 'OK', close: 'Close', langTitle: 'language',
@@ -170,7 +170,7 @@ globalThis.STR = {
     how: 'how to do it', howTitle: 'How to do it', video: 'Technique video on YouTube', videoQ: 'technique',
     legWork: 'working muscle', legStretch: 'stretched muscle', legGear: 'equipment', legBand: 'band', mainWork: 'main work', assist: 'assisting', front: 'front', back: 'back',
     exOf: (i, n) => `exercise ${i} of ${n}`, target: 'Target', set: 'Set', rest: 'Rest', min: 'min', seconds: n => +n === 1 ? 'second' : 'seconds', reps: n => +n === 1 ? 'rep' : 'reps',
-    repsPer: x => `reps · ${x}`, setDone: 'set done', startTime: s => `start · ${s}\u00A0s`, soundsOn: 'sounds: on', soundsOff: 'sounds: off', soundsHint: 'Sound signals when a set starts, on the last set and at the end of the workout. A muted iPhone may not play them.', weight: 'weight', perDumbbell: 'per dumbbell', kgTitle: 'weight', kgType: 'type the weight in kg', kgTotalT: 'Lifted',
+    repsPer: x => `reps · ${{ noga: 'leg', nogę: 'leg', strona: 'side', stronę: 'side', ręka: 'arm', rękę: 'arm' }[String(x).trim().toLowerCase()] || x}`, setDone: 'set done', startTime: s => `start · ${s}\u00A0s`, soundsOn: 'sounds: on', soundsOff: 'sounds: off', soundsHint: 'Sound signals when a set starts, on the last set and at the end of the workout. A muted iPhone may not play them.', weight: 'weight', perDumbbell: 'per dumbbell', kgTitle: 'weight', kgType: 'type the weight in kg', kgTotalT: 'Lifted',
     workMenu: 'Workout menu: skip an exercise or finish', less: 'Less', more: 'More', lessKg: 'Less weight', moreKg: 'More weight',
     getReady: 'Get ready', skip: 'skip', stop: 'stop', nextLine: (s, n, g) => `next · set ${s}/${n} · ${g}`,
     repsT: 'Reps', firstTime: 'first time', ofPlan: p => `${p}% of plan`, hold: 'Hold', worked: 'Worked today',
@@ -201,7 +201,7 @@ globalThis.STR = {
     motDone: ['You finished another workout! You are reaching your goals and your body keeps getting stronger.', 'Another workout done. Your fitness grows every week, keep going!',
       'Well done for sticking with it! Consistency brings the biggest results.', 'Today’s workout counts. Rest, hydrate and come back for more!',
       'Great work! Every day like this brings you closer to the shape you are working for.'],
-    milestone: n => n === 1 ? 'Your first workout in the app. Great start!' : `That’s workout number ${n} in the app, huge congrats! Consistency is your superpower.`,
+    milestone: n => n === 1 ? 'Great start!' : `That’s workout number ${n} in the app, huge congrats! Consistency is your superpower.`,
   },
 };
 globalThis.t = (k, ...a) => { const v = STR[LANG]?.[k] ?? STR.pl[k]; return typeof v === 'function' ? v(...a) : v ?? k; };
