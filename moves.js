@@ -125,6 +125,85 @@ const MOVES = {
     A: { h: [112, 142], t: -75, E: [148, 107], ea: 50, F: [156, 184], fa: 12 },
     B: { h: [112, 142], t: -75, E: [148, 107], ea: -95, F: [156, 184], fa: 12 },
   },
+  // --- Partia 4 (20.10): rozciąganie i mobilność. Czerwień = mięsień rozciągany (ćwiczenie z rozc: true), tempo 'hold' trzyma pozycję.
+  // Tułów jest sztywny, więc ćwiczeń z zaokrąglaniem kręgosłupa (kot-krowa) nie rysujemy.
+  // Zginacze biodra w klęku: bliższe kolano na ziemi (to ta noga się rozciąga), przednia stopa płasko; biodra idą w przód, tułów prosto.
+  hipflexor: {
+    props: [['ground', 190]],
+    A: { h: [132, 143], t: -90, Hs: [-50, 8], F: [[83.4, 175], [184, 184]], fa: [100, 12] }, // tylna stopa na palcach, jak w wykroku
+    B: { h: [143, 147], t: -94, Hs: [-50, 8], F: [[83.4, 175], [184, 184]], fa: [100, 12] },
+  },
+  // Przód uda stojąc: pięta bliższej nogi do pośladka, dłoń trzyma kostkę, kolano w dół; druga dłoń na ścianie.
+  quadstretch: {
+    props: [['ground', 190], ['path', 'M206 0V190', [202, 0, 210, 190]]],
+    A: { h: [150, 98], t: -90, H: [[150, 104], [202, 64]], F: [[150, 184], [150, 184]], fa: 12 },
+    B: { h: [150, 98], t: -90, H: [[127, 103], [202, 64]], F: [[126, 104], [150, 184]], fa: [220, 12] }, // 220 (= -140): stopa obraca się przez tył, jak przy zginaniu kolana
+  },
+  // Tył uda w leżeniu: plecy na podłodze, bliższa noga prosta w górę, ręcznik albo guma z dłoni na stopę; druga noga prosto na ziemi.
+  hamstretch: {
+    props: [['ground', 190], ['band2', 'wr0', 'to0']], sup: true,
+    A: { h: [100, 176], t: 0, H: [134, 150], F: [[71, 95], [14, 184]], kb: [1, 1], eb: [-1, -1], fa: [-30, -100] },
+    B: { h: [100, 176], t: 0, H: [134, 146], F: [[107, 90], [14, 184]], kb: [1, 1], eb: [-1, -1], fa: [-10, -100] },
+  },
+  // Pozycja dziecka: z siadu na piętach tułów kładzie się na udach, proste ręce daleko przed głową na podłodze.
+  childpose: {
+    props: [['ground', 190]],
+    A: { h: [114, 161], t: -90, H: [130, 166], F: [108, 182], fa: 150 }, // grzbiet stopy prawie płasko (kostka w zakresie stawu)
+    B: { h: [114, 161], t: 10, H: [232, 184], F: [108, 182], fa: 150 },
+  },
+  // Pies z głową w dół: odwrócone V, ręce w linii z tułowiem, nogi proste; pięty schodzą do podłogi.
+  downdog: {
+    props: [['ground', 190]],
+    A: { h: [124, 104], t: 46, a: 46, F: [76, 178], fa: 60 },
+    B: { h: [118, 98], t: 50, a: 50, F: [76, 183], fa: 20 },
+  },
+  // Łydka przy ścianie: dłonie na ścianie, bliższa noga z tyłu prosta z piętą na ziemi, przednia ugięta; biodra idą do ściany.
+  calfwall: {
+    props: [['ground', 190], ['path', 'M216 0V190', [212, 0, 220, 190]]],
+    // Tylna stopa blisko, żeby przy pięcie na ziemi kostka nie wychodziła poza zakres stawu (zgięcie grzbietowe ok. 10°).
+    A: { h: [144, 100], t: -80, H: [214, 58], F: [[118, 184], [186, 184]], fa: 14 },
+    B: { h: [151, 104], t: -72, H: [214, 62], F: [[118, 184], [186, 184]], fa: 14 },
+  },
+  // Głęboki przysiad: biodra nisko między piętami, stopy płasko, dłonie złączone przed klatką.
+  deepsquat: {
+    props: [['ground', 190]],
+    A: { ...STAND, H: undefined, Hs: [-16, 20] },
+    B: { h: [120, 158], t: -64, Hs: [-16, 20], F: [150, 184], fa: 12 },
+  },
+  // Klatka w drzwiach: przedramiona pionowo na futrynie (za plecami), ramiona na wysokości barków; krok w przód otwiera klatkę.
+  doorchest: {
+    props: [['ground', 190], ['path', 'M112 -20V190', [108, -24, 116, 190]]],
+    A: { h: [150, 98], t: -90, E: [122, 42], ea: -90, F: [[150, 184], [150, 184]], fa: 12 },
+    B: { h: [160, 98], t: -84, E: [124, 42], ea: -90, F: [[176, 184], [150, 184]], fa: 12 },
+  },
+  // Bark przed klatką (od przodu): rozciągana ręka najpierw unosi się przed sobą (skrót), potem prosto i lekko w dół przez górną część
+  // klatki; dłoń drugiej ręki na jej ramieniu nad łokciem, łokieć drugiej ręki w dół (przedramię idzie w stronę widza, więc jest skrócone).
+  crossbody: (() => {
+    const S = { h: [150, 98], F: [[160, 184], [140, 184]] };
+    const A = { ...S, H: [[176, 104], [124, 104]], eb: [1, 1] };
+    const M = { ...S, H: [[172, 62], [124, 104]], s: [[.45, .45], [1, 1]], eb: [1, 1] };
+    const B = { ...S, H: [[106, 62], [150, 50]], s: [[1, 1], [1, .7]], eb: [1, 1] };
+    return { front: true, props: [['ground', 199]], A, B, seq: [[A, 0, 0, 1], [M, .8, .4], [B, 1.6, 1, 1], [B, 4.6, 1, 1], [M, 5.4, .4], [A, 6.2, 0, 1], [A, 6.8, 0, 1]] };
+  })(),
+  // Krążenia ramion: proste ręce zataczają pełne koło w przód i w górę, potem w tył i w dół (kąt -270 to znów dół, więc pętla jest płynna).
+  armcircle: (() => {
+    const P = a => ({ h: [150, 98], t: -90, a, F: [150, 184], fa: 12 });
+    return { props: [['ground', 190]], A: P(90), B: P(-90), seq: [[P(90), 0, 0, 1], [P(0), .5, .5], [P(-90), 1, 1], [P(-180), 1.5, .5], [P(-270), 2, 0, 1]] };
+  })(),
+  // Wymachy nóg: bliższa noga prosta po łuku wokół biodra (z tyłu 25°, w przodzie 60° od pionu), dalsza dłoń na oparciu.
+  legswing: (() => {
+    // Przy pionie (deg 0) noga minimalnie ugięta (r 80), żeby stopa przeszła nad podłogą, a nie szorowała po niej.
+    const P = (deg, fa, r0 = 85.9) => { const r = (90 - deg) * Math.PI / 180; return { h: [150, 98], t: -90, H: [[150, 104], [194, 72]], F: [[150 + r0 * Math.cos(r), 98 + r0 * Math.sin(r)], [150, 184]], fa: [fa, 12] }; };
+    return { props: [['ground', 190], ['post', 196, 70, 190]], A: P(-25, 40), B: P(60, -20),
+      seq: [[P(-25, 40), 0, 0, 1], [P(0, 0, 80), .25, .4], [P(30, 0), .45, .8], [P(60, -20), .7, 1, 1], [P(30, 0), .95, .8], [P(0, 0, 80), 1.15, .4], [P(-25, 40), 1.4, 0, 1]] };
+  })(),
+  // Ściąganie wąskim uchwytem od przodu (z boku nie różni się od szerokiego, a od tyłu dłonie wyglądały, jakby schodziły na plecy):
+  // uchwyt V z bloczka nad głową zjeżdża przed twarzą do górnej części klatki; łokcie w dół przy bokach i trochę w stronę widza (skrót).
+  closepulldown: {
+    front: true, props: [['ground', 199], ['path', 'M104 142H196M104 146H196M150 146V199M126 199H174M116 128H184M150 -40V-30', [100, -44, 200, 199]], ['pulley', 150, -34], ['pull', 150, -34, 'both']],
+    A: { h: [150, 136], H: [[157, 16], [143, 16]], eb: [-1, 1], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+    B: { h: [150, 136], H: [[156, 92], [144, 92]], s: [[.87, .62], [.87, .62]], eb: [-1, 1], F: [[168, 191], [132, 191]], sl: [[.42, 1], [.42, 1]] },
+  },
   // Odwrotne rozpiętki z gumą: jak rozciąganie gumy, ale ręce lekko ugięte w łokciach przez cały ruch (opis ćwiczenia, poprawka z 20.10).
   revfly: {
     front: true, back: true, props: [['ground', 199], ['band2', 'wr1', 'wr0']],
@@ -574,6 +653,10 @@ const EX_MOVE = {
   'wyciskanie-hantli-skos': ['inclinepress'], 'wypychanie-nog': ['legpress'], 'prostowanie-nog': ['legext'], 'uginanie-nog-maszyna': ['legcurl'],
   'wyciskanie-maszyna': ['chestpress'], 'wioslowanie-maszyna': ['machinerow'],
   'wyciskanie-barki-maszyna': ['machineohp'], 'prostowanie-nad-glowa-wyciag': ['cableohext'], 'uginanie-modlitewnik': ['preacher'],
+  'rozciaganie-zginaczy-biodra': ['hipflexor', 'hold'], 'rozciaganie-czworoglowych': ['quadstretch', 'hold'], 'rozciaganie-dwuglowych': ['hamstretch', 'hold'],
+  'pozycja-dziecka': ['childpose', 'hold'], 'pies-z-glowa-w-dol': ['downdog', 'hold'], 'rozciaganie-lydki': ['calfwall', 'hold'], 'gleboki-przysiad': ['deepsquat', 'hold'],
+  'rozciaganie-klatki': ['doorchest', 'hold'], 'rozciaganie-barku': ['crossbody', 'hold'], 'krazenia-ramion': ['armcircle'], 'wymachy-nog': ['legswing'],
+  'sciaganie-waskie': ['closepulldown'],
   'martwy-ciag': ['bbdl'], 'przysiad-bulgarski': ['bulgarian'], 'bird-dog': ['birddog'],
   'martwy-ciag-kettlebell': ['kbdl'], 'swing-kettlebell': ['kbswing', 'swing'], 'goblet-kettlebell': ['kbgoblet'],
 };
@@ -772,7 +855,8 @@ function joints(m, p) {
 
 // Tempo: spięcie 1,2 s, zatrzymanie 0,5 s, powrót 1,2 s, pauza 0,5 s; negatyw 0,8/0,4/3/0,6; swing (ruch z rozpędu, bez zatrzymania
 // na górze, od 2026-10-20) 0,6/0,15/0,7/0,15. Ruch z sekwencją (seq) ma własny cykl.
-const tempoOf = tempo => tempo === 'neg' ? [.8, .4, 3, .6] : tempo === 'swing' ? [.6, .15, .7, .15] : [1.2, .5, 1.2, .5];
+// hold (rozciąganie, od 20.10): powolne wejście w pozycję i 3 s przytrzymania.
+const tempoOf = tempo => tempo === 'neg' ? [.8, .4, 3, .6] : tempo === 'swing' ? [.6, .15, .7, .15] : tempo === 'hold' ? [1.6, 3, 1.4, .6] : [1.2, .5, 1.2, .5];
 const ease = x => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
 function cycleOf(m, tempo) { return m.seq ? m.seq[m.seq.length - 1][1] : tempoOf(tempo).reduce((a, b) => a + b); }
 // Klatka w chwili ms: stawy J, spięcie act i kamera cam (o ile w x przesunął się obraz, bo kamera idzie za biodrem idącej postaci).
@@ -974,8 +1058,8 @@ function mountMove(svg, fixed) {
   const held = [];
   for (const pr of m.props) {
     // ['pull', x, y, 'lever']: sztywna dźwignia maszyny od osi do uchwytu (gruba linia), bez 'lever' cienka linka wyciągu.
-    // Od przodu dźwignia maszyny ('lever') jest przy obu dłoniach, linka wyciągu zostaje przy jednej; druga oś w lustrzanym odbiciu względem środka postaci (x 150).
-    if (pr[0] === 'pull') for (const i of m.front && pr[3] === 'lever' ? [0, 1] : [0]) held.push(['pull', mk('line', { class: pr[3] === 'lever' ? 'pq' : 'pc' }), [i ? 300 - pr[1] : pr[1], pr[2]], mk('circle', { r: 3.2, class: 'pb' }), i]);
+    // Od przodu dźwignia maszyny ('lever') jest przy obu dłoniach, linka wyciągu zostaje przy jednej, a z 'both' idzie do obu (uchwyt V przy ściąganiu wąskim); druga oś w lustrzanym odbiciu względem środka postaci (x 150).
+    if (pr[0] === 'pull') for (const i of m.front && (pr[3] === 'lever' || pr[3] === 'both') ? [0, 1] : [0]) held.push(['pull', mk('line', { class: pr[3] === 'lever' ? 'pq' : 'pc' }), [i ? 300 - pr[1] : pr[1], pr[2]], mk('circle', { r: 3.2, class: 'pb' }), i]);
     if (pr[0] === 'bb') held.push(['bb', mk('circle', { r: pr[1] || 13, class: 'pw' }), mk('circle', { r: 2.6, class: 'pb' })]); // pr[1]: promień talerza
     if (pr[0] === 'kb') held.push(['kb', pr[1], mk('circle', { r: 5, class: 'pc', 'stroke-width': 2.6 }), mk('circle', { r: KB_R, class: 'pt' })]);
     if (pr[0] === 'db') for (const i of pr[2] || (m.front ? [0, 1] : [0])) held.push(['db', pr[1], i, ...(pr[1] === 'end' ? [mk('circle', { r: 5.6, class: 'pw' }), mk('circle', { r: 1.8, class: 'pb' })] : [mk('line', { class: 'pbl', 'stroke-width': 2.4 }), mk('rect', { class: 'pt', rx: 1 }), mk('rect', { class: 'pt', rx: 1 })])]);

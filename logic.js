@@ -75,7 +75,7 @@ function muscleLoad(items, sets = it => it.sets) {
   const load = {};
   items.forEach((it, k) => {
     const e = globalThis.EXERCISES?.[it.ex], n = sets(it, k);
-    if (!e || !n) return;
+    if (!e || !n || e.rozc) return; // rozciąganie nie obciąża mięśni (ekran startowy, podsumowanie)
     for (const m of e.p) load[m] = (load[m] || 0) + n;
     for (const m of e.s) load[m] = (load[m] || 0) + n / 2;
   });

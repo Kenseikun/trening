@@ -849,7 +849,7 @@ function drawFigure(box, load, opt = {}) {
 const moveBlock = id => {
   if (!EX_MOVE[id]) return '';
   const g = moveGear(id);
-  return `<figure class="mv">${moveFig(id)}<figcaption><span><i class="sw"></i>${t('legWork')}</span>${g.tool ? `<span><i class="eq"></i>${t('legGear')}</span>` : ''}${g.band ? `<span><i class="eq band"></i>${t('legBand')}</span>` : ''}</figcaption></figure>`;
+  return `<figure class="mv">${moveFig(id)}<figcaption><span><i class="sw"></i>${t(EXERCISES[id]?.rozc ? 'legStretch' : 'legWork')}</span>${g.tool ? `<span><i class="eq"></i>${t('legGear')}</span>` : ''}${g.band ? `<span><i class="eq band"></i>${t('legBand')}</span>` : ''}</figcaption></figure>`;
 };
 // pct = dopisz udział mięśnia w ćwiczeniu (główny liczy się podwójnie względem pomocniczego).
 const musLine = (e, pct) => {
