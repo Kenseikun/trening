@@ -61,6 +61,9 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   #dolMenu .ico { width: 20px; height: 20px; stroke-width: 1.6 }
   #dolMenu [aria-current] { color: var(--cream); font-weight: 600 } #dolMenu [aria-current] .ico { stroke-width: 2 }
   #dolMenu .mid { color: var(--cream) }
+  /* Czerwona kropka na „dieta”: nowa albo zmieniona dieta, której osoba jeszcze nie otworzyła (od 2026-10-22). */
+  #dolMenu > * { position: relative } #dolMenu .kropka { position: absolute; top: 2px; left: calc(50% + 7px); width: 9px; height: 9px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px var(--deep) }
+  #dolMenu .kropka[hidden] { display: none }
   #dolMenu .krag { display: grid; place-items: center; width: 42px; height: 42px; margin-top: -10px; border-radius: 50%; background: var(--gear); color: var(--ink); box-shadow: 0 0 0 4px var(--deep) }
   #dolMenu .krag .ico { width: 24px; height: 24px; stroke-width: 1.8 }
   #home > .dock { padding-top: 0; background: linear-gradient(to bottom, rgba(51,60,57,0) 0, rgba(51,60,57,0) 40%, var(--deep) calc(100% - 54px)) }
@@ -583,7 +586,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
       <button data-sheet="imp"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg><span data-t="menuImport">import</span></button>
       <button data-sheet="lib"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg><span data-t="menuLib">ćwiczenia</span></button>
       <a id="waFab" class="mid" hidden target="_blank" rel="noopener" aria-label="napisz do trenera (WhatsApp)" data-ta="waBtn"><span class="krag"><svg class="ico" viewBox="0 0 24 24"><path d="M4.5 18.5 5.6 15A7.5 7.5 0 1 1 9 18.4Z"/><path d="M9 10.5h6M9 13.5h4"/></svg></span><span data-t="menuTrainer">trener</span></a>
-      <button data-sheet="diet" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M8 3v18M5.5 3v4.5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-1.9 1.3-3 4.2-3 7.6 0 1.6 1 2.9 3 2.9"/></svg><span data-t="menuDiet">dieta</span></button>
+      <button data-sheet="diet" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M8 3v18M5.5 3v4.5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-1.9 1.3-3 4.2-3 7.6 0 1.6 1 2.9 3 2.9"/></svg><span data-t="menuDiet">dieta</span><i class="kropka" hidden></i></button>
       <button data-sheet="hist"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span data-t="menuHist">historia</span></button>
     </nav>
   </div>
@@ -947,7 +950,7 @@ function renderHome() {
   const plans = allPlans();
   $('repCard').hidden = !repDue(); netNote();
   $('today').textContent = new Date().toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
-  hello();
+  hello(); kropkaDiety();
   $('resume').hidden = !cur;
   netNote(); // z banerem „w toku” albo informacją o serwisie legenda się chowa, żeby pierwsza strona się mieściła
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
@@ -1025,9 +1028,15 @@ function sheetText() {
   const v = swText?.match(/trening-v(\d+)/)?.[1], apk = inApk() && load('apkWersja', null);
   $('appVer').textContent = [v && t('appVer', v), apk && t('apkVer', apk), t('rights')].filter(Boolean).join(' · ');
 }
+// Kropka na „dieta”: znika po otwarciu diety (otwartaDieta = czas zmiany diety). Kto miał dietę przed tą zmianą, zaczyna bez kropki.
+function kropkaDiety() {
+  const at = load('dietaAt', 0);
+  if (diet && load('otwartaDieta', null) === null && load('widzianaDieta', null) === at) store('otwartaDieta', at);
+  document.querySelector('#dolMenu .kropka').hidden = !diet || load('otwartaDieta', null) === at;
+}
 function openSheet(k) {
   sheetNow = k; sheetText();
-  if (k === 'diet') { dietDay = null; renderDiet(); } // dieta zawsze otwiera się na dzisiejszym dniu
+  if (k === 'diet') { dietDay = null; renderDiet(); store('otwartaDieta', load('dietaAt', 0)); kropkaDiety(); } // dieta zawsze otwiera się na dzisiejszym dniu
   if (k === 'hist') { calM = 0; renderCal(); renderProg(); }
   if (k === 'rep') renderRep();
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
@@ -1688,7 +1697,7 @@ async function loadPlans() {
     if (json !== servedJson) { servedJson = json; store('plans', d.plans); store('plansAt', d.zmieniono ? Date.parse(d.zmieniono) : 0); setPlans(d.plans); }
     // Dieta przychodzi razem z rozpiską (serwis bez diet jej nie podaje, wtedy jej nie ma). Usunięta przez trenera zamyka otwarty arkusz.
     if (dj !== dietJson) {
-      dietJson = dj; store('dieta', d.dieta ?? null); store('dietaAt', d.dieta_zmieniono ? Date.parse(d.dieta_zmieniono) : 0); setDiet(d.dieta);
+      dietJson = dj; store('dieta', d.dieta ?? null); store('dietaAt', d.dieta_zmieniono ? Date.parse(d.dieta_zmieniono) : 0); setDiet(d.dieta); kropkaDiety();
       if ($('sheet').open && sheetNow === 'diet') renderDiet();
     }
     if (!$('home').hidden) renderHome();
