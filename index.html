@@ -251,6 +251,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
   /* Zieleń z aplikacji (od 2026-10-19, decyzja właściciela): kontakt z trenerem w dolnym pasku i „zaktualizuj ankietę”. Braki w ankiecie (.alarm) zostają czerwone. */
   #surveyBtn { background: var(--gear); border-color: var(--gear); color: var(--ink); font-weight: 700 } #surveyBtn:active { background: #b3c9b0 } #surveyBtn.alarm { background: var(--red); border-color: var(--red) }
+  .wyloguj { margin-top: 36px; border-color: var(--red); color: var(--red-txt) }
   .alarm { background: var(--red); border-color: var(--red); color: var(--ink); font-weight: 700 }
   .alarm:active { background: #ff8a8a }
   .fine { margin: 22px 0 8px; font-size: .84rem; line-height: 1.4 }
@@ -694,9 +695,10 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     <a id="apkLink" class="walink" href="https://github.com/Kenseikun/trening/releases/latest/download/Trening.apk" target="_blank" rel="noopener" hidden data-t="pushApkLink">pobierz nową wersję aplikacji</a>
     <button id="soundBtn"></button>
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
-    <button id="logoutBtn" data-t="logout">wyloguj się</button>
-    <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska treningu i wyniki zostają u trenera.</p>
     <button id="tourBtn" data-t="tourAgain">pokaż samouczek</button>
+    <!-- Wylogowanie na końcu, z odstępem i na czerwono, żeby nie kliknąć go przez przypadek (prośba właściciela z 2026-10-22). -->
+    <button id="logoutBtn" class="wyloguj" data-t="logout">wyloguj się</button>
+    <p class="stone fine" data-t="logoutHint">Żeby wrócić, wpiszesz inicjały i kod od trenera. Rozpiska treningu i wyniki zostają u trenera.</p>
     <p id="appVer" class="ver"></p>
   </div>
   <div id="p-diet" class="pane"><div id="diet"></div></div>
