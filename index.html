@@ -65,6 +65,10 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   #dolMenu .krag .ico { width: 24px; height: 24px; stroke-width: 1.8 }
   #home > .dock { padding-top: 0; background: linear-gradient(to bottom, rgba(51,60,57,0) 0, rgba(51,60,57,0) 40%, var(--deep) calc(100% - 54px)) }
   #home > .dock .primary { box-shadow: 0 6px 18px rgba(0,0,0,.35) }
+  /* Strzałki nad „zacznij” (od 2026-10-22, pomysł właściciela): niżej jest spis ćwiczeń. Podskakują trzy razy i znikają po przewinięciu. */
+  .wiecej { position: absolute; left: 50%; top: -34px; translate: -50% 0; width: 48px; height: 32px; min-height: 0; padding: 0; border: 0; background: none; color: var(--cream); opacity: .9; animation: wiecej 1.4s ease-in-out .8s 3 }
+  .wiecej .ico { width: 26px; height: 26px; stroke-width: 2.2 } .wiecej[hidden] { display: none } .wiecej:active { background: none; transform: none }
+  @keyframes wiecej { 50% { transform: translateY(6px) } }
   /* Nazwa treningu jest już na zakładce, więc duży tytuł zostaje tylko dla czytnika ekranu. */
   #hName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap } #hSub { margin-top: 12px }
   /* Statystyki ciaśniej: liczba i jednostka w jednej linii. */
@@ -129,6 +133,11 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .page1 .body, .figpage .body { flex: 1 1 0; height: 0; min-height: 0; max-height: none }
   /* Bez rozpiski pierwsza strona nie rezerwuje wysokości, a zachęta do importu stoi na środku. */
   .noplan .page1 { min-height: 0 }
+  /* Od 2026-10-22: ramka ma wielkość postaci (na wysokim telefonie postać nie pływa w pustej ramce), a pod nią wystaje uwaga trenera
+     i spis ćwiczeń, więc widać, że niżej jest coś jeszcze. Wysokość postaci ograniczona do tego, co mieści się nad „zacznij”. */
+  .page1 { min-height: 0 } .page1 .garden, .page1 .views { flex: 0 1 auto }
+  .page1 .body { flex: 0 1 auto; height: auto; width: 100%; aspect-ratio: 222 / 360; max-height: max(180px, calc(100dvh - 440px - env(safe-area-inset-bottom))) }
+  .page1.resuming .body { max-height: max(150px, calc(100dvh - 540px - env(safe-area-inset-bottom))) }
   /* Druga strona startu i pierwsza strona wyników też mieszczą się na ekranie. Lista przewija się w środku pełnymi wierszami. */
   #plan, .dpage { display: flex; flex-direction: column }
   #plan { height: calc(100dvh - 84px - env(safe-area-inset-bottom)); padding-top: 24px }
@@ -136,9 +145,13 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
      (iPhone SE w Safari) pierwsza strona rośnie i się przewija, zamiast ściskać liczby (patrz #dBlock). */
   #donePage1 { min-height: calc(100dvh - 18px - 132px - env(safe-area-inset-bottom)); display: flex; flex-direction: column; padding-bottom: 12px }
   .dpage { height: calc(100dvh - 132px - env(safe-area-inset-bottom)) }
-  #donePage3 { height: auto; min-height: calc(100dvh - 132px - env(safe-area-inset-bottom)) }
+  #donePage3 { height: auto } /* od 2026-10-22 bez pełnej wysokości: pole uwag nie rozciąga się na pół ekranu */
+  /* Strona „Pracowały dziś”: ramka też ma wielkość postaci, bez pustego pola pod nią (od 2026-10-22). */
+  .figpage { height: auto } .figpage .garden, .figpage .views { flex: 0 1 auto }
+  .figpage .body { flex: 0 1 auto; height: auto; width: 100%; aspect-ratio: 222 / 360; max-height: max(200px, calc(100dvh - 300px - env(safe-area-inset-bottom))) }
+  #donePage2 { height: auto; max-height: calc(100dvh - 132px - env(safe-area-inset-bottom)) } #donePage2 .fit { flex: 0 1 auto; overflow-y: auto }
   .dpage > h2:first-child { margin-top: 16px }
-  #donePage3 textarea { flex: 1 0 120px }
+  #donePage3 textarea { flex: none; min-height: 140px }
   .figpage { padding-bottom: 12px }
   #plan > .note { margin: 0 0 4px; flex: none }
   .fit { flex: 1 1 0; min-height: 0 }
@@ -489,7 +502,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   }
   @media (max-height: 600px) { #work .mus, .mot, #work .mv figcaption, .page1 .key { display: none } } /* legenda animacji jest w karcie ćwiczenia; na starcie zasłaniałby ją „zacznij” */
   @media (prefers-reduced-motion: reduce) {
-    .plot *, .float span, .strip i, .bump, .body .ld { animation: none !important }
+    .plot *, .float span, .strip i, .bump, .body .ld, .wiecej { animation: none !important }
     .primary .ico { transition: none; translate: none !important }
     .breath .lung { animation: none; fill-opacity: .6 }
   }
@@ -563,7 +576,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     <button class="pos" data-for="hParts" hidden></button>
   </div>
   <div id="empty" class="gate" hidden><h1 class="float" id="eTitle"></h1><p class="stone" id="eText"></p></div>
-  <div class="dock"><button id="startBtn" class="primary"></button>
+  <div class="dock"><button id="wiecej" class="wiecej" hidden aria-label="pokaż spis ćwiczeń" data-ta="moreList"><svg class="ico" viewBox="0 0 24 24"><path d="m7 6 5 5 5-5M7 12l5 5 5-5"/></svg></button><button id="startBtn" class="primary"></button>
     <nav id="dolMenu" aria-label="Menu" data-ta="menu">
       <button id="navStart" aria-current="page"><svg class="ico" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V20h-5.5v-5h-5v5H4Z"/></svg><span data-t="menuStart">start</span></button>
       <button data-sheet="imp"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg><span data-t="menuImport">import</span></button>
@@ -954,7 +967,7 @@ function renderHome() {
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted);
   $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · '); // bez dnia tygodnia: data jest u góry (2026-10-22)
-  drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
+  drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted }); wiecej();
   plotted = true;
   $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes', estimate(p))], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
@@ -1018,6 +1031,10 @@ function openSheet(k) {
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
 }
+// Strzałki nad „zacznij”: widać je na górze ekranu startowego, gdy jest rozpiska; po przewinięciu znikają.
+const wiecej = () => { $('wiecej').hidden = $('home').hidden || !allPlans().length || scrollY > 40; };
+addEventListener('scroll', wiecej, { passive: true });
+$('wiecej').onclick = () => $('plan').scrollIntoView({ behavior: 'smooth' });
 $('dolMenu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); else if (e.target.closest('#navStart')) scrollTo({ top: 0, behavior: 'smooth' }); };
 $('setBtn').onclick = () => openSheet('set');
 $('sheetClose').onclick = () => $('sheet').close();
