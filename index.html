@@ -50,11 +50,25 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px }
   .brand { display: block; font-size: 1.35rem; font-weight: 600; letter-spacing: .02em; text-transform: lowercase; line-height: 1.15; white-space: nowrap }
   .head .lbl { letter-spacing: .14em }
-  .menu { display: flex; gap: 4px }
-  .menu button { flex-direction: column; gap: 4px; min-height: 0; padding: 0; border: 0; width: 64px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; color: var(--stone) }
-  .menu button:active { background: none; transform: none }
-  .menu .ring { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--cream); transition: background-color .15s }
-  .menu button:active .ring { background: rgba(231,232,226,.14) }
+  /* Ekran startowy od 2026-10-22 (decyzja właściciela): powitanie i ustawienia (samo kółko zębate) w prawym górnym rogu,
+     nawigacja w dolnym pasku pod „zacznij”, kontakt z trenerem jako większe zielone kółko na środku paska. */
+  .hright { display: flex; align-items: center; gap: 10px; min-width: 0 } .hright .hello { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+  .gear { position: relative; display: grid; place-items: center; width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 50%; flex: none }
+  .gear::after { content: ''; position: absolute; inset: -4px } .gear .ico { width: 18px; height: 18px }
+  #dolMenu { display: flex; align-items: end; margin: 8px -18px calc(-12px - env(safe-area-inset-bottom)); padding: 2px 4px calc(4px + env(safe-area-inset-bottom)); background: var(--deep); border-top: 1px solid var(--line) }
+  #dolMenu > * { all: unset; flex: 1 1 0; display: grid; justify-items: center; gap: 1px; padding: 3px 0 0; min-height: 44px; color: var(--stone); font-size: .64rem; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent }
+  #dolMenu > [hidden] { display: none } #dolMenu > :focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; border-radius: 10px }
+  #dolMenu .ico { width: 20px; height: 20px; stroke-width: 1.6 }
+  #dolMenu [aria-current] { color: var(--cream); font-weight: 600 } #dolMenu [aria-current] .ico { stroke-width: 2 }
+  #dolMenu .mid { color: var(--cream) }
+  #dolMenu .krag { display: grid; place-items: center; width: 42px; height: 42px; margin-top: -10px; border-radius: 50%; background: var(--gear); color: var(--ink); box-shadow: 0 0 0 4px var(--deep) }
+  #dolMenu .krag .ico { width: 24px; height: 24px; stroke-width: 1.8 }
+  #home > .dock { padding-top: 0; background: linear-gradient(to bottom, rgba(51,60,57,0) 0, rgba(51,60,57,0) 40%, var(--deep) calc(100% - 54px)) }
+  #home > .dock .primary { box-shadow: 0 6px 18px rgba(0,0,0,.35) }
+  /* Nazwa treningu jest już na zakładce, więc duży tytuł zostaje tylko dla czytnika ekranu. */
+  #hName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap } #hSub { margin-top: 12px }
+  /* Statystyki ciaśniej: liczba i jednostka w jednej linii. */
+  #hBlock > div { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 5px; padding: 6px 12px 7px } #hBlock small { flex-basis: 100% } #hBlock b { font-size: 1.2rem } #hBlock i { display: inline }
   /* Wybór języka: na ekranie kodu (PL / EN) i w ustawieniach. */
   .langs { display: flex; gap: 6px }
   .langs button { min-height: 44px; min-width: 48px; padding: 0 12px; font-size: .9rem; text-transform: none; color: var(--stone) }
@@ -146,7 +160,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .body .mu.s { fill: url(#rain) }
   .body .ld { stroke: var(--red); stroke-opacity: .9; stroke-width: 1.3; stroke-dasharray: 2 4 }
   .body .hit { fill: var(--cream); stroke: var(--ink); stroke-width: 1.2 }
-  .body .lt { fill: var(--cream); font: 600 var(--lt, 11px) var(--font) }
+  .body .lt { fill: var(--cream); font: 500 var(--lt, 11px) var(--font) }
   .body .ld { animation: flow 1.2s linear infinite } /* deszcz płynie od podpisu do mięśnia */
   .plot path:not(.ld):not(.mu) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both }
   .plot .mu { stroke-dasharray: 1; stroke-dashoffset: 1; animation: plot 1.7s cubic-bezier(.45,0,.2,1) calc(var(--i) * 32ms) both, fillin .9s ease-out 1.9s both }
@@ -222,8 +236,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .lbl.bad, .lbl.bad .hint { color: var(--red-txt) } .txt.bad .lbl { color: var(--red-txt) } .txt.bad input { border-color: var(--red) }
   .note.gap { border-color: var(--red); color: var(--cream); margin: 18px 0 0 }
   /* Czerwony przycisk (kolor z logo): sprawa, której nie da się pominąć, np. braki w ankiecie. */
-  /* Zieleń z aplikacji (od 2026-10-19, decyzja właściciela): kontakt z trenerem w rogu i „zaktualizuj ankietę”. Braki w ankiecie (.alarm) zostają czerwone. */
-  #waFab { background: var(--gear); border-color: var(--gear); color: var(--ink) }
+  /* Zieleń z aplikacji (od 2026-10-19, decyzja właściciela): kontakt z trenerem w dolnym pasku i „zaktualizuj ankietę”. Braki w ankiecie (.alarm) zostają czerwone. */
   #surveyBtn { background: var(--gear); border-color: var(--gear); color: var(--ink); font-weight: 700 } #surveyBtn:active { background: #b3c9b0 } #surveyBtn.alarm { background: var(--red); border-color: var(--red) }
   .alarm { background: var(--red); border-color: var(--red); color: var(--ink); font-weight: 700 }
   .alarm:active { background: #ff8a8a }
@@ -237,12 +250,6 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .lib .move { width: 84px; height: 60px; flex: none; margin: 0; border-radius: 12px; aspect-ratio: auto !important }
   .lib small { display: block; color: var(--stone); font-size: .8rem; font-weight: 500 }
   .hist summary { min-height: 52px; display: flex; align-items: center; border-bottom: 1px solid var(--line) }
-  /* Ustawienia: pływająca okrągła ikonka w prawym dolnym rogu ekranu startowego, nad przyciskiem „zacznij” (decyzja właściciela
-     z 2026-10-07: w menu u góry jest miejsce na dietę). Bez rozpiski pasek z „zacznij” znika, więc ikonka schodzi niżej. */
-  .fab { position: fixed; right: max(18px, calc(50vw - 262px)); bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 3; width: 44px; height: 44px; min-height: 44px; padding: 0;
-    border-radius: 50%; background: #38423E; border: 1.5px solid var(--line-strong); box-shadow: 0 6px 18px rgba(15,17,19,.45);
-    display: grid; place-items: center; color: var(--cream) } /* kontakt z trenerem (link do WhatsAppa) */
-  #home.noplan .fab { bottom: calc(18px + env(safe-area-inset-bottom)) }
   /* Dieta: dni tygodnia w jednym rzędzie (domyślnie dziś), posiłki jako karty z przykładami do wyboru. */
   .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 0 }
   .days button { min-height: 44px; padding: 0; font-size: .92rem; color: var(--stone) }
@@ -436,7 +443,6 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   #ask .tmsg #askMsgText { margin: 0; font-size: 1.15rem; font-weight: 600 }
   #ask .row { display: flex; flex-direction: column; gap: 8px }
   #ask .row button { width: 100% }
-  .hrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 0 } .hrow .menu { margin-left: auto } /* ustawienia jak pozostałe przyciski menu: kółko 40 px i podpis */
   .hello { display: block; margin: 0; padding: 0; min-height: 44px; border: 0; border-radius: 0; text-align: left; text-transform: none; font-size: 1.25rem; font-weight: 600; color: var(--cream); background: none }
   .cheer { margin: 2px 0 12px; color: var(--cream); line-height: 1.4; text-wrap: pretty }
   .ask-name { display: flex; flex-direction: column; gap: 12px; padding-top: 4px }
@@ -481,7 +487,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     #work .wsub .chip { min-height: 36px }
     #work .primary { min-height: 48px }
   }
-  @media (max-height: 600px) { #work .mus, .mot, #work .mv figcaption { display: none } } /* legenda animacji jest w karcie ćwiczenia */
+  @media (max-height: 600px) { #work .mus, .mot, #work .mv figcaption, .page1 .key { display: none } } /* legenda animacji jest w karcie ćwiczenia; na starcie zasłaniałby ją „zacznij” */
   @media (prefers-reduced-motion: reduce) {
     .plot *, .float span, .strip i, .bump, .body .ld { animation: none !important }
     .primary .ico { transition: none; translate: none !important }
@@ -531,17 +537,11 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
 
 <main id="home" class="sheet" hidden>
   <div id="page1" class="page1">
+  <!-- Od 2026-10-22: powitanie i ustawienia w prawym górnym rogu, nawigacja w dolnym pasku (kontakt z trenerem na środku). -->
   <header class="head">
     <div><span class="brand"><span data-t="brand">trening</span><i class="dot b"></i><i class="dot r"></i></span><span id="today" class="lbl"></span></div>
-    <nav class="menu" aria-label="Menu">
-      <button data-sheet="imp"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg></i><span data-t="menuImport">import</span></button>
-      <button data-sheet="lib"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg></i><span data-t="menuLib">ćwiczenia</span></button>
-      <button data-sheet="hist"><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i><span data-t="menuHist">historia</span></button>
-      <button data-sheet="diet" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><path d="M8 3v18M5.5 3v4.5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-1.9 1.3-3 4.2-3 7.6 0 1.6 1 2.9 3 2.9"/></svg></i><span data-t="menuDiet">dieta</span></button>
-    </nav>
+    <div class="hright"><button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button><button id="setBtn" class="gear" hidden aria-label="ustawienia" data-ta="menuSet"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></button></div>
   </header>
-  <!-- Powitanie i ustawienia w jednym wierszu (od 2026-10-19); pływające kółko w rogu to kontakt z trenerem. -->
-  <div class="hrow"><button id="hello" class="hello" hidden aria-label="Zmień imię" data-ta="changeName"></button><nav class="menu"><button id="setBtn" hidden><i class="ring"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.8"/><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9Z"/></svg></i><span data-t="menuSet">ustawienia</span></button></nav></div>
   <div id="resume" class="resume" hidden>
     <p id="resumeName"></p>
     <div class="row"><button id="resumeBtn" class="primary" data-t="resume">wznów</button><button id="dropBtn" data-t="discard">porzuć</button></div>
@@ -563,8 +563,16 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     <button class="pos" data-for="hParts" hidden></button>
   </div>
   <div id="empty" class="gate" hidden><h1 class="float" id="eTitle"></h1><p class="stone" id="eText"></p></div>
-  <a id="waFab" class="fab" hidden target="_blank" rel="noopener" aria-label="napisz do trenera (WhatsApp)" data-ta="waBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M4.5 18.5 5.6 15A7.5 7.5 0 1 1 9 18.4Z"/><path d="M9 10.5h6M9 13.5h4"/></svg></a>
-  <div class="dock"><button id="startBtn" class="primary"></button></div>
+  <div class="dock"><button id="startBtn" class="primary"></button>
+    <nav id="dolMenu" aria-label="Menu" data-ta="menu">
+      <button id="navStart" aria-current="page"><svg class="ico" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V20h-5.5v-5h-5v5H4Z"/></svg><span data-t="menuStart">start</span></button>
+      <button data-sheet="imp"><svg class="ico" viewBox="0 0 24 24"><path d="M7.5 15.5h9a3.6 3.6 0 0 0 .4-7.2 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 7.5 15.5Z"/><path d="M12 11.5v8m-2.8-2.8 2.8 2.8 2.8-2.8"/></svg><span data-t="menuImport">import</span></button>
+      <button data-sheet="lib"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="2.6"/><circle cx="15.6" cy="10.2" r="2.6"/><circle cx="8.4" cy="10.2" r="2.6"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 16.4V21"/></svg><span data-t="menuLib">ćwiczenia</span></button>
+      <a id="waFab" class="mid" hidden target="_blank" rel="noopener" aria-label="napisz do trenera (WhatsApp)" data-ta="waBtn"><span class="krag"><svg class="ico" viewBox="0 0 24 24"><path d="M4.5 18.5 5.6 15A7.5 7.5 0 1 1 9 18.4Z"/><path d="M9 10.5h6M9 13.5h4"/></svg></span><span data-t="menuTrainer">trener</span></a>
+      <button data-sheet="diet" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M8 3v18M5.5 3v4.5a2.5 2.5 0 0 0 5 0V3M16.5 21V3c-1.9 1.3-3 4.2-3 7.6 0 1.6 1 2.9 3 2.9"/></svg><span data-t="menuDiet">dieta</span></button>
+      <button data-sheet="hist"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span data-t="menuHist">historia</span></button>
+    </nav>
+  </div>
 </main>
 
 <section id="work" class="sheet" hidden>
@@ -812,21 +820,21 @@ const ANCHOR = {
 // Nazwy mięśni przy postaci (od 2026-10-19 zamiast kropel z numerami i listy z procentami, które nic osobie nie mówiły):
 // przód ma podpisy po lewej, tył po prawej; od podpisu do mięśnia płynie czerwona przerywana kreska. u = skala podpisu,
 // dobierana w drawFigure tak, żeby napis miał na ekranie ok. 13 px. Długa nazwa łamie się na dwie linie.
-const LAB = 104;
-const labLines = name => { const n = name.replace(/\u00AD/g, ''); if (n.length <= 11 || !n.includes(' ')) return [n]; const i = n.indexOf(' ', Math.floor(n.length / 2) - 3); const j = i < 0 ? n.lastIndexOf(' ') : i; return [n.slice(0, j), n.slice(j + 1)]; };
-function figure(load, { plot = false, legend = true, u = 1 } = {}) {
+const LAB = 116, LGAP = 24; // od 2026-10-22 podpisy cieńsze i mniejsze, odsunięte od postaci: dłuższa czerwona kreska do mięśnia
+const labLines = name => { const n = name.replace(/\u00AD/g, ''); if (n.length <= 9 || !n.includes(' ')) return [n]; const i = n.indexOf(' ', Math.floor(n.length / 2) - 3); const j = i < 0 ? n.lastIndexOf(' ') : i; return [n.slice(0, j), n.slice(j + 1)]; };
+function figure(load, { plot = false, legend = true, u = 1, gap = { F: LGAP, B: LGAP }, fit = { F: 1, B: 1 } } = {}) {
   const share = muscleShare(load), max = share[0]?.load || 1, top = legend ? share.slice(0, 6) : [];
   const cls = m => !load[m] ? '' : load[m] > max / 2 ? ' p' : ' s';
   let k = 0;
   const view = v => {
     const half = [], mid = [];
     for (const [m, d, center] of (SEX === 'K' ? BODY_K : BODY)[v]) (center ? mid : half).push(`<path pathLength="1" style="--i:${k++}" class="${m ? 'mu' + cls(m) : 'dt'}" d="${d}"/>`);
-    const front = v === 'F', bx = front ? 46 : 154, fs = 11 * u, lh = fs * 1.12; // sylwetka zajmuje x 53–147, podpisy tuż obok
+    const front = v === 'F', bx = front ? 46 - gap[v] : 154 + gap[v], fs = 11.8 * u * fit[v], lh = fs * 1.2; // sylwetka zajmuje x 53–147, podpisy odsunięte o gap
     let lastY = -99;
     // Podpis przy krawędzi; czerwona kreska spływa od niego łukiem i ląduje na mięśniu (jasny punkt).
     const labels = top.map(s => ({ m: s.m, a: ANCHOR[s.m] })).filter(b => b.a[0] === v).sort((a, b) => a.a[2] - b.a[2]).map(b => {
       const lines = labLines(muscleName(b.m)), hgt = lines.length * lh;
-      const ax = front ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(352 - hgt, Math.max(fs, ay - hgt / 2, lastY + 6 * u));
+      const ax = front ? b.a[1] + 20 : 180 - b.a[1], ay = b.a[2], y = Math.min(352 - hgt, Math.max(fs, ay - hgt / 2, lastY + 14 * u));
       lastY = y + hgt;
       const ly = y + hgt / 2, lx = front ? bx + 2 : bx - 2;
       return `<path class="ld" d="M${lx},${ly}Q${(lx + ax) / 2},${ly} ${ax},${ay}"/><circle class="hit" cx="${ax}" cy="${ay}" r="2.6"/>` +
@@ -839,11 +847,19 @@ function figure(load, { plot = false, legend = true, u = 1 } = {}) {
   const leg = top.length ? `<p class="key"><span><i class="sw"></i>${t('mainWork')}</span><span><i class="sw s"></i>${t('assist')}</span></p>` : '';
   return `<div class="views"><figure>${view('F')}<figcaption>${t('front')}</figcaption></figure><figure>${view('B')}<figcaption>${t('back')}</figcaption></figure></div>${leg}`;
 }
-// Rysuje postać, mierzy ją i rysuje drugi raz z podpisem tej wielkości, żeby na ekranie miał ok. 13 px.
+// Rysuje postać, mierzy ją i rysuje drugi raz z podpisem tej wielkości, żeby na ekranie miał ok. 14 px (u liczone dla 11 jednostek = 13 px, fs = 11,8 u).
 function drawFigure(box, load, opt = {}) {
   box.innerHTML = figure(load, opt);
-  const hgt = box.querySelector('.body').getBoundingClientRect().height, u = hgt ? Math.min(3, 13 * 360 / hgt / 11) : 1;
-  if (Math.abs(u - 1) > .05) box.innerHTML = figure(load, { ...opt, u });
+  // Skala rysunku: piksele na jednostkę, liczone z ciaśniejszego wymiaru (na wysokim ekranie postać ogranicza szerokość, nie wysokość).
+  const svgs = box.querySelectorAll('.body'), r = svgs[0]?.getBoundingClientRect(), ppu = r?.height ? Math.min(r.width / (106 + LAB), r.height / 360) : 0, u = ppu ? Math.min(3, 13 / 11 / ppu) : 1;
+  // Najszerszy podpis w widoku decyduje, jak daleko od postaci może odejść, żeby nie wyjść poza rysunek (szerokość rośnie razem z u).
+  // Gdy nie mieści się nawet tuż przy postaci (np. „czworogłowe”), podpisy tego widoku są odpowiednio mniejsze.
+  const gap = {}, fit = {};
+  svgs.forEach((svg, i) => {
+    const v = i ? 'B' : 'F', w = u * Math.max(0, ...[...svg.querySelectorAll('.lt')].map(e => e.getBBox().width));
+    gap[v] = Math.max(2, Math.min(LGAP, LAB - 6 - w)); fit[v] = Math.min(1, (LAB - 6 - gap[v]) / (w || 1));
+  });
+  box.innerHTML = figure(load, { ...opt, u, gap, fit });
 }
 
 // --- ćwiczenie
@@ -922,8 +938,8 @@ function renderHome() {
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
   $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
   $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
-  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma.
-  $('startBtn').parentElement.hidden = !plans.length && !!API;
+  // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma (dolny pasek zostaje).
+  $('startBtn').hidden = !plans.length && !!API;
   if (!plans.length) {
     floatText($('eTitle'), t('noPlanTitle'));
     $('eText').textContent = API ? t('noPlanApi') : t('noPlanLocal');
@@ -937,7 +953,7 @@ function renderHome() {
   $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`).join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted);
-  $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week), new Date().toLocaleDateString(locale(), { weekday: 'long' })].filter(Boolean).join(' · '); // dzisiejszy dzień tygodnia (prośba właściciela z 2026-10-15)
+  $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · '); // bez dnia tygodnia: data jest u góry (2026-10-22)
   drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted });
   plotted = true;
   $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes', estimate(p))], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
@@ -1002,7 +1018,7 @@ function openSheet(k) {
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
 }
-document.querySelector('.menu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); };
+$('dolMenu').onclick = e => { const k = e.target.closest('[data-sheet]')?.dataset.sheet; if (k) openSheet(k); else if (e.target.closest('#navStart')) scrollTo({ top: 0, behavior: 'smooth' }); };
 $('setBtn').onclick = () => openSheet('set');
 $('sheetClose').onclick = () => $('sheet').close();
 // Dieta od trenera: dzień tygodnia (na start dziś), cele dnia i posiłki z przykładami do wyboru.
@@ -1692,20 +1708,23 @@ function notices() {
 }
 // Samouczek: przejście po ekranie startowym, jedno miejsce i jedno zdanie na krok. Sam pokazuje się raz (po ankiecie, imieniu
 // i komunikatach), „pomiń” na każdym kroku, a w ustawieniach „pokaż samouczek” powtarza go w każdej chwili (prośba właściciela z 2026-10-15).
-const TOUR = [[null, 'tour1'], ['#tabs', 'tour2'], ['#hFig .views', 'tour3'], ['#startBtn', 'tour4'], ['.menu', 'tour5'], ['#repCard', 'tour6'], ['#waFab', 'tour7'], ['#setBtn', 'tour8'], [null, 'tour9']];
+const TOUR = [[null, 'tour1'], ['#tabs', 'tour2'], ['#hFig .views', 'tour3'], ['#startBtn', 'tour4'], ['#dolMenu', 'tour5'], ['#repCard', 'tour6'], ['#waFab', 'tour7'], ['#setBtn', 'tour8'], [null, 'tour9']];
+// Po zmianie wyglądu (2026-10-22) osoba, która zna już aplikację, dostaje raz krótką wiadomość z ramką na ustawieniach (tam jest samouczek).
+const NEWLOOK = [['#setBtn', 'newLook']];
 let tourAt = -1, tourList = [];
-function tourOnce() { if (!load('samouczek', false) && API && auth) tour(); }
-function tour() {
+function tourOnce() { if (!API || !auth) return; if (!load('samouczek', false)) tour(); else if (!load('nowyWyglad', false)) tour(NEWLOOK); }
+function tour(list = TOUR) {
   if (!surveyOk || $('home').hidden || training() || document.querySelector('dialog[open]')) return;
-  store('samouczek', true);
-  tourList = TOUR.filter(([sel]) => !sel || (document.querySelector(sel) && !document.querySelector(sel).closest('[hidden]')));
+  store('samouczek', true); store('nowyWyglad', true);
+  tourList = list.filter(([sel]) => !sel || (document.querySelector(sel) && !document.querySelector(sel).closest('[hidden]')));
   scrollTo(0, 0); tourAt = 0; $('tour').hidden = false; tourShow();
 }
 function tourShow() {
   const [sel, key] = tourList[tourAt], el = sel && document.querySelector(sel), last = tourAt === tourList.length - 1, hole = $('tourHole');
-  $('tourStep').textContent = t('tourStep', tourAt + 1, tourList.length);
+  const one = tourList.length === 1;
+  $('tourStep').textContent = one ? t('newLookLbl') : t('tourStep', tourAt + 1, tourList.length);
   $('tourText').textContent = t(key);
-  $('tourNext').textContent = t(last ? 'tourDone' : 'tourNext');
+  $('tourNext').textContent = t(one ? 'gotIt' : last ? 'tourDone' : 'tourNext');
   $('tourSkip').hidden = last;
   hole.classList.toggle('none', !el);
   const box = $('tourBox');
