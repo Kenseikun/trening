@@ -1,5 +1,5 @@
 // Offline: najpierw sieć (świeże rozpiski i aplikacja), a bez sieci ostatnia wersja z cache.
-const C = 'trening-v83';
+const C = 'trening-v84';
 const SHELL = ['./', 'index.html', 'strings.js', 'exercises.js', 'logic.js', 'moves.js', 'manifest.webmanifest', 'icons/icon-192px.png', 'icons/icon-512px.png', 'icons/badge-96.png',
   'fonts/quicksand-latin.woff2', 'fonts/quicksand-latin-ext.woff2'];
 // Sieć zawsze z pytaniem do serwera o aktualną wersję. Bez tego przeglądarka przez 10 minut oddaje pliki z własnej pamięci

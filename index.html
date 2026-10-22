@@ -298,6 +298,9 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .przyp { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 4px; color: var(--stone) }
   .przyp select { min-height: 44px; padding: 0 14px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .przyp select option { color: #1d2124 }
+  /* Dni treningów (od 2026-10-22): tyle dni, ile treningów w planie; w te dni przypomnienie z dobrym słowem. */
+  .dni-przyp .lbl { margin: 14px 0 0 } .dni-przyp .days { margin-top: 8px } .dni-przyp .days button[aria-pressed=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
+  .dni-przyp .fine { margin-top: 8px } #dniHint.bad { color: var(--red-txt) }
   .meal li.own input { flex: 1; min-width: 0; min-height: 44px; padding: 0 16px; background: rgba(15,17,19,.18); color: var(--cream); border: 1.5px solid var(--line-strong); border-radius: 999px; font: 500 1rem var(--font) }
   .eaten { margin: 12px 0 0 } .eaten p { display: flex; justify-content: space-between; margin: 0 0 6px; font-size: .9rem; color: var(--stone) }
   .eaten .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden } .eaten .bar i { display: block; height: 100%; width: var(--p); background: #9DB89A }
@@ -695,6 +698,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
     <button id="pushBtn" hidden></button>
     <p id="pushHint" class="stone fine" hidden></p>
     <label id="przypBox" class="przyp" hidden><span data-t="przypLbl">przypomnienie o treningu</span><select id="przyp"></select></label>
+    <div id="dniBox" class="dni-przyp" hidden><p class="lbl" data-t="dniLbl">dni treningów</p><div id="dniPrzyp" class="days" role="group" aria-label="dni treningów" data-ta="dniLbl"></div><p id="dniHint" class="stone fine" aria-live="polite"></p></div>
     <a id="apkLink" class="walink" href="https://github.com/Kenseikun/trening/releases/latest/download/Trening.apk" target="_blank" rel="noopener" hidden data-t="pushApkLink">pobierz nową wersję aplikacji</a>
     <button id="soundBtn"></button>
     <p class="stone fine" data-t="soundsHint">Sygnał startu serii, ostatniej serii i końca treningu. iPhone z wyciszeniem może ich nie zagrać.</p>
@@ -1528,6 +1532,7 @@ function pushBtn(msg) {
   $('przypBox').hidden = !on;
   $('przyp').innerHTML = [`<option value="">${t('przypOff')}</option>`, ...Array.from({ length: 18 }, (_, k) => `<option value="${k + 5}">${k + 5}:00</option>`)].join('');
   $('przyp').value = h == null ? '' : String(h);
+  dniRysuj();
   $('pushBtn').hidden = !ok; $('pushBtn').textContent = t(on ? 'pushOn' : 'pushOff');
   const blok = ok && !on && Notification.permission === 'denied';
   $('pushHint').hidden = !(ok || iosBrowser()); $('pushHint').textContent = msg || (blok ? t('pushDenied') : ok ? t('pushHint') : t('pushIos'));
@@ -1545,6 +1550,33 @@ async function pushSub(quiet) {
   if (!r.ok) throw Error(r.status);
   store('push', true); pushBtn(); if (!quiet) sound('tick');
 }
+// Dni treningów (od 2026-10-22, prośba właściciela): dokładnie tyle dni, ile treningów w planie. Zapis idzie sam, gdy liczba się zgadza;
+// w trakcie wyboru (dniWyb) obowiązuje poprzedni zapis. Gdy nowy plan ma inną liczbę treningów, stary wybór przestaje działać.
+let dniWyb = null, dniPelne = false;
+function dniRysuj() {
+  const n = allPlans().length, zap = load('dniPrzyp', null), ok = !!zap && zap.length === n, wyb = dniWyb ?? (ok ? zap : []), nazwy = t('dietDays').split(' ');
+  $('dniBox').hidden = $('przypBox').hidden || !n || n > 7;
+  $('dniPrzyp').innerHTML = nazwy.map((d, i) => `<button data-dz="${i}" aria-pressed="${wyb.includes(i)}">${d}</button>`).join('');
+  const zmiana = !!zap && !ok && dniWyb == null;
+  $('dniHint').classList.toggle('bad', zmiana);
+  $('dniHint').textContent = dniPelne ? t('dniPelne', n) : ok && dniWyb == null ? t('dniOk', wyb.map(i => nazwy[i]).join(', '), load('przyp', 8)) : zmiana ? t('dniZmiana', n) : t('dniWybierz', n, n - wyb.length);
+}
+$('dniPrzyp').onclick = async e => {
+  const b = e.target.closest('[data-dz]'); if (!b) return;
+  const n = allPlans().length, i = +b.dataset.dz, zap = load('dniPrzyp', null);
+  const wyb = [...(dniWyb ?? (zap && zap.length === n ? zap : []))];
+  dniPelne = !wyb.includes(i) && wyb.length >= n;
+  if (!dniPelne) dniWyb = wyb.includes(i) ? wyb.filter(x => x !== i) : [...wyb, i];
+  if (dniWyb?.length === n) {
+    const dni = [...dniWyb].sort((a, c) => a - c);
+    try {
+      const r = await call('/api/dni-przyp', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify({ dni }) });
+      if (!r.ok) throw Error(r.status);
+      store('dniPrzyp', dni); dniWyb = null; sound('tick');
+    } catch { dniRysuj(); return void pushBtn(t('pushFail')); }
+  }
+  dniRysuj();
+};
 $('przyp').onchange = async e => {
   const godz = e.target.value === '' ? null : +e.target.value, was = load('przyp', 8);
   store('przyp', godz);
@@ -1690,7 +1722,7 @@ async function loadPlans() {
     // Raport i waga wysłane z drugiego telefonu też się liczą.
     if (d.raport && d.raport > (load('raportDzien', '') || '')) store('raportDzien', d.raport);
     if (d.raport_waga && d.raport_waga > (load('wagaDzien', '') || '')) store('wagaDzien', d.raport_waga);
-    store('kontakt', d.kontakt ?? null); waLinks(); store('wiadomosc', d.wiadomosc ?? null); if ('przypomnienie' in d) store('przyp', d.przypomnienie);
+    store('kontakt', d.kontakt ?? null); waLinks(); store('wiadomosc', d.wiadomosc ?? null); if ('przypomnienie' in d) store('przyp', d.przypomnienie); if ('dni_przyp' in d) store('dniPrzyp', d.dni_przyp);
     $('repCard').hidden = !repDue(); netNote();
     // Bez zmian też sprawdza komunikaty: wstrzymany przez trening albo otwarty arkusz pokaże się teraz, a nie dopiero przy następnej zmianie.
     if (json === servedJson && dj === dietJson) return notices();
@@ -1728,6 +1760,8 @@ function notices() {
   if (dietNew && planNew) msgs[0] = t('noticeBoth', n);
   else if (dietNew) msgs.push(seenDiet === null ? t('noticeDietFirst') : t('noticeDiet'));
   store('widzianaDieta', dietAt);
+  // Nowy plan z inną liczbą treningów niż wybrane dni: prośba o ponowny wybór dni (od 2026-10-22).
+  { const zap = load('dniPrzyp', null); if (planNew && zap && zap.length !== allPlans().length) msgs.push(t('noticeDni', allPlans().length)); }
   // Wiadomość od trenera: raz, na początku okienka (razem z komunikatem o planie albo diecie, jeśli przyszły naraz).
   const wm = load('wiadomosc', null), tm = wm && wm.id !== load('wiadomoscWidziana', null) ? wm.tekst : null;
   if (tm) store('wiadomoscWidziana', wm.id);
