@@ -1046,6 +1046,7 @@ function openSheet(k) {
   sheetNow = k; sheetText();
   if (k === 'diet') { dietDay = null; renderDiet(); store('otwartaDieta', load('dietaAt', 0)); kropkaDiety(); } // dieta zawsze otwiera się na dzisiejszym dniu
   if (k === 'hist') { calM = 0; renderCal(); renderProg(); }
+  if (k === 'set') dniRysuj();
   if (k === 'rep') renderRep();
   for (const s of Object.keys(SHEETS)) $('p-' + s).hidden = s !== k;
   $('sheet').showModal(); $('sheet').focus();
@@ -1529,11 +1530,13 @@ function apkCheck() {
 }
 const canPush = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 const iosBrowser = () => /iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone;
+let dniWyb = null, dniPelne = false, pushJest = false; // dni treningów (niżej): wybór w trakcie, próba ponad limit, czy powiadomienia są włączone
 function pushBtn(msg) {
   const ok = !!API && !!auth && canPush(), on = ok && load('push', false) && Notification.permission === 'granted';
   // Godzina przypomnienia o treningu (z serwisu, domyślnie 8:00) albo wyłączone; widać ją przy włączonych powiadomieniach.
   const h = load('przyp', 8);
-  $('przypBox').hidden = !on;
+  // Godzina i dni przypomnień widoczne zawsze przy serwisie (zgłoszenie z 2026-10-22: przy wyłączonych powiadomieniach nie dało się ich znaleźć).
+  pushJest = on; $('przypBox').hidden = !API || !auth;
   $('przyp').innerHTML = [`<option value="">${t('przypOff')}</option>`, ...Array.from({ length: 18 }, (_, k) => `<option value="${k + 5}">${k + 5}:00</option>`)].join('');
   $('przyp').value = h == null ? '' : String(h);
   dniRysuj();
@@ -1556,14 +1559,16 @@ async function pushSub(quiet) {
 }
 // Dni treningów (od 2026-10-22, prośba właściciela): dokładnie tyle dni, ile treningów w planie. Zapis idzie sam, gdy liczba się zgadza;
 // w trakcie wyboru (dniWyb) obowiązuje poprzedni zapis. Gdy nowy plan ma inną liczbę treningów, stary wybór przestaje działać.
-let dniWyb = null, dniPelne = false;
 function dniRysuj() {
   const n = allPlans().length, zap = load('dniPrzyp', null), ok = !!zap && zap.length === n, wyb = dniWyb ?? (ok ? zap : []), nazwy = t('dietDays').split(' ');
-  $('dniBox').hidden = $('przypBox').hidden || !n || n > 7;
+  // Widać zawsze przy planie i połączeniu z serwisem (wcześniej tylko przy włączonych powiadomieniach i nie dało się tego znaleźć, zgłoszenie z 2026-10-22).
+  const push = pushJest;
+  $('dniBox').hidden = !API || !auth || !n || n > 7;
   $('dniPrzyp').innerHTML = nazwy.map((d, i) => `<button data-dz="${i}" aria-pressed="${wyb.includes(i)}">${d}</button>`).join('');
   const zmiana = !!zap && !ok && dniWyb == null;
   $('dniHint').classList.toggle('bad', zmiana);
-  $('dniHint').textContent = dniPelne ? t('dniPelne', n) : ok && dniWyb == null ? t('dniOk', wyb.map(i => nazwy[i]).join(', '), load('przyp', 8)) : zmiana ? t('dniZmiana', n) : t('dniWybierz', n, n - wyb.length);
+  $('dniHint').textContent = (dniPelne ? t('dniPelne', n) : ok && dniWyb == null ? (push ? t('dniOk', wyb.map(i => nazwy[i]).join(', '), load('przyp', 8)) : t('dniOkBezPush', wyb.map(i => nazwy[i]).join(', ')))
+    : zmiana ? t('dniZmiana', n) : t('dniWybierz', n, n - wyb.length)) + (!push && !(ok && dniWyb == null) ? ' ' + t('dniWlaczPush') : '');
 }
 $('dniPrzyp').onclick = async e => {
   const b = e.target.closest('[data-dz]'); if (!b) return;
