@@ -738,7 +738,7 @@ const call = (path, o) => fetch(API + path, { ...o, signal: AbortSignal.timeout?
 let auth = load('auth', null), outbox = load('outbox', []), netDown = false; // netDown: serwis nie odpowiedział przy ostatniej próbie
 // Z kodem dostępu liczy się tylko rozpiska z serwisu. Rozpiska wczytana kiedyś importem zostaje w pamięci telefonu, ale się nie pokazuje.
 setSex(load('plec', 'M')); // postać w animacjach: kobieta albo mężczyzna, według ankiety
-let served = [], imported = API ? [] : load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false;
+let served = [], imported = API ? [] : load('imported', []), past = load('history', []), cur = load('cur', null), sel = null, plotted = false, lastFig = '';
 // Dieta od trenera przychodzi z serwisu razem z rozpiską; kopia w pamięci telefonu działa bez zasięgu. dietDay: wybrany dzień (0 = poniedziałek).
 let diet = null, dietJson = '', dietDay = null;
 let tInt, tDone, tLen, lastBeep, ac, wl;
@@ -974,10 +974,13 @@ function renderHome() {
   sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
   $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`).join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
-  floatText($('hName'), short(p.name).toLowerCase(), !plotted);
+  floatText($('hName'), short(p.name).toLowerCase(), !plotted && !$('home').hidden);
   $('hSub').textContent = [t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · '); // bez dnia tygodnia: data jest u góry (2026-10-22)
-  drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted }); wiecej();
-  plotted = true;
+  // Postać rysuje się tylko, gdy coś się zmieniło (trening, płeć, język, ekran): drugie odświeżenie po pobraniu rozpiski nie przerywa
+  // animacji rysowania przy starcie (poprawka z 2026-10-22). Animacja zużywa się dopiero na widocznym ekranie.
+  const widac = !$('home').hidden, figKey = [sel, p.name, p.items.map(i => i.ex + ':' + i.sets).join(), SEX, LANG, innerWidth, innerHeight, widac].join('|');
+  if (figKey !== lastFig || !plotted && widac) { drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted && widac }); lastFig = figKey; if (widac) plotted = true; }
+  wiecej();
   $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes', estimate(p))], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
   $('hParts').innerHTML = p.items.map((it, j) => `<li><button data-j="${j}"><span>${esc(exName(it))}<small>${t('partLine', it.sets, esc(goal(it)), fmt(it.rest))}</small></span>${ico('next')}</button></li>`).join('')
