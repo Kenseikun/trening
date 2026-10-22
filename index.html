@@ -984,7 +984,8 @@ function renderHome() {
     + (sel < imported.length ? `<li><button data-del="${sel}" class="ghost">${t('delWorkout')}</button></li>` : '');
   $('startBtn').innerHTML = `${t('startN', esc(short(p.name).toLowerCase()))}${ico('go')}`;
 }
-$('tabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { sel = +b.dataset.k; renderHome(); } };
+// Inny trening: postać rysuje się od nowa, jak po włączeniu aplikacji (prośba właściciela z 2026-10-22); ten sam trening bez animacji.
+$('tabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { if (+b.dataset.k !== sel) plotted = false; sel = +b.dataset.k; renderHome(); } };
 $('hParts').onclick = e => {
   const b = e.target.closest('button'), p = allPlans()[sel];
   if (b?.dataset.j) showExercise(p.items[b.dataset.j]);
