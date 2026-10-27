@@ -84,6 +84,16 @@ globalThis.EXERCISES = {
       'Przyciągnij klatkę do drążka, ściągając łopatki, i powoli opuść.'],
     tips: ['Łatwiej: ugięte kolana. Trudniej: nogi na podwyższeniu.'],
   },
+  'wioslowanie-stol': {
+    sprzet: [],
+    name: 'Wiosłowanie pod stołem', p: ['midback', 'lats'], s: ['biceps', 'shoulders', 'abs'],
+    steps: ['Połóż się na plecach pod stabilnym, ciężkim stołem, klatką piersiową pod krawędzią blatu.',
+      'Chwyć krawędź blatu nachwytem na szerokość barków.',
+      'Napnij brzuch i pośladki i unieś biodra tak, by ciało tworzyło linię od pięt do głowy (łatwiej: kolana zgięte, stopy na podłodze).',
+      'Ściągnij łopatki i przyciągnij klatkę do krawędzi blatu, łokcie ok. 45° od tułowia.',
+      'Zatrzymaj się na 1 s na górze i powoli opuść do pełnego wyprostu rąk.'],
+    tips: ['Ciało sztywne: biodra nie opadają, głowa w przedłużeniu tułowia.', 'Tylko masywny stół, który się nie przewróci ani nie przesunie.'],
+  },
   'dipy': {
     sprzet: ['PORECZE'],
     name: 'Dipy na poręczach', p: ['triceps', 'chest'], s: ['shoulders'],
@@ -989,6 +999,15 @@ Object.entries({
       'Body straight from heels to head, heels on the ground.',
       'Pull your chest to the bar, squeezing your shoulder blades, and lower slowly.'],
     tips: ['Easier: bent knees. Harder: feet raised.'],
+  },
+  'wioslowanie-stol': {
+    name: 'Table inverted row',
+    steps: ['Lie on your back under a sturdy, heavy table, with your chest under the edge of the tabletop.',
+      'Grab the edge overhand, hands shoulder-width apart.',
+      'Brace your abs and glutes and lift your hips so your body forms a line from heels to head (easier: knees bent, feet on the floor).',
+      'Squeeze your shoulder blades and pull your chest to the edge, elbows at about 45° from your body.',
+      'Hold for 1 s at the top, then lower slowly until your arms are fully straight.'],
+    tips: ["Keep your body rigid: hips don't sag, head in line with your torso.", 'Only use a heavy table that cannot tip over or slide.'],
   },
   'dipy': {
     name: 'Parallel bar dip',

@@ -70,6 +70,15 @@ const MOVES = {
     A: { t: -159, H: [131, 89], F: [220, 184], fa: -60 },
     B: { t: -138, H: [131, 89], F: [220, 184], fa: -50 },
   },
+  // Wiosłowanie pod stołem (od 2026-10-27): to samo co australijskie, tylko chwyt za krawędź blatu (stół ok. 75 cm, więc ciało bardziej poziomo).
+  // Blat i nogi stołu za postacią.
+  tablerow: {
+    props: [['ground', 190], ['path', 'M6 104H138V112H6ZM14 112V190M130 112V190', [6, 104, 138, 190]]],
+    // Pozy liczone (27.10): na dole proste ręce lekko w stronę nóg (ciało obraca się wokół pięt), na górze łokieć ok. 138°,
+    // klatka tuż pod krawędzią, a głowa pod blatem (nie przechodzi przez stół).
+    A: { t: -173.5, H: [134, 113], F: [250, 184], fa: -60 },
+    B: { t: -157.5, H: [134, 113], F: [250, 184], fa: -50 },
+  },
   // Dipy: na dole łokieć zgięty do 90° i nie głębiej, przedramię prawie pionowo, tułów lekko pochylony.
   dip: {
     props: [['ground', 232], ['pbar', 152, 100, 232]],
@@ -640,7 +649,7 @@ function kbAt(J, mode) {
 // Ćwiczenie → [ruch, tempo]; 'neg' = powolne opuszczanie z napięciem przez cały ruch w dół, 'band' = guma od drążka do stóp.
 const EX_MOVE = {
   'podciaganie': ['pullup'], 'podciaganie-podchwyt': ['chinup'], 'podciaganie-guma': ['pullup', 'band'], 'podciaganie-negatyw': ['pullup', 'neg'],
-  'podciaganie-lopatek': ['scap'], 'zwis': ['hang'], 'trx-wioslowanie': ['row'], 'wioslowanie-australijskie': ['invrow'],
+  'podciaganie-lopatek': ['scap'], 'zwis': ['hang'], 'trx-wioslowanie': ['row'], 'wioslowanie-australijskie': ['invrow'], 'wioslowanie-stol': ['tablerow'],
   'dipy': ['dip'], 'dipy-negatyw': ['dip', 'neg'], 'podpor-porecze': ['support'],
   'pompki': ['pushup'], 'pompki-waskie': ['pushup'], 'pompki-trx': ['trxpush'], 'pompki-nogi-wyzej': ['declpush'], 'pompki-na-podwyzszeniu': ['inclpush'],
   'guma-rozciaganie': ['pullapart'], 'guma-odwrotne-rozpietki': ['revfly'], 'guma-rotacja': ['extrot'],
