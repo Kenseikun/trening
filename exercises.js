@@ -534,6 +534,15 @@ globalThis.EXERCISES = {
       'Biodra cały czas wysoko.'],
     tips: ['Ćwiczenie na barki bez sprzętu i krok w stronę stania na rękach.', 'Łokcie idą lekko do tyłu, nie na boki.'],
   },
+  'brzuszki': {
+    sprzet: [],
+    name: 'Brzuszki', p: ['abs'], s: ['obliques'],
+    steps: ['Połóż się na plecach, kolana ugięte ok. 90°, stopy płasko na podłodze na szerokość bioder.',
+      'Dłonie przy skroniach (łokcie szeroko) albo skrzyżowane na klatce piersiowej.',
+      'Z wydechem unieś głowę i łopatki od podłogi, zwijając tułów w stronę miednicy; lędźwie zostają na podłodze.',
+      'Zatrzymaj się na 1 s na górze, potem powoli opuść łopatki.'],
+    tips: ['Nie ciągnij głowy rękami, broda lekko przyciągnięta.', 'Ruch krótki i kontrolowany, bez rozpędu.'],
+  },
   'superman': {
     sprzet: [],
     name: 'Superman', p: ['lowerback'], s: ['glutes', 'shoulders', 'midback'],
@@ -1390,6 +1399,14 @@ Object.entries({
       'Push back up to straight arms.',
       'Hips high the whole time.'],
     tips: ['A shoulder exercise without equipment and a step towards a handstand.', 'Elbows go slightly back, not out to the sides.'],
+  },
+  'brzuszki': {
+    name: 'Crunch',
+    steps: ['Lie on your back with your knees bent at about 90° and your feet flat on the floor, hip-width apart.',
+      'Place your hands by your temples (elbows wide) or cross them over your chest.',
+      'Breathe out and lift your head and shoulder blades off the floor, curling your torso toward your pelvis; your lower back stays on the floor.',
+      'Hold for 1 s at the top, then slowly lower your shoulder blades.'],
+    tips: ["Don't pull your head with your hands; keep your chin slightly tucked.", 'Keep the movement short and controlled, without momentum.'],
   },
   'superman': {
     name: 'Superman',

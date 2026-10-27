@@ -258,6 +258,14 @@ const MOVES = {
     A: { h: [110, 176], t: 0, a: -90, F: [68, 132], kb: [1, 1], fa: -90 },
     B: { h: [110, 176], t: 0, a: [-3, -90], F: [[68, 132], [24, 170]], kb: [1, 1], fa: -90 },
   },
+  // Brzuszki (od 2026-10-27): dłonie przy skroniach, łokcie szeroko (skrócone ramię s, jak przy łokciach odwiedzionych w bok), kolana 90°,
+  // stopy płasko. Tułów obraca się wokół punktu 6 od biodra (dolne lędźwie), nie wokół biodra: łopatki i głowa idą w górę, a lędźwie zostają
+  // przy podłodze (to nie siad z leżenia).
+  crunch: {
+    props: [['ground', 190]], sup: true,
+    A: { h: [110, 176], t: 0, Hs: [16, 6], s: [[.4, .9], [.4, .9]], F: [50, 184], kb: [1, 1], fa: 180 },
+    B: { h: [110.4, 177.2], t: -22, Hs: [16, 6], s: [[.4, .9], [.4, .9]], F: [50, 184], kb: [1, 1], fa: 180 },
+  },
   squat: {
     props: [['ground', 190]],
     A: { ...STAND, H: [210, 50] },
@@ -654,7 +662,7 @@ const EX_MOVE = {
   'pompki': ['pushup'], 'pompki-waskie': ['pushup'], 'pompki-trx': ['trxpush'], 'pompki-nogi-wyzej': ['declpush'], 'pompki-na-podwyzszeniu': ['inclpush'],
   'guma-rozciaganie': ['pullapart'], 'guma-odwrotne-rozpietki': ['revfly'], 'guma-rotacja': ['extrot'],
   'kolana-porecze': ['kneebars'], 'kolana-zwis': ['kneehang'], 'plank': ['plank'], 'deska-bokiem': ['sideplank'],
-  'trx-rollout': ['rollout'], 'trx-kolana': ['trxknees'], 'dead-bug': ['deadbug'],
+  'trx-rollout': ['rollout'], 'trx-kolana': ['trxknees'], 'dead-bug': ['deadbug'], 'brzuszki': ['crunch'],
   'przysiad': ['squat'], 'przysiad-guma': ['bandsquat'], 'trx-przysiad-wykroczny': ['trxsplit'], 'przysiad-jednonoz': ['boxpistol'],
   'wykroki': ['lunge'], 'mostek': ['bridge'], 'mostek-jednonoz': ['bridge1'], 'guma-sklon': ['goodmorning'],
   'guma-uginanie-nog': ['hamcurl'], 'lydki-guma': ['calf'], 'wyciag-prostowanie': ['pushdown'],
