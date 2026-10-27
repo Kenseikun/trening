@@ -96,6 +96,7 @@ globalThis.STR = {
     gapTitle: 'nowe pytania w ankiecie', gapBtn: 'uzupełnij ankietę',
     gapText: 'W ankiecie są nowe pytania albo nowa zgoda. Uzupełnij je, żeby dalej korzystać z aplikacji. Zajmie to minutę.',
     gapOffline: 'Połącz się z internetem, żeby uzupełnić ankietę.', gapHint: 'Uzupełnij pytania zaznaczone na czerwono.',
+    privacy: 'Szczegóły: jak chronimy Twoje dane',
     // Komunikaty od trenera, raz na zmianę (n = imię z telefonu albo pusto).
     noticePlanFirst: n => `Hej${n ? ', ' + n : ''}! Twój pierwszy plan jest gotowy. Zacznij spokojnie, liczy się regularność.`,
     noticePlan: n => `Hej${n ? ', ' + n : ''}! Trener zaktualizował Twój plan treningowy. Niech doda Ci motywacji i szybciej przybliży Cię do celu!`,
@@ -204,6 +205,7 @@ globalThis.STR = {
     gapTitle: 'new survey questions', gapBtn: 'complete the survey',
     gapText: 'The survey has new questions or a new consent. Complete them to keep using the app. It only takes a minute.',
     gapOffline: 'Connect to the internet to complete the survey.', gapHint: 'Fill in the questions marked in red.',
+    privacy: 'Details: how we protect your data',
     noticePlanFirst: n => `Hi${n ? ', ' + n : ''}! Your first plan is ready. Start steady, consistency is what counts.`,
     noticePlan: n => `Hi${n ? ', ' + n : ''}! Your trainer has updated your training plan. May it give you an extra boost on the way to your goals!`,
     noticeNewEx: l => `New exercises: ${l}. Have a look at the animations before your workout.`,

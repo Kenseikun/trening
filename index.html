@@ -1931,7 +1931,7 @@ function renderSurvey() {
     if (qs[i].typ !== 'liczba') {
       const p = qs[i];
       html.push(`<fieldset class="ask" data-q="${p.id}"><legend>${esc(qText(p))}</legend><div class="opts">${p.opcje.map((o, k) =>
-        `<button type="button" data-k="${k}" aria-pressed="${[].concat(survey.odp[p.id] ?? []).includes(o[0])}">${esc(oText(p, o))}</button>`).join('')}</div></fieldset>`);
+        `<button type="button" data-k="${k}" aria-pressed="${[].concat(survey.odp[p.id] ?? []).includes(o[0])}">${esc(oText(p, o))}</button>`).join('')}</div>${p.id === 'zgoda' ? `<a class="stone fine" href="https://treningapp.com/prywatnosc${LANG === 'en' ? '?en' : ''}" target="_blank" rel="noopener">${esc(t('privacy'))}</a>` : ''}</fieldset>`);
       continue;
     }
     const row = []; // kolejne pytania o liczbę stoją obok siebie
