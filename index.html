@@ -109,8 +109,10 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .dock > * + * { margin-top: 12px }
 
   /* Zakładki treningów */
-  .tabs { display: flex; gap: 6px; overflow-x: auto; margin: 8px -18px 2px; padding: 2px 18px 4px; scrollbar-width: none; flex: none }
-  .tabs button { flex: 1 0 auto; min-height: 46px; padding: 0 8px; font-size: .95rem; color: var(--stone); border-color: var(--line-strong); white-space: nowrap }
+  /* Treningi w siatce równych kolumn, zawijane do kolejnego rzędu (od 2026-10-28): przy 4+ treningach przewijany rząd chował dalsze
+     za prawą krawędzią. Szerokość kolumny = najdłuższa nazwa (--tab, mierzy renderHome), więc ostatni rząd się nie rozciąga. */
+  .tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--tab, 96px), 1fr)); gap: 6px; margin: 8px 0 2px; padding: 2px 0 4px; flex: none }
+  .tabs button { min-height: 46px; padding: 0 8px; font-size: .95rem; color: var(--stone); border-color: var(--line-strong); white-space: nowrap }
   .tabs button[aria-selected=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
   /* Treningi dla chętnych (od 2026-10-28): osobny wiersz pod treningami z podpisem, zawsze widoczny (w przewijanym rzędzie dodatek
      chował się za prawą krawędzią, zgłoszenie właściciela); przerywana ramka = dodatek, nie liczy się do dni treningów. */
@@ -987,6 +989,8 @@ function renderHome() {
   sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
   const tab = (p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`;
   $('tabs').innerHTML = plans.map((p, k) => p.extra ? '' : tab(p, k)).join('');
+  const tabW = Math.max(0, ...[...$('tabs').children].map(b => b.scrollWidth)); // przy ukrytym ekranie 0: zostaje poprzednia szerokość
+  if (tabW) $('tabs').style.setProperty('--tab', Math.min(tabW, $('tabs').clientWidth) + 'px');
   $('tabsExtra').innerHTML = `<span class="lbl">${t('extra')}</span>` + plans.map((p, k) => p.extra ? tab(p, k) : '').join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted && !$('home').hidden);
