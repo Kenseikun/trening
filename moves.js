@@ -160,11 +160,13 @@ const MOVES = {
     A: { h: [114, 161], t: -90, H: [130, 166], F: [108, 182], fa: 150 }, // grzbiet stopy prawie płasko (kostka w zakresie stawu)
     B: { h: [114, 161], t: -2, c: 24, H: [232, 184], F: [108, 182], fa: 150 }, // plecy zaokrąglone, czoło przy podłodze (od 28.10)
   },
-  // Pies z głową w dół: odwrócone V, ręce w linii z tułowiem, nogi proste; pięty schodzą do podłogi.
+  // Pies z głową w dół: odwrócone V, ręce w linii z tułowiem, nogi prawie proste; pięty schodzą do podłogi.
+  // Poprawka z 28.10 (zgłoszenie właściciela: stopy odrywały się od ziemi, bo noga nie sięgała): dłonie i czubki palców stóp
+  // przypięte w jednym miejscu, biodro z przecięcia długości nogi i tułowia z ręką; pięta schodzi, stopa obraca się wokół palców.
   downdog: {
     props: [['ground', 190]],
-    A: { h: [124, 104], t: 46, a: 46, F: [76, 178], fa: 60 },
-    B: { h: [118, 98], t: 50, a: 50, F: [76, 183], fa: 20 },
+    A: { h: [126.1, 102.1], t: 44.3, H: [213, 187], F: [82.2, 175.4], fa: 60 },
+    B: { h: [121.3, 107.3], t: 41.0, H: [213, 187], F: [77.2, 180.6], fa: 28 }, // pięta tuż nad podłogą: przy prostym kolanie łydka nie puści kostki poniżej ok. 80°
   },
   // Łydka przy ścianie: dłonie na ścianie, bliższa noga z tyłu prosta z piętą na ziemi, przednia ugięta; biodra idą do ściany.
   calfwall: {
