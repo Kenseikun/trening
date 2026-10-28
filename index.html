@@ -112,8 +112,12 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   .tabs { display: flex; gap: 6px; overflow-x: auto; margin: 8px -18px 2px; padding: 2px 18px 4px; scrollbar-width: none; flex: none }
   .tabs button { flex: 1 0 auto; min-height: 46px; padding: 0 8px; font-size: .95rem; color: var(--stone); border-color: var(--line-strong); white-space: nowrap }
   .tabs button[aria-selected=true] { background: var(--cream); color: var(--ink); border-color: var(--cream) }
-  /* Trening dla chętnych (od 2026-10-28): przerywana ramka, dodatek do planu, nie liczy się do dni treningów. */
-  .tabs button.extra { border-style: dashed }
+  /* Treningi dla chętnych (od 2026-10-28): osobny wiersz pod treningami z podpisem, zawsze widoczny (w przewijanym rzędzie dodatek
+     chował się za prawą krawędzią, zgłoszenie właściciela); przerywana ramka = dodatek, nie liczy się do dni treningów. */
+  .tabs-extra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 2px 0 6px }
+  .tabs-extra[hidden] { display: none }
+  .tabs-extra button { min-height: 40px; padding: 0 14px; font-size: .9rem; color: var(--stone); border-style: dashed; border-color: var(--line-strong) }
+  .tabs-extra button[aria-selected=true] { background: var(--cream); color: var(--ink); border-color: var(--cream); border-style: solid }
 
   /* Pasek statusu */
   .stats { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 20px; margin: 10px 0; overflow: hidden }
@@ -571,6 +575,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   <p id="hNet" class="note gap" role="status" hidden></p>
   <button id="repCard" class="repcard" hidden><span><b data-t="repTitle">raport dnia</b><small data-t="repCardSub">sen, woda, energia · 30 s</small></span><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 12h5m-2-2.5 2.5 2.5-2.5 2.5"/></svg></button>
   <div id="tabs" class="tabs" role="tablist" aria-label="Treningi tygodnia" data-ta="weekTabs"></div>
+  <div id="tabsExtra" class="tabs-extra" role="group" hidden></div>
   <div id="planHead">
     <h1 id="hName" class="float"></h1>
     <p id="hSub" class="stone"></p>
@@ -967,6 +972,7 @@ function renderHome() {
   if (cur) $('resumeName').textContent = cur.phase === 'done' ? t('resumeDone', cur.plan.name) : t('resumeRun', cur.plan.name, cur.i + 1, S().length);
   $('empty').hidden = !!plans.length; $('home').classList.toggle('noplan', !plans.length);
   $('plan').hidden = $('planHead').hidden = $('tabs').hidden = !plans.length;
+  $('tabsExtra').hidden = !plans.some(p => p.extra);
   // Bez rozpiski główny przycisk prowadzi do importu. Z serwisem rozpiska przychodzi sama, więc przycisku nie ma (dolny pasek zostaje).
   $('startBtn').hidden = !plans.length && !!API;
   if (!plans.length) {
@@ -979,7 +985,9 @@ function renderHome() {
     : `<p class="stone">${t('histEmpty')}</p>`;
   if (!plans.length) return;
   sel = sel == null || sel >= plans.length ? suggested(plans) : sel;
-  $('tabs').innerHTML = plans.map((p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}"${p.extra ? ' class="extra"' : ''}>${esc(short(p.name))}</button>`).join('');
+  const tab = (p, k) => `<button role="tab" aria-selected="${k === sel}" data-k="${k}">${esc(short(p.name))}</button>`;
+  $('tabs').innerHTML = plans.map((p, k) => p.extra ? '' : tab(p, k)).join('');
+  $('tabsExtra').innerHTML = `<span class="lbl">${t('extra')}</span>` + plans.map((p, k) => p.extra ? tab(p, k) : '').join('');
   const p = plans[sel], prev = prevOf(p.name), week = p.name.match(/^T(\d+)/)?.[1];
   floatText($('hName'), short(p.name).toLowerCase(), !plotted && !$('home').hidden);
   $('hSub').textContent = [p.extra && t('extra'), t('nExercises', p.items.length), p.name.match(/\((.*)\)\s*$/)?.[1], week && t('week', week)].filter(Boolean).join(' · '); // bez dnia tygodnia: data jest u góry (2026-10-22)
@@ -995,7 +1003,7 @@ function renderHome() {
   $('startBtn').innerHTML = `${t('startN', esc(short(p.name).toLowerCase()))}${ico('go')}`;
 }
 // Inny trening: postać rysuje się od nowa, jak po włączeniu aplikacji (prośba właściciela z 2026-10-22); ten sam trening bez animacji.
-$('tabs').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { if (+b.dataset.k !== sel) plotted = false; sel = +b.dataset.k; renderHome(); } };
+$('tabs').onclick = $('tabsExtra').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { if (+b.dataset.k !== sel) plotted = false; sel = +b.dataset.k; renderHome(); } };
 $('hParts').onclick = e => {
   const b = e.target.closest('button'), p = allPlans()[sel];
   if (b?.dataset.j) showExercise(p.items[b.dataset.j]);
