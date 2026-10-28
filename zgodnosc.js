@@ -55,7 +55,9 @@ globalThis.ZGODNOSC = (() => {
       const brak = silownia ? [] : need.filter(s => s !== 'SILOWNIA' && !ma.has(s));
       if (brak.length) blad(`${nazwa} wymaga sprzętu, którego osoba nie ma: ${brak.map(s => SPRZET[s]).join(', ')}.`);
     }
-    if (odp.dni && plans.length > odp.dni) blad(`W rozpisce jest ${plans.length} treningów, a osoba może trenować ${odp.dni} dni w tygodniu.`);
+    // Treningi „dla chętnych” (extra: true, od 2026-10-28, np. codzienne rozciąganie rano) są dodatkiem i nie liczą się do dni z ankiety.
+    const ile = plans.filter(p => !p.extra).length;
+    if (odp.dni && ile > odp.dni) blad(`W rozpisce jest ${ile} treningów (bez treningów dla chętnych), a osoba może trenować ${odp.dni} dni w tygodniu.`);
     if (odp.czas) for (const p of plans) if (minuty(p) > odp.czas + 5) blad(`${p.name}: ok. ${minuty(p)} min, a osoba ma na trening ${odp.czas} min.`);
     for (const b of lista(odp.bol)) {
       if (!BOL[b]) { uwaga(`Zgłoszony ból: ${odp.bol_inne ? `„${odp.bol_inne}”` : 'coś innego'}. Dopytaj osobę, zanim wyślesz rozpiskę.`); continue; }

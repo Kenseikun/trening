@@ -7,7 +7,7 @@ function normalize(data) {
   return plans.map((p, i) => {
     if (!p?.name || !Array.isArray(p.items) || !p.items.length) throw Error(`Trening ${i + 1}: brak "name" albo "items"`);
     return {
-      name: String(p.name), note: p.note ? String(p.note) : '',
+      name: String(p.name), note: p.note ? String(p.note) : '', ...(p.extra ? { extra: true } : {}), // extra: trening dla chętnych
       items: p.items.map((it, j) => {
         const where = `${p.name}, pozycja ${j + 1}`;
         if (!it?.ex) throw Error(`${where}: brak "ex"`);
@@ -306,6 +306,12 @@ if (typeof module !== 'undefined' && require.main === module) {
   assert.deepStrictEqual(ZGODNOSC.plan([sil[0]].map(p => ({ ...p, items: [p.items[0]] })), { ...kal, sprzet: ['PARK'], bol: ['NIE'] }), []);
   assert.deepStrictEqual(ZGODNOSC.plan(sil, { ...kal, rodzaj: 'OBA', sprzet: ['SILOWNIA', 'GUMY'], bol: ['NIE'] }), []);
   assert.match(ZGODNOSC.plan(sil, { ...kal, sprzet: ['SILOWNIA'], bol: ['NIE'] }).map(u => u.tekst).join(' '), /sztangą wymaga siłowni/);
+  // Trening dla chętnych (extra) nie liczy się do dni z ankiety i przechodzi przez normalize; czwarty zwykły trening przy 3 dniach to błąd.
+  const tydz = n => Array.from({ length: n }, (_, i) => ({ name: 'T' + (i + 1), items: [{ ex: 'pompki', sets: 3, reps: 10 }] }));
+  const zDodatkiem = normalize([...tydz(3), { name: 'Dla chętnych · Rozciąganie', extra: true, items: [{ ex: 'pompki', sets: 1, reps: 5 }] }]);
+  assert.ok(zDodatkiem[3].extra && !zDodatkiem[0].extra);
+  assert.deepStrictEqual(ZGODNOSC.plan(zDodatkiem, { ...kal, bol: ['NIE'] }), []);
+  assert.match(ZGODNOSC.plan(tydz(4), { ...kal, bol: ['NIE'] }).map(u => u.tekst).join(' '), /4 treningów/);
   const zlaDieta = ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Śniadanie', options: [{ name: 'Skyr z migdałami', note: '15 g migdałów' }, 'Tofu z warzywami'] }] }) }, kal);
   assert.deepStrictEqual(zlaDieta.map(u => u.tekst.split(':')[0]), ['Uczulenie (orzechy)', 'Sposób odżywiania (wegańsko)'], JSON.stringify(zlaDieta));
   assert.deepStrictEqual(ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Obiad', options: ['Tofu z ryżem', 'Ciecierzyca z warzywami'] }] }) }, kal), []);
