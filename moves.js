@@ -135,7 +135,7 @@ const MOVES = {
     B: { h: [112, 142], t: -75, E: [148, 107], ea: -95, F: [156, 184], fa: 12 },
   },
   // --- Partia 4 (20.10): rozciąganie i mobilność. Czerwień = mięsień rozciągany (ćwiczenie z rozc: true), tempo 'hold' trzyma pozycję.
-  // Tułów jest sztywny, więc ćwiczeń z zaokrąglaniem kręgosłupa (kot-krowa) nie rysujemy.
+  // Od 28.10 tułów może się zginać (c w pozie), więc kot-krowa jest w partii 5.
   // Zginacze biodra w klęku: bliższe kolano na ziemi (to ta noga się rozciąga), przednia stopa płasko; biodra idą w przód, tułów prosto.
   hipflexor: {
     props: [['ground', 190]],
@@ -158,7 +158,7 @@ const MOVES = {
   childpose: {
     props: [['ground', 190]],
     A: { h: [114, 161], t: -90, H: [130, 166], F: [108, 182], fa: 150 }, // grzbiet stopy prawie płasko (kostka w zakresie stawu)
-    B: { h: [114, 161], t: 10, H: [232, 184], F: [108, 182], fa: 150 },
+    B: { h: [114, 161], t: -2, c: 24, H: [232, 184], F: [108, 182], fa: 150 }, // plecy zaokrąglone, czoło przy podłodze (od 28.10)
   },
   // Pies z głową w dół: odwrócone V, ręce w linii z tułowiem, nogi proste; pięty schodzą do podłogi.
   downdog: {
@@ -259,12 +259,12 @@ const MOVES = {
     B: { h: [110, 176], t: 0, a: [-3, -90], F: [[68, 132], [24, 170]], kb: [1, 1], fa: -90 },
   },
   // Brzuszki (od 2026-10-27): dłonie przy skroniach, łokcie szeroko (skrócone ramię s, jak przy łokciach odwiedzionych w bok), kolana 90°,
-  // stopy płasko. Tułów obraca się wokół punktu 6 od biodra (dolne lędźwie), nie wokół biodra: łopatki i głowa idą w górę, a lędźwie zostają
-  // przy podłodze (to nie siad z leżenia).
+  // stopy płasko. Łopatki i głowa idą w górę, a lędźwie zostają przy podłodze (to nie siad z leżenia).
   crunch: {
     props: [['ground', 190]], sup: true,
-    A: { h: [110, 176], t: 0, Hs: [16, 6], s: [[.4, .9], [.4, .9]], F: [50, 184], kb: [1, 1], fa: 180 },
-    B: { h: [110.4, 177.2], t: -22, Hs: [16, 6], s: [[.4, .9], [.4, .9]], F: [50, 184], kb: [1, 1], fa: 180 },
+    // Od 28.10 ze zgiętym kręgosłupem: lędźwie leżą płasko (t 0 przy biodrze), zwija się górna część pleców (c 40), łopatki nad podłogą.
+    A: { h: [110, 176], t: 0, c: 0, Hs: [16, 6], s: [[.4, .9], [.4, .9]], F: [50, 184], kb: [1, 1], fa: 180 },
+    B: { h: [110, 176], t: 0, c: 40, Hs: [16, 6], s: [[.4, .9], [.4, .9]], F: [50, 184], kb: [1, 1], fa: 180 },
   },
   squat: {
     props: [['ground', 190]],
@@ -479,11 +479,71 @@ const MOVES = {
     A: { h: [120, 100], t: 30, H: [186, 184], F: [80, 178], fa: 70 },
     B: { h: [120, 100], t: 50, H: [186, 184], F: [80, 178], fa: 70 },
   },
+  // --- Partia 5 (28.10): joga i mobilność. Od tej partii tułów może się zginać (c: + zaokrąglenie, − wyprost), więc jest kot-krowa.
+  // Na czworakach: dłonie pod barkami (ręce proste), kolana pod biodrami, grzbiety stóp na podłodze.
+  // Kot-krowa: krowa (wdech) to wyprost, brzuch w dół, głowa w górę; kot (wydech) to zaokrąglenie, głowa w dół. Barki zostają nad dłońmi.
+  catcow: {
+    props: [['ground', 190]],
+    A: { h: [110, 141], t: -5.5, c: -25, H: [166, 187], F: [70, 182], fa: 160 },
+    B: { h: [110, 141], t: -40.5, c: 45, H: [166, 187], F: [70, 182], fa: 160 },
+  },
+  // Rozgrzewka nadgarstków: z prostymi rękami ciężar idzie do przodu nad dłonie (bark przed nadgarstkiem), dłonie i kolana w miejscu.
+  wristrock: {
+    props: [['ground', 190]],
+    A: { h: [110, 141], t: -18, H: [166, 187], F: [70, 182], fa: 160 },
+    B: { h: [121.5, 141], t: -17, H: [166, 187], F: [70, 182], fa: 160 },
+  },
+  // Nawlekanie igły: bliższa ręka w górę, potem pod drugą (idzie w głąb obrazu, więc skrócona), bark i bok głowy na podłodze;
+  // ręka podporowa wysuwa się trochę do przodu i ugina. Biodra zostają nad kolanami.
+  thread: (() => {
+    const Q = { h: [110, 141], t: -18, H: [[166, 187], [166, 187]], s: [[1, 1], [1, 1]], F: [70, 182], fa: 160 };
+    const U = { ...Q, t: -16, H: [[167, 60], [166, 187]] };
+    const T = { ...Q, t: 30, H: [[160, 186], [206, 187]], s: [[.35, .35], [1, 1]] };
+    return { props: [['ground', 190]], A: Q, B: T, seq: [[Q, 0, 0, 1], [U, 1.4, .5, 1], [U, 2, .5, 1], [Q, 3, .3], [T, 4.4, 1, 1], [T, 7.4, 1, 1], [Q, 9, 0, 1], [Q, 9.6, 0, 1]] };
+  })(),
+  // Kobra: biodra i grzbiety stóp na podłodze, dłonie pod barkami; klatka idzie w górę z wyprostem kręgosłupa, łokcie przy tułowiu.
+  cobra: {
+    props: [['ground', 190]],
+    // Dłonie przy dolnych żebrach, trochę za barkami, i nie ruszają się; łokcie idą w tył i w górę wzdłuż tułowia, nie pionowo.
+    A: { h: [110, 180], t: 0, c: 0, H: [136, 187], F: [24, 180], fa: 155 },
+    B: { h: [110, 180], t: -15, c: -40, H: [136, 187], F: [24, 180], fa: 155 },
+  },
+  // Sfinks: na przedramionach, łokcie pod barkami, przedramiona płasko do przodu; lżejszy wyprost niż w kobrze.
+  sphinx: {
+    props: [['ground', 190]],
+    A: { h: [110, 180], t: -4, c: -10, E: [192.7, 186], ea: 0, F: [24, 180], fa: 155 },
+    B: { h: [110, 180], t: -10, c: -30, E: [162, 185.7], ea: 0, F: [24, 180], fa: 155 },
+  },
+  // Gołąb: przednia goleń leży w poprzek przed biodrami (idzie w stronę widza, więc skrócona), tylna noga prosto w tył;
+  // z wyprostu tułów kładzie się nad przednią nogą na przedramionach.
+  pigeon: {
+    props: [['ground', 190]],
+    // Przednia goleń leży złożona i wraca skośnie w stronę drugiego biodra (skrót .5), stopa płasko w stronę bioder. Ręce: w wyproście
+    // wiszą wzdłuż tułowia do podłogi, w skłonie łokcie na podłodze pod barkami, przedramiona płasko do przodu (jak w sfinksie).
+    A: { h: [110, 172], t: -84, c: 0, E: [118, 144], ea: 85, F: [[130, 186], [24, 182]], sl: [[1, .5], [1, 1]], fa: [185, 150] },
+    B: { h: [110, 172], t: -17, c: 0, E: [166, 185], ea: 0, F: [[130, 186], [24, 182]], sl: [[1, .5], [1, 1]], fa: [185, 150] },
+  },
+  // 90-90: przednie udo do przodu, goleń w poprzek (skrócona); tylne udo w bok (skrócone), goleń w tył. Pochylenie z bioder, plecy proste.
+  ninety: {
+    props: [['ground', 190]],
+    A: { h: [110, 178], t: -88, H: [[120, 180], [100, 180]], F: [[134, 186], [62, 184]], sl: [[1, .5], [.25, 1]], fa: [185, 155] },
+    B: { h: [110, 178], t: -50, H: [[170, 184], [160, 186]], F: [[134, 186], [62, 184]], sl: [[1, .5], [.25, 1]], fa: [185, 155] },
+  },
+  // Wykrok z rotacją: długi wykrok, dłonie przy przedniej stopie; łokieć bliższej ręki schodzi do stopy, potem ta ręka idzie prosto
+  // do sufitu (skręt tułowia w stronę widza), wzrok za dłonią.
+  wgs: (() => {
+    const A = { h: [122, 150], t: -30, H: [[180, 186], [176, 186]], F: [[184, 184], [40, 176]], fa: [12, 100] };
+    const M = { ...A, h: [124, 154], t: -18, H: [[200, 186], [176, 186]] };
+    // X: w połowie skrętu ręka idzie łukiem skośnie w przód i w górę, łokieć prawie prosty (bez X dłoń przechodziła przy barku).
+    const X = { ...A, h: [123, 152], t: -29, H: [[222, 83], [176, 186]] };
+    const B = { ...A, t: -40, H: [[168, 49], [176, 186]] };
+    return { props: [['ground', 190]], A, B, seq: [[A, 0, 0, 1], [M, 1.4, .6, 1], [M, 2.2, .6, 1], [X, 3, .8], [B, 3.8, 1, 1], [B, 5.8, 1, 1], [X, 6.6, .8], [M, 7.4, .6], [A, 8.2, 0, 1], [A, 8.8, 0, 1]] };
+  })(),
   // Superman: leżenie na brzuchu, proste ręce przed głową; ręce, klatka i nogi unoszą się kilka centymetrów nad podłogę.
   superman: {
     props: [['ground', 190]],
     A: { h: [110, 180], t: 0, a: [0, 0], F: [24, 180], fa: 155 },
-    B: { h: [110, 178], t: -8, a: [-14, -14], F: [24, 166], fa: 150 },
+    B: { h: [110, 178], t: -2, c: -14, a: [-14, -14], F: [24, 166], fa: 150 }, // lekki wyprost pleców (od 28.10)
   },
   // Wykrok boczny od przodu: szeroki rozkrok, ciężar na jedną nogę, która się zgina (biodra w tył i w dół), druga prosta.
   sidelunge: {
@@ -669,7 +729,7 @@ const EX_MOVE = {
   'przysiad-sztanga': ['bbsquat'], 'przysiad-goblet': ['goblet'], 'martwy-rumunski': ['rdl'], 'hip-thrust': ['hipthrust'], 'wyciskanie-lezac': ['bench'],
   'wyciskanie-hantli-nad-glowe': ['ohp'], 'wioslowanie-hantlem': ['dbrow'], 'sciaganie-drazka': ['pulldown'], 'wioslowanie-wyciag': ['cablerow'],
   'wykroki-hantle': ['dblunge'], 'unoszenie-bokiem': ['lateral'], 'uginanie-hantle': ['curl'],
-  'pajacyki': ['jacks', 'swing'], 'wspinaczka': ['climber'], 'krzeselko': ['wallsit'], 'pompki-v': ['pike'], 'superman': ['superman'],
+  'pajacyki': ['jacks', 'swing'], 'wspinaczka': ['climber'], 'krzeselko': ['wallsit'], 'pompki-v': ['pike'], 'superman': ['superman'], 'kot-krowa': ['catcow'], 'rozgrzewka-nadgarstkow': ['wristrock'], 'nawlekanie-igly': ['thread', 'hold'], 'kobra': ['cobra', 'hold'], 'sfinks': ['sphinx', 'hold'], 'golab': ['pigeon', 'hold'], 'pozycja-90-90': ['ninety', 'hold'], 'wykrok-z-rotacja': ['wgs'],
   'wykrok-boczny': ['sidelunge'], 'wejscia-na-podwyzszenie': ['stepup'], 'burpees': ['burpee'], 'skakanka': ['rope'],
   'motylek': ['pecdeck'], 'odwodzenie-nog': ['abduction'], 'przywodzenie-nog': ['adduction'], 'uginanie-wyciag': ['cablecurl'],
   'unoszenie-bokiem-wyciag': ['cablelateral'], 'przysiad-smith': ['smith'],
@@ -804,20 +864,26 @@ function smooth(pts) {
   return d + 'Z';
 }
 // Układ odcinka: punkt na osi w t, przesunięty o off w stronę „przodu” (fs = znak przodu względem normalnej).
-function frame(A, B) {
+// bend (radiany, od 2026-10-28): oś to łuk od A do B, który skręca o bend (zgięty kręgosłup); 0 = prosty odcinek jak dawniej.
+function frame(A, B, bend = 0) {
   const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1;
-  return (t, off) => [A[0] + dx * t + (-dy / L) * off, A[1] + dy * t + (dx / L) * off];
+  if (Math.abs(bend) < 1e-4) return (t, off) => [A[0] + dx * t + (-dy / L) * off, A[1] + dy * t + (dx / L) * off];
+  const f0 = Math.atan2(dy, dx) - bend / 2, k = L / Math.sin(bend / 2);
+  return (t, off) => {
+    const r = k * Math.sin(bend * t / 2), a = f0 + bend * t / 2, n = f0 + bend * t;
+    return [A[0] + r * Math.cos(a) - Math.sin(n) * off, A[1] + r * Math.sin(a) + Math.cos(n) * off];
+  };
 }
 // Strona przodu: tułów ma przód po +normalnej (widok twarzą w prawo); kończyny skierowane w dół po -normalnej.
 const frontSign = (type, sup) => (type === 'torso' || type === 'neck' ? 1 : -1) * (sup ? -1 : 1);
 
-function segPath(prof, A, B, fs) {
-  const f = frame(A, B), N = 14, t0 = prof[0][0], t1 = prof[prof.length - 1][0], L = [], R = [];
+function segPath(prof, A, B, fs, bend) {
+  const f = frame(A, B, bend), N = 14, t0 = prof[0][0], t1 = prof[prof.length - 1][0], L = [], R = [];
   for (let i = 0; i <= N; i++) { const t = t0 + (t1 - t0) * i / N, w = profAt(prof, t); L.push(f(t, fs * w[1])); R.push(f(t, -fs * w[2])); }
   return smooth([...L, ...R.reverse()]);
 }
-function musPath(prof, A, B, fs, spec) {
-  const [, t0, t1, side, o, i] = spec, f = frame(A, B), N = 10, E1 = [], E2 = [];
+function musPath(prof, A, B, fs, spec, bend) {
+  const [, t0, t1, side, o, i] = spec, f = frame(A, B, bend), N = 10, E1 = [], E2 = [];
   for (let k = 0; k <= N; k++) {
     const t = t0 + (t1 - t0) * k / N, w = profAt(prof, t), taper = Math.sin(Math.PI * k / N) ** .6;
     // Szerokość po stronie mięśnia: przód, tył, albo środek (od -tył do +przód).
@@ -843,7 +909,7 @@ function ik(root, target, a, b, bend) {
 const pair = v => Array.isArray(v[0]) ? v : [v, v];
 function norm(P, front) {
   const two = (v, d) => Array.isArray(v) ? v : [v ?? d[0], v ?? d[1]];
-  return { h: P.h, t: P.t ?? -90, E: P.E, ea: P.ea, H: P.H && pair(P.H), Hs: P.Hs && pair(P.Hs), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
+  return { h: P.h, t: P.t ?? -90, c: P.c ?? 0, E: P.E, ea: P.ea, H: P.H && pair(P.H), Hs: P.Hs && pair(P.Hs), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
     s: P.s || [[1, 1], [1, 1]], sl: P.sl || [[1, 1], [1, 1]], eb: P.eb || (front ? [1, -1] : [1, 1]), kb: P.kb || (front ? [-1, 1] : [-1, -1]) };
 }
 const lerp = (a, b, p) => typeof a === 'number' ? a + (b - a) * p : a.map((x, i) => lerp(x, b[i], p));
@@ -851,23 +917,28 @@ const lerp = (a, b, p) => typeof a === 'number' ? a + (b - a) * p : a.map((x, i)
 // Stawy dla pozy pośredniej p (0 = A, 1 = B).
 function joints(m, p) {
   const A = m.nA, B = m.nB, mix = k => A[k] && lerp(A[k], B[k], p);
-  const P = { t: lerp(A.t, B.t, p), E: mix('E'), ea: mix('ea'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p), sl: lerp(A.sl, B.sl, p) };
+  const P = { t: lerp(A.t, B.t, p), c: lerp(A.c, B.c, p), E: mix('E'), ea: mix('ea'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p), sl: lerp(A.sl, B.sl, p) };
   // Poza bez h: ciało proste od kostek do barków (deska, pompka, wiosłowanie). Biodro idzie wtedy po łuku i kolana się nie uginają.
   P.h = mix('h') || at(P.F[0], P.t, SEG.th + SEG.sh);
-  const J = { hip: P.h, sh: at(P.h, P.t, SEG.torso) };
-  J.hd = at(J.sh, P.t, SEG.neck + SEG.head);
-  J.nk = at(J.sh, P.t, SEG.neck);
+  // Kręgosłup (od 2026-10-28): c = zgięcie w stopniach, + zaokrąglenie (koci grzbiet, brzuszki), − wyprost (krowa, kobra). Tułów idzie
+  // po łuku: t to kierunek dolnej części przy biodrze, górna przy barkach ma kierunek tg, a kark i głowa idą dalej w jej kierunku.
+  // Tylko z boku; od przodu i od tyłu c nie działa.
+  const bend = m.front ? 0 : P.c * (m.sup ? -1 : 1), tg = P.t + bend, x = rad(bend) / 2;
+  const J = { hip: P.h, sh: at(P.h, P.t + bend / 2, SEG.torso * (x ? Math.sin(x) / x : 1)) };
+  Object.defineProperty(J, 'bend', { value: rad(bend) }); // liczba, nie staw: poza listą stawów (logic.js sprawdza każdy staw jako punkt)
+  J.hd = at(J.sh, tg, SEG.neck + SEG.head);
+  J.nk = at(J.sh, tg, SEG.neck);
   J.hb = at(J.hip, P.t + (m.sup ? 90 : -90), 6); // tył bioder (pośladki w widoku z boku)
   for (const i of [0, 1]) {
     const side = m.front ? (i ? -1 : 1) : 0; // od przodu barki i biodra rozchodzą się na boki
-    J['s' + i] = at(J.sh, P.t + 90, side * HALF.shoulder);
+    J['s' + i] = at(J.sh, tg + 90, side * HALF.shoulder);
     J['h' + i] = at(J.hip, P.t + 90, side * HALF.hip);
     // Poza z a: ręka prosta pod kątem a (zatacza łuk wokół barku). Poza z H: dłoń w punkcie H, łokieć liczy kinematyka odwrotna.
     // Poza z Hs: punkt dłoni liczony od barku w układzie tułowia, więc przy skłonie dłoń zostaje przy barku.
     if (P.E) { J['el' + i] = P.E; J['wr' + i] = at(P.E, P.ea, SEG.fa); }
     else if (P.a) { J['el' + i] = at(J['s' + i], P.a[i], SEG.ua * P.s[i][0]); J['wr' + i] = at(J['el' + i], P.a[i], SEG.fa * P.s[i][1]); }
     else {
-      const T = P.Hs ? at(at(J['s' + i], P.t, P.Hs[i][0]), P.t + (m.sup ? -90 : 90), P.Hs[i][1]) : P.H[i];
+      const T = P.Hs ? at(at(J['s' + i], tg, P.Hs[i][0]), tg + (m.sup ? -90 : 90), P.Hs[i][1]) : P.H[i];
       [J['el' + i], J['wr' + i]] = ik(J['s' + i], T, SEG.ua * P.s[i][0], SEG.fa * P.s[i][1], A.eb[i]);
     }
     // sl: skrót udo/goleń (widok od przodu na siedzącą postać: uda idą w stronę widza i wyglądają na krótsze).
@@ -946,8 +1017,8 @@ function moveFigure(svg, m, e, mk, groundY) {
       const w = J['wr' + i], el = J['el' + i];
       J['hn' + i] = at(w, groundY != null && w[1] > groundY - 10 ? (w[0] >= el[0] ? 0 : 180) : ang(el, w), 8);
     }
-    const pos = s => [J[s[1]], s[0] === 'neck' ? J.hd : J[s[2]]];
-    for (const [o, f, s] of parts) { const [A, B] = pos(s), d = segPath(PROF[s[0]], A, B, fsOf(s)); o.setAttribute('d', d); f.setAttribute('d', d); }
+    const pos = s => [J[s[1]], s[0] === 'neck' ? J.hd : J[s[2]]], bendOf = s => s[0] === 'torso' ? J.bend || 0 : 0;
+    for (const [o, f, s] of parts) { const [A, B] = pos(s), d = segPath(PROF[s[0]], A, B, fsOf(s), bendOf(s)); o.setAttribute('d', d); f.setAttribute('d', d); }
     // Głowa: oś od barków przez środek głowy, twarz po stronie przodu.
     const up = rad(ang(J.sh, J.hd)), fs = frontSign('torso', m.sup), fx = [-Math.sin(up) * fs, Math.cos(up) * fs], dy = [-Math.cos(up), -Math.sin(up)];
     for (const [h, grow, shape] of heads) {
@@ -955,7 +1026,7 @@ function moveFigure(svg, m, e, mk, groundY) {
       h.setAttribute('d', smooth((shape || (front ? HEAD_FRONT : HEAD_SIDE)).map(([x, y]) => [J.hd[0] + (x * fx[0] + y * dy[0]) * k, J.hd[1] + (x * fx[1] + y * dy[1]) * k])));
     }
     for (const [el, list] of lines) el.setAttribute('d', list.map(s => {
-      const [A, B] = pos(s), f = frame(A, B), sg = fsOf(s);
+      const [A, B] = pos(s), f = frame(A, B, bendOf(s)), sg = fsOf(s);
       return DET[s[0]].map(([t0, t1, o]) => 'M' + Array.from({ length: 7 }, (_, k) => {
         const t = t0 + (t1 - t0) * k / 6, w = profAt(PROF[s[0]], t);
         return P(f(t, sg * o * (o > 0 ? w[1] : w[2])));
@@ -968,10 +1039,10 @@ function moveFigure(svg, m, e, mk, groundY) {
       }).join('L');
       el.setAttribute('d', 'M' + q(1) + 'M' + q(-1));
     }
-    for (const [el, s, spec] of muscles) { const [A, B] = pos(s); el.setAttribute('d', musPath(PROF[s[0]], A, B, fsOf(s), spec)); }
+    for (const [el, s, spec] of muscles) { const [A, B] = pos(s); el.setAttribute('d', musPath(PROF[s[0]], A, B, fsOf(s), spec, bendOf(s))); }
     for (const [g, l] of groups) g.setAttribute('opacity', (l === 'p' ? .45 + .55 * act : .2 + .4 * act).toFixed(3));
     // Rysy: kręgosłup i łopatki od tyłu, mostek, łuki klatki i kratka brzucha od przodu, dolny brzeg klatki z boku.
-    const f = frame(J.hip, J.sh);
+    const f = frame(J.hip, J.sh, J.bend || 0);
     let d = '';
     if (m.back) {
       d += 'M' + P(f(.12, 0)) + 'L' + P(f(.98, 0));

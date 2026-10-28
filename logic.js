@@ -330,6 +330,8 @@ if (typeof module !== 'undefined' && require.main === module) {
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1]], cross = (a, b) => a[0] * b[1] - a[1] * b[0];
   const kat = (a, b) => Math.acos(Math.max(-1, Math.min(1, (a[0] * b[0] + a[1] * b[1]) / Math.hypot(...a) / Math.hypot(...b)))) * 180 / Math.PI;
   for (const [key, m] of Object.entries(MOVES)) {
+    // Kręgosłup (c, od 2026-10-28): zgięcie piersiowo-lędźwiowe najwyżej ok. 60°, wyprost najwyżej ok. 45° (z podporem rąk, np. kobra).
+    for (const P of [m.A, m.B, ...(m.seq || []).map(k => k[0])]) assert(P.c == null || P.c >= -45 && P.c <= 60, `${key}: kręgosłup poza zakresem (c ${P.c}°)`);
     m.nA = norm(m.A, m.front); m.nB = norm(m.B, m.front);
     const len = [0, .5, 1].map(p => {
       const J = joints(m, p);
@@ -358,10 +360,13 @@ if (typeof module !== 'undefined' && require.main === module) {
           if (lokiec < 170 && z) { assert(!strona[i] || z === strona[i], `${gdzie}: łokieć ${i} przeskakuje na drugą stronę (dłoń przechodzi przez bark)`); strona[i] = z; }
         }
         const an = J['an' + i], th = sub(J['kn' + i], J['h' + i]), sh = sub(an, J['kn' + i]), kolano = kat(sub(J['h' + i], J['kn' + i]), sh);
-        assert(kolano >= 28, `${gdzie}: kolano ${i} zgięte ponad zakres stawu (${kolano.toFixed(0)}°)`);
         const golen = sub(J['kn' + i], an), stopa = sub(J['to' + i], an), kostka = kat(golen, stopa);
-        assert(Math.sign(cross(golen, stopa)) !== -(kolano > 178 ? -m.nA.kb[i] : Math.sign(cross(th, sh))), `${gdzie}: palce stopy ${i} skierowane w stronę łydki`);
-        assert(kostka >= (kolano > 160 ? 80 : 65) && kostka <= 158, `${gdzie}: kąt w kostce ${i} poza zakresem stawu (${kostka.toFixed(0)}°)`);
+        // Noga skrócona w rzucie (sl < .95: udo albo goleń w stronę widza, np. gołąb, 90-90): kąty w rzucie są pozorne, ocena w podglądzie.
+        if (Math.min(...m.nA.sl[i], ...m.nB.sl[i]) >= .95) {
+          assert(kolano >= 28, `${gdzie}: kolano ${i} zgięte ponad zakres stawu (${kolano.toFixed(0)}°)`);
+          assert(Math.sign(cross(golen, stopa)) !== -(kolano > 178 ? -m.nA.kb[i] : Math.sign(cross(th, sh))), `${gdzie}: palce stopy ${i} skierowane w stronę łydki`);
+          assert(kostka >= (kolano > 160 ? 80 : 65) && kostka <= 158, `${gdzie}: kąt w kostce ${i} poza zakresem stawu (${kostka.toFixed(0)}°)`);
+        }
         for (const [nazwa, d] of [['palce', 1.12], ['pięta', -.42]]) {
           const q = [an[0] + d * stopa[0], an[1] + d * stopa[1]];
           const pod = Math.min(ground, ...boxes.filter(b => q[0] > b[1] && q[0] < b[1] + b[3] && an[1] < b[2]).map(b => b[2]));
