@@ -6,6 +6,7 @@
 // Poza: h biodra [x,y], t kąt tułowia (°; 0 = w prawo, -90 = w górę), H dłonie, F kostki (jeden punkt albo [prawa/bliższa, lewa/dalsza]),
 // fa kąt stóp, eb/kb kierunek zgięcia łokci/kolan (±1), s skrót perspektywiczny ramion [ramię, przedramię], sup = leży na plecach.
 // E i ea: łokieć nieruchomy w punkcie E, przedramię pod kątem ea (dłoń zatacza łuk wokół łokcia, np. prostowanie na wyciągu).
+// K i ka: to samo dla kolana: kolano nieruchome w punkcie K, goleń pod kątem ka (kostka po łuku, np. prostowanie nóg na maszynie).
 // Bez h: ciało proste od kostek (biodro wynika z F i t). a zamiast H: proste ręce pod kątem a (liczba albo [bliższa, dalsza]).
 // Hs zamiast H: dłonie przypięte do barku [wzdłuż tułowia w stronę głowy, do przodu] i idą razem z tułowiem (guma albo sztanga przy barkach).
 // Anatomia (pilnuje `node logic.js`): łokieć zgięty najwyżej do ok. 150°, kąt goleń–stopa (kostka do czubków palców) od 65° (od 80° przy
@@ -52,7 +53,7 @@ function lungeSeq(fwd) {
 
 const MOVES = {
   // Drążek od tyłu (widać pracujące plecy): pełny zakres, na górze drążek na wysokości szyi, głowa nad drążkiem.
-  pullup: { front: true, back: true, props: [FBAR], A: FHANG, B: { h: [150, 81], H: FHANG.H, F: [[158, 166], [142, 166]] } },
+  pullup: { front: true, back: true, props: [FBAR], A: { ...FHANG, h: [150, 134.5], F: [[158, 219.5], [142, 219.5]], s: [[.93, .93], [.93, .93]] }, B: { h: [150, 81], H: FHANG.H, F: [[158, 166], [142, 166]] } },
   // Podchwyt: węższy chwyt, na górze łokcie schodzą w dół wzdłuż tułowia.
   chinup: { front: true, back: true, props: [FBAR], A: { ...FHANG, H: FNARROW }, B: { h: [150, 81], H: FNARROW, F: [[158, 166], [142, 166]] } },
   // Podciąganie łopatek: ręce zostają proste, barki schodzą w dół, ciało unosi się o kilka centymetrów.
@@ -90,7 +91,7 @@ const MOVES = {
   pushup: {
     props: [['ground', 190]],
     A: { t: -22.7, H: [188, 184], F: [49.1, 175.6], fa: 72.3 },
-    B: { t: -7.2, H: [188, 184], F: [50.9, 175], fa: 87.8 },
+    B: { t: -7.2, H: [188, 184], F: [50.9, 175], fa: 87.8, s: [[.75, 1], [.75, 1]] },
   },
   // Pompki na TRX: tyłem do zaczepu, taśmy biegną zza pleców do dłoni.
   trxpush: {
@@ -487,7 +488,7 @@ const MOVES = {
   catcow: {
     props: [['ground', 190]],
     A: { h: [110, 141], t: -5.5, c: -25, H: [166, 187], F: [70, 182], fa: 160 },
-    B: { h: [110, 141], t: -40.5, c: 45, H: [166, 187], F: [70, 182], fa: 160 },
+    B: { h: [110, 141], t: -40.5, c: 60, H: [166, 187], F: [70, 182], fa: 160 },
   },
   // Rozgrzewka nadgarstków: z prostymi rękami ciężar idzie do przodu nad dłonie (bark przed nadgarstkiem), dłonie i kolana w miejscu.
   wristrock: {
@@ -666,14 +667,14 @@ const MOVES = {
   // Prostowanie nóg na maszynie: siedząc, wałek na przodzie goleni przy kostkach; goleń z pionu do poziomu, uda leżą na siedzisku.
   legext: {
     props: [['ground', 190], ['path', 'M96 146H170M100 146L92 80M120 146V190M178 118V190', [88, 76, 216, 190]], ['pad', .82, 1]],
-    A: { h: [122, 136], t: -98, H: [128, 146], F: [166, 178], fa: 8 },
-    B: { h: [122, 136], t: -98, H: [128, 146], F: [208, 136], fa: -80 },
+    A: { h: [122, 136], t: -98, H: [128, 146], K: [166, 136], ka: 90, F: [166, 178], fa: 8 },
+    B: { h: [122, 136], t: -98, H: [128, 146], K: [166, 136], ka: 0, F: [208, 136], fa: -80 },
   },
   // Uginanie nóg na maszynie siedząc: wałek za kostkami, uda przytrzymane z góry; goleń z poziomu pod siedzisko.
   legcurl: {
     props: [['ground', 190], ['path', 'M96 146H170M100 146L92 80M120 146V190M178 118V190M146 124H172', [88, 76, 216, 190]], ['pad', .82, -1]],
-    A: { h: [122, 136], t: -98, H: [128, 146], F: [208, 136], fa: -80 },
-    B: { h: [122, 136], t: -98, H: [128, 146], F: [166, 178], fa: 8 },
+    A: { h: [122, 136], t: -98, H: [128, 146], K: [166, 136], ka: 0, F: [208, 136], fa: -80 },
+    B: { h: [122, 136], t: -98, H: [128, 146], K: [166, 136], ka: 90, F: [166, 178], fa: 8 },
   },
   // Wyciskanie na maszynie siedząc: plecy na oparciu, uchwyty przy środku klatki, łokcie z tyłu; ręce prostują się do przodu.
   // Dźwignia (gruba linia) wisi z osi nad głową, na ramie za oparciem, i odchyla się do przodu razem z uchwytami (poprawka z 20.10:
@@ -911,15 +912,15 @@ function ik(root, target, a, b, bend) {
 const pair = v => Array.isArray(v[0]) ? v : [v, v];
 function norm(P, front) {
   const two = (v, d) => Array.isArray(v) ? v : [v ?? d[0], v ?? d[1]];
-  return { h: P.h, t: P.t ?? -90, c: P.c ?? 0, E: P.E, ea: P.ea, H: P.H && pair(P.H), Hs: P.Hs && pair(P.Hs), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
+  return { h: P.h, t: P.t ?? -90, c: P.c ?? 0, E: P.E, ea: P.ea, K: P.K, ka: P.ka, H: P.H && pair(P.H), Hs: P.Hs && pair(P.Hs), a: P.a == null ? null : two(P.a), F: pair(P.F), fa: two(P.fa, front ? [75, 105] : [12, 12]),
     s: P.s || [[1, 1], [1, 1]], sl: P.sl || [[1, 1], [1, 1]], eb: P.eb || (front ? [1, -1] : [1, 1]), kb: P.kb || (front ? [-1, 1] : [-1, -1]) };
 }
 const lerp = (a, b, p) => typeof a === 'number' ? a + (b - a) * p : a.map((x, i) => lerp(x, b[i], p));
 
 // Stawy dla pozy pośredniej p (0 = A, 1 = B).
 function joints(m, p) {
-  const A = m.nA, B = m.nB, mix = k => A[k] && lerp(A[k], B[k], p);
-  const P = { t: lerp(A.t, B.t, p), c: lerp(A.c, B.c, p), E: mix('E'), ea: mix('ea'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p), sl: lerp(A.sl, B.sl, p) };
+  const A = m.nA, B = m.nB, mix = k => A[k] == null ? undefined : lerp(A[k], B[k], p); // == null: kąt 0 (ka, ea) też się miesza
+  const P = { t: lerp(A.t, B.t, p), c: lerp(A.c, B.c, p), E: mix('E'), ea: mix('ea'), K: mix('K'), ka: mix('ka'), H: mix('H'), Hs: mix('Hs'), a: mix('a'), F: lerp(A.F, B.F, p), fa: lerp(A.fa, B.fa, p), s: lerp(A.s, B.s, p), sl: lerp(A.sl, B.sl, p) };
   // Poza bez h: ciało proste od kostek do barków (deska, pompka, wiosłowanie). Biodro idzie wtedy po łuku i kolana się nie uginają.
   P.h = mix('h') || at(P.F[0], P.t, SEG.th + SEG.sh);
   // Kręgosłup (od 2026-10-28): c = zgięcie w stopniach, + zaokrąglenie (koci grzbiet, brzuszki), − wyprost (krowa, kobra). Tułów idzie
@@ -944,7 +945,8 @@ function joints(m, p) {
       [J['el' + i], J['wr' + i]] = ik(J['s' + i], T, SEG.ua * P.s[i][0], SEG.fa * P.s[i][1], A.eb[i]);
     }
     // sl: skrót udo/goleń (widok od przodu na siedzącą postać: uda idą w stronę widza i wyglądają na krótsze).
-    [J['kn' + i], J['an' + i]] = ik(J['h' + i], P.F[i], SEG.th * P.sl[i][0], SEG.sh * P.sl[i][1], A.kb[i]);
+    if (P.K) { J['kn' + i] = P.K; J['an' + i] = at(P.K, P.ka, SEG.sh * P.sl[i][1]); } // K i ka: kolano nieruchome, kostka po łuku
+    else [J['kn' + i], J['an' + i]] = ik(J['h' + i], P.F[i], SEG.th * P.sl[i][0], SEG.sh * P.sl[i][1], A.kb[i]);
     J['to' + i] = at(J['an' + i], P.fa[i], SEG.ft);
   }
   return J;
