@@ -55,7 +55,7 @@ const MOVES = {
   // Drążek od tyłu (widać pracujące plecy): pełny zakres, na górze drążek na wysokości szyi, głowa nad drążkiem.
   pullup: { front: true, back: true, props: [FBAR], A: { ...FHANG, h: [150, 134.5], F: [[158, 219.5], [142, 219.5]], s: [[.93, .93], [.93, .93]] }, B: { h: [150, 81], H: FHANG.H, F: [[158, 166], [142, 166]] } },
   // Podchwyt: węższy chwyt, na górze łokcie schodzą w dół wzdłuż tułowia.
-  chinup: { front: true, back: true, props: [FBAR], A: { ...FHANG, H: FNARROW }, B: { h: [150, 81], H: FNARROW, F: [[158, 166], [142, 166]] } },
+  chinup: { front: true, back: true, props: [FBAR], A: { ...FHANG, H: FNARROW, h: [150, 134.5], F: [[158, 219.5], [142, 219.5]], s: [[.93, .93], [.93, .93]] }, B: { h: [150, 81], H: FNARROW, F: [[158, 166], [142, 166]] } },
   // Podciąganie łopatek: ręce zostają proste, barki schodzą w dół, ciało unosi się o kilka centymetrów.
   scap: { front: true, back: true, props: [FBAR], A: FHANG, B: { ...FHANG, h: [150, 134.5], F: [[158, 219.5], [142, 219.5]], s: [[.93, .93], [.93, .93]] } },
   hang: { front: true, back: true, props: [FBAR], A: FHANG, B: FHANG },
@@ -92,6 +92,12 @@ const MOVES = {
     props: [['ground', 190]],
     A: { t: -22.7, H: [188, 184], F: [49.1, 175.6], fa: 72.3 },
     B: { t: -7.2, H: [188, 184], F: [50.9, 175], fa: 87.8, s: [[.75, 1], [.75, 1]] },
+  },
+  // Wąskie pompki: łokcie wzdłuż tułowia, więc ramię leży w płaszczyźnie rysunku (bez skrótu jak przy 45° w zwykłych pompkach).
+  pushupnarrow: {
+    props: [['ground', 190]],
+    A: { t: -22.7, H: [188, 184], F: [49.1, 175.6], fa: 72.3 },
+    B: { t: -7.2, H: [188, 184], F: [50.9, 175], fa: 87.8 },
   },
   // Pompki na TRX: tyłem do zaczepu, taśmy biegną zza pleców do dłoni.
   trxpush: {
@@ -722,7 +728,7 @@ const EX_MOVE = {
   'podciaganie': ['pullup'], 'podciaganie-podchwyt': ['chinup'], 'podciaganie-guma': ['pullup', 'band'], 'podciaganie-negatyw': ['pullup', 'neg'],
   'podciaganie-lopatek': ['scap'], 'zwis': ['hang'], 'trx-wioslowanie': ['row'], 'wioslowanie-australijskie': ['invrow'], 'wioslowanie-stol': ['tablerow'],
   'dipy': ['dip'], 'dipy-negatyw': ['dip', 'neg'], 'podpor-porecze': ['support'],
-  'pompki': ['pushup'], 'pompki-waskie': ['pushup'], 'pompki-trx': ['trxpush'], 'pompki-nogi-wyzej': ['declpush'], 'pompki-na-podwyzszeniu': ['inclpush'],
+  'pompki': ['pushup'], 'pompki-waskie': ['pushupnarrow'], 'pompki-trx': ['trxpush'], 'pompki-nogi-wyzej': ['declpush'], 'pompki-na-podwyzszeniu': ['inclpush'],
   'guma-rozciaganie': ['pullapart'], 'guma-odwrotne-rozpietki': ['revfly'], 'guma-rotacja': ['extrot'],
   'kolana-porecze': ['kneebars'], 'kolana-zwis': ['kneehang'], 'plank': ['plank'], 'deska-bokiem': ['sideplank'],
   'trx-rollout': ['rollout'], 'trx-kolana': ['trxknees'], 'dead-bug': ['deadbug'], 'brzuszki': ['crunch'],
