@@ -743,7 +743,8 @@ const store = (k, v) => v == null ? localStorage.removeItem(k) : localStorage.se
 // Adres serwisu z kodami dostępu. Pusty = tryb bez kodu: rozpiski tylko z importu. localStorage.api podmienia go do prób lokalnych.
 const API = localStorage.api || 'https://trening.tail847b94.ts.net';
 // Każde połączenie z serwisem ma limit czasu: przy awarii serwera połączenie potrafi wisieć bez końca, a osoba musi dostać komunikat.
-const call = (path, o) => fetch(API + path, { ...o, signal: AbortSignal.timeout?.(15000) });
+// 410: trener usunął konto. Wszystko o osobie znika też z telefonu, a aplikacja wraca do ekranu kodu.
+const call = (path, o) => fetch(API + path, { ...o, signal: AbortSignal.timeout?.(15000) }).then(r => { if (r.status === 410) gone(); return r; });
 // auth = { token, nazwa }; outbox = wyniki czekające na wysłanie do trenera.
 let auth = load('auth', null), outbox = load('outbox', []), netDown = false; // netDown: serwis nie odpowiedział przy ostatniej próbie
 // Z kodem dostępu liczy się tylko rozpiska z serwisu. Rozpiska wczytana kiedyś importem zostaje w pamięci telefonu, ale się nie pokazuje.
@@ -1199,6 +1200,7 @@ document.addEventListener('click', e => {
 $('surveyBtn').onclick = async () => {
   try {
     const r = await call('/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
+    if (r.status === 410) return $('sheet').close();
     if (r.status === 401) { $('sheet').close(); return lock(t('codeExpired')); }
     if (!r.ok) throw Error(r.status);
     const d = await r.json();
@@ -1473,7 +1475,7 @@ async function flushOutbox() {
   for (const w of [...outbox]) {
     try {
       const r = await call('/api/wyniki', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth?.token }, body: JSON.stringify(w) });
-      if (r.status === 401) { ok = false; break; } // kod przestał działać; wynik czeka na ponowne wejście
+      if (r.status === 401 || r.status === 410) { ok = false; break; } // kod przestał działać; wynik czeka na ponowne wejście (410: konto usunięte, wyników już nie ma)
       if (!r.ok) continue;
       netDown = false; outbox = outbox.filter(x => x.poczatek !== w.poczatek); store('outbox', outbox);
     } catch { netDown = true; ok = false; break; }
@@ -1750,9 +1752,12 @@ async function loadPlans() {
   if (!API || !auth) return;
   try {
     const r = await call('/api/rozpiska?jezyk=' + LANG, { headers: { Authorization: 'Bearer ' + auth.token } });
+    if (r.status === 410) return;
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     const d = await r.json(), json = JSON.stringify(d.plans), dj = JSON.stringify(d.dieta ?? null);
+    // Konto sprawdzone przed wysłaniem zaległych wyników: wyniki poprzedniej osoby nie mogą trafić na nowe konto.
+    if (d.konto && d.konto !== load('konto', null)) { const was = cur; checkAccount(d); if (was && !cur) { clearInterval(tInt); show('home'); } if (!$('home').hidden) renderHome(); }
     netDown = false; flushOutbox();
     // Raport i waga wysłane z drugiego telefonu też się liczą.
     if (d.raport && d.raport > (load('raportDzien', '') || '')) store('raportDzien', d.raport);
@@ -1847,6 +1852,27 @@ $('tourSkip').onclick = tourEnd;
 $('tourBtn').onclick = () => { $('sheet').close(); setTimeout(tour, 250); };
 addEventListener('keydown', e => { if (e.key === 'Escape' && tourAt >= 0) tourEnd(); });
 // Kod dostępu: serwis wydaje przepustkę (token) i od tej pory oddaje rozpiskę tej osoby.
+// Historia należy do osoby: przy zmianie osoby znikają imię, historia, trening w toku, niewysłane wyniki (poszłyby na konto nowej osoby)
+// i to, które komunikaty od trenera już widziała.
+// Zostają tylko ustawienia telefonu (adres serwisu, język, dźwięki, wersja APK, przepustka, powiadomienia); samouczek nowa osoba zobaczy od początku.
+const DEVICE_KEYS = ['api', 'jezyk', 'dzwieki', 'apkWersja', 'auth', 'push', 'who', 'konto'];
+function wipePerson() {
+  clearInterval(tInt);
+  for (const k of Object.keys(localStorage)) if (!DEVICE_KEYS.includes(k)) localStorage.removeItem(k);
+  past = []; cur = null; outbox = []; served = []; servedJson = ''; diet = null; dietJson = ''; sel = null; surveyOk = false;
+}
+function gone() {
+  if ($('gate').hidden === false && !auth) return;
+  wipePerson(); store('who', null); store('konto', null); lock(t('accountGone'));
+}
+// Konto (numer i chwila utworzenia) od 2026-11-10: usunięte konto i nowe z tymi samymi inicjałami to dla aplikacji różne osoby.
+// Telefon bez zapisanego konta (starsza wersja) czyści dane, gdy historia albo trening w toku są starsze niż konto, czyli należą do poprzedniego.
+function checkAccount(d) {
+  if (!d?.konto) return;
+  const prev = load('konto', null), old = t => typeof t === 'number' && t < d.utworzono;
+  if (prev ? prev !== d.konto : past.some(h => old(h?.t0)) || old(cur?.t0)) wipePerson();
+  store('konto', d.konto);
+}
 function lock(msg) {
   auth = null; store('auth', null); store('push', null); store('kontakt', null); store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = '';
   store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
@@ -1865,13 +1891,10 @@ async function activate(inicjaly, kod) {
     // Nowy kod może należeć do innej osoby, więc stara rozpiska znika, zanim przyjdzie nowa.
     store('plans', null); store('plansAt', null); store('ankieta', null); store('plec', null); served = []; servedJson = ''; sel = null;
     store('dieta', null); diet = null; dietJson = ''; store('ankietaBraki', null); surveyOk = false;
-    // Historia należy do osoby: inne inicjały niż przy ostatnim wejściu czyszczą imię, historię, trening w toku i niewysłane wyniki (poszłyby na konto nowej osoby).
-    // Razem z nimi znika to, które komunikaty od trenera już widziała.
+    // Inne inicjały niż przy ostatnim wejściu albo inne konto (także nowe konto z tymi samymi inicjałami) czyszczą dane poprzedniej osoby.
     const who = inicjaly.replace(/\s/g, '').toUpperCase();
-    if (load('who', null) !== who) {
-      store('imie', null); past = []; store('history', past); cur = null; save(); outbox = []; store('outbox', outbox); store('who', who);
-      for (const k of ['widzianaRozpiska', 'widzianaDieta', 'cwiczenia']) store(k, null);
-    }
+    if (load('who', null) !== who) wipePerson();
+    store('who', who); checkAccount(d);
     $('gCode').value = $('gIni').value = '';
     show('home'); renderHome(); loadPlans(); checkSurvey();
   } catch { $('gMsg').textContent = t('errOffline'); }
@@ -1908,6 +1931,7 @@ async function checkSurvey() {
   if (!API || !auth || training() || !$('form').hidden) return;
   try {
     const r = await call('/api/ankieta', { headers: { Authorization: 'Bearer ' + auth.token } });
+    if (r.status === 410) return;
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     const d = await r.json();
@@ -2012,6 +2036,7 @@ $('fBtn').onclick = async () => {
   $('fBtn').disabled = true; $('fMsg').textContent = '';
   try {
     const r = await call('/api/ankieta', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }, body: JSON.stringify({ odpowiedzi: survey.odp }) });
+    if (r.status === 410) return;
     if (r.status === 401) return lock(t('codeExpired'));
     if (!r.ok) throw Error(r.status);
     store('ankieta', 1); store('ankietaBraki', null); surveyOk = true; store('plec', survey.odp.plec); setSex(survey.odp.plec); show('home'); renderHome();
