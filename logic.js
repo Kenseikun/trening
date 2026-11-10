@@ -315,6 +315,7 @@ if (typeof module !== 'undefined' && require.main === module) {
   const zlaDieta = ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Śniadanie', options: [{ name: 'Skyr z migdałami', note: '15 g migdałów' }, 'Tofu z warzywami'] }] }) }, kal);
   assert.deepStrictEqual(zlaDieta.map(u => u.tekst.split(':')[0]), ['Uczulenie (orzechy)', 'Sposób odżywiania (wegańsko)'], JSON.stringify(zlaDieta));
   assert.deepStrictEqual(ZGODNOSC.dieta({ days: Array(7).fill({ meals: [{ name: 'Obiad', options: ['Tofu z ryżem', 'Ciecierzyca z warzywami'] }] }) }, kal), []);
+  assert.deepEqual(ZGODNOSC.dieta({ days: [] }, { ...kal, choroby: ['CUKRZYCA'] }).map(u => u.poziom), ['uwaga']); // choroba nie blokuje, trener decyduje
   assert.match(ZGODNOSC.dieta({ days: [] }, { ...kal, choroby: ['CUKRZYCA'] })[0].tekst, /dietetyk/);
   // Ankieta od 2026-10-13: czego osoba nie je (uwaga) i liczba posiłków różna od diety (uwaga z dniami).
   const dzien = n => ({ meals: Array(n).fill({ name: 'Obiad', options: ['Tofu z ryżem'] }) });

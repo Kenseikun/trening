@@ -72,7 +72,8 @@ globalThis.ZGODNOSC = (() => {
     const out = [], blad = tekst => out.push({ poziom: 'blad', tekst });
     if (!odp.odzywianie || !odp.alergie || !odp.choroby) blad('Ankieta nie ma pytań o dietę (sposób odżywiania, uczulenia, choroby). Osoba musi ją uzupełnić, zanim dostanie dietę.');
     const choroby = lista(odp.choroby);
-    if (choroby.length) blad(`Osoba zgłosiła: ${choroby.map(c => CHOROBY[c] || c).join(', ')}. Dietę układa dietetyk albo lekarz, nie trener.`);
+    // Od 2026-11-10 choroba to uwaga, nie błąd: decyzję o wysłaniu podejmuje trener, a w razie wątpliwości konsultuje dietę ze specjalistą.
+    if (choroby.length) out.push({ poziom: 'uwaga', tekst: `Osoba zgłosiła: ${choroby.map(c => CHOROBY[c] || c).join(', ')}. Sprawdź dietę pod tym kątem przed wysłaniem. W razie wątpliwości skonsultuj ją z dietetykiem albo lekarzem.` });
     // Każde danie z dnia i posiłku: nazwa, opis i notatka posiłku.
     const dania = (d.days || []).flatMap((day, i) => (day.meals || []).flatMap(m => (m.options || []).map(o => {
       const name = typeof o === 'string' ? o : o?.name || '', note = typeof o === 'string' ? '' : o?.note || '';
