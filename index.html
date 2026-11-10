@@ -605,7 +605,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
 </main>
 
 <section id="work" class="sheet" hidden>
-  <div class="wbar"><div id="wStrip"></div><button id="endBtn" class="round" aria-label="Menu treningu: pomiń ćwiczenie albo zakończ" data-ta="workMenu"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
+  <div class="wbar"><div id="wStrip"></div><button id="endBtn" class="round" aria-label="Menu treningu: pomiń ćwiczenie, zakończ albo przerwij" data-ta="workMenu"><svg class="ico" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>
   <h1 id="wName" class="float"></h1>
   <div class="wsub"><p id="wProg" class="stone"></p><button id="howBtn" class="chip" data-t="how">jak wykonać</button></div>
   <div id="wBlock" class="stats"></div>
@@ -688,6 +688,7 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   <div id="p-act" class="pane">
     <button id="skipEx" data-t="skipEx">pomiń to ćwiczenie</button>
     <button id="quitBtn" data-t="quit">zakończ trening i pokaż wyniki</button>
+    <button id="cancelWo" class="wyloguj" data-t="cancelWo">przerwij trening bez zapisu</button>
   </div>
   <div id="p-lib" class="pane"><div id="lib" class="lib rows"></div><button class="pos" data-for="lib" hidden></button></div>
   <div id="p-upd" class="pane">
@@ -1336,6 +1337,12 @@ $('skipEx').onclick = () => {
   cur.i = next; renderSet();
 };
 $('quitBtn').onclick = () => { $('sheet').close(); finish(); };
+// Przerwanie bez zapisu (np. trening włączony przez pomyłkę): wyniki znikają, można od razu zacząć od początku.
+$('cancelWo').onclick = async () => {
+  $('sheet').close();
+  if (!await ask(t('askCancelWo'), t('cancelWoOk'), t('cancelWoBack'))) return;
+  clearInterval(tInt); cur = null; save(); show('home'); renderHome();
+};
 
 function finishSet(v) {
   cur.log[cur.i] = v;
