@@ -18,7 +18,8 @@ const put = (req, res) => { if (res.ok) { const copy = res.clone(); caches.open(
 
 self.addEventListener('fetch', e => {
   const r = e.request;
-  if (r.method !== 'GET' || !r.url.startsWith(self.location.origin)) return;
+  // Wideo (zapytania o fragment, Range) idzie prosto do sieci: Cache API nie przyjmuje odpowiedzi częściowych, a Safari bez nich nie odtwarza.
+  if (r.method !== 'GET' || r.headers.has('range') || !r.url.startsWith(self.location.origin)) return;
   e.respondWith(fetch(r, FRESH).then(res => put(r, res)).catch(() => caches.match(r, { ignoreSearch: true })));
 });
 

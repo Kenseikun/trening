@@ -175,6 +175,9 @@ if (location.host === 'kenseikun.github.io') location.replace('https://treningap
   /* Postać w ogrodzie */
   .garden { border: 1px solid var(--line); border-radius: 26px; padding: 8px 6px 10px; margin-top: 12px; background: radial-gradient(60% 55% at 50% 42%, rgba(141,163,141,.13), transparent 70%) }
   .views { display: grid; grid-template-columns: 1fr 1fr; gap: 2px }
+  /* Żywa postać (od 2026-11-12): render na płótnie nad obrysem; obrys przygasa, podpisy i kreski do mięśni zostają. */
+  .views { position: relative } .views canvas.live { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none }
+  .views .body path:not(.ld) { transition: opacity 1.2s ease } .views.alive .body path:not(.ld) { opacity: 0 }
   .views figure { margin: 0; text-align: center }
   .views figcaption { font-size: .72rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--stone) }
   .body { width: 100%; height: auto; max-height: 208px; display: block; margin: 0 auto; overflow: visible }
@@ -895,6 +898,108 @@ function drawFigure(box, load, opt = {}) {
   box.innerHTML = figure(load, { ...opt, u, gap, fit });
 }
 
+// --- żywa postać na stronie głównej (od 2026-11-12)
+// Najpierw rysuje się obrys jak dotąd, potem przenika w render postaci (trenerka albo trener według ankiety), który stoi i oddycha,
+// a co kilkanaście sekund bez dotykania ekranu robi krótki ruch (jak postać w grze). Czerwień mięśni nakłada aplikacja z mapy mięśni.
+// Klip: MP4 720×1440, rząd przód i rząd tył, panele kolor | alfa | mapa mięśni (szarość = numer z LIVE_IDS × 15); kadr każdego widoku
+// to jednostki obrysu x 40–160, y 0–360, więc podpisy i kreski do mięśni zostają na swoich miejscach. Bez WebGL, przy ograniczonym ruchu
+// albo gdy klip się nie wczyta, zostaje sam obrys. LIVE: lista ruchów danej płci; pusta = funkcja wyłączona.
+const LIVE = { M: ['ruch1', 'ruch2', 'ruch3'], K: ['ruch1', 'ruch2', 'ruch3'] };
+const LIVE_IDS = ['chest', 'shoulders', 'biceps', 'forearms', 'abs', 'obliques', 'quads', 'adductors', 'traps', 'triceps', 'lats', 'midback', 'lowerback', 'glutes', 'hamstrings', 'calves'];
+const LIVE_IDLE = [12000, 22000]; // ruch po tylu ms bez dotykania (losowo z przedziału)
+let live = null;
+const liveSrc = clip => `render/glowna/${SEX === 'K' ? 'K' : 'M'}-${clip}.mp4`;
+function liveGL(cv) {
+  const gl = cv.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
+  if (!gl) return null;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, sh(gl.VERTEX_SHADER, 'attribute vec2 p;uniform vec4 r;uniform float row;varying vec2 uv;void main(){uv=vec2(p.x/3.,(row+p.y)/2.);gl_Position=vec4(r.xy+p*r.zw,0.,1.);}'));
+  // Mięsień liczy się tylko, gdy piksel i dwaj sąsiedzi mają ten sam numer: na krawędziach kompresja daje szarości pośrednie (cudzy numer).
+  gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, `precision mediump float;uniform sampler2D t;uniform float lv[17];uniform float pulse,fade;uniform vec2 px;varying vec2 uv;
+    float id(vec2 q){return floor(texture2D(t,q+vec2(2./3.,0.)).r*17.+.5);}
+    void main(){vec3 c=texture2D(t,uv).rgb;float a=texture2D(t,uv+vec2(1./3.,0.)).r;float i=id(uv);
+      float k=0.;if(i==id(uv+vec2(px.x,0.))&&i==id(uv+vec2(0.,px.y)))for(int n=1;n<17;n++)if(abs(i-float(n))<.5)k=lv[n];
+      float l=dot(c,vec3(.3,.59,.11));vec3 red=vec3(1.,.42,.42)*(.55+.6*l);
+      c=mix(c,red,k*(k>.9?pulse:1.)*.85);gl_FragColor=vec4(c*a*fade,a*fade);}`));
+  gl.linkProgram(pr); gl.useProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  const u = n => gl.getUniformLocation(pr, n);
+  return { gl, r: u('r'), row: u('row'), lv: u('lv'), pulse: u('pulse'), fade: u('fade'), px: u('px') };
+}
+// Woła renderHome po każdym narysowaniu obrysu. load: obciążenie mięśni jak w figure (główna praca = powyżej połowy największego).
+function liveFigure(box, load, plot) {
+  const views = box.querySelector('.views');
+  if (!LIVE[SEX]?.length || matchMedia('(prefers-reduced-motion: reduce)').matches || !views) return liveStop();
+  if (live && live.sex !== SEX) liveStop();
+  if (!live) {
+    const cv = document.createElement('canvas'), g = liveGL(cv);
+    if (!g) return;
+    const mk = () => Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'auto' });
+    live = { sex: SEX, cv, g, idle: mk(), move: mk(), cur: null, ready: false, shown: false, next: 0, fade: 0 };
+    live.idle.src = liveSrc('oddech'); live.idle.setAttribute('playsinline', ''); live.move.setAttribute('playsinline', '');
+    live.idle.onended = () => liveNext();
+    live.move.onended = () => { live.cur = live.idle; live.idle.currentTime = 0; live.idle.play().catch(() => {}); liveWait(); };
+    live.idle.onerror = () => liveStop();
+    live.idle.addEventListener('canplay', () => { live && (live.ready = true); }, { once: true });
+    for (const ev of ['pointerdown', 'scroll', 'keydown']) addEventListener(ev, liveWait, { passive: true });
+    liveWait(); live.cur = live.idle; live.idle.play().catch(() => {});
+    requestAnimationFrame(liveDraw);
+  }
+  const max = Math.max(1, ...Object.values(load));
+  live.lv = new Float32Array(17); LIVE_IDS.forEach((m, i) => { if (load[m]) live.lv[i + 1] = load[m] > max / 2 ? 1 : .45; });
+  live.views = views; live.cv.className = 'live'; views.append(live.cv);
+  // Przy pierwszym rysowaniu obrys najpierw się kreśli (ok. 3 s), dopiero potem przenika w render; przy kolejnych render jest od razu.
+  live.at = performance.now() + (live.shown ? 0 : plot ? 3200 : 500);
+  if (live.shown) views.classList.add('alive');
+}
+function liveWait() { if (live) live.next = Date.now() + LIVE_IDLE[0] + Math.random() * (LIVE_IDLE[1] - LIVE_IDLE[0]); }
+// Koniec pętli oddechu: po czasie bez dotykania losowy ruch (inny niż poprzedni), inaczej oddech od nowa. Pozy na styku są te same.
+function liveNext() {
+  if (!live) return;
+  if (Date.now() >= live.next) {
+    const list = LIVE[live.sex].filter(c => c !== live.last), c = list[Math.floor(Math.random() * list.length)];
+    live.last = c; live.move.src = liveSrc(c); live.cur = live.move; live.move.play().catch(() => { live.cur = live.idle; live.idle.play().catch(() => {}); });
+  } else { live.idle.currentTime = 0; live.idle.play().catch(() => {}); }
+}
+function liveDraw(now) {
+  if (!live) return;
+  requestAnimationFrame(liveDraw);
+  const { cv, g, views } = live, v = live.cur, seen = views.isConnected && !$('home').hidden && !document.hidden;
+  if (!seen) { if (!v.paused) v.pause(); return; }
+  if (v.paused && !v.ended) v.play().catch(() => {});
+  if (!live.ready || v.readyState < 2 || now < live.at) return;
+  if (!live.shown) { live.shown = true; views.classList.add('alive'); }
+  live.fade = Math.min(1, live.fade + 1 / 70); // przenikanie ok. 1,2 s
+  const dpr = Math.min(2, devicePixelRatio || 1), box = views.getBoundingClientRect(), w = Math.round(box.width * dpr), h = Math.round(box.height * dpr);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const { gl } = g;
+  gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, v);
+  gl.uniform1fv(g.lv, live.lv); gl.uniform1f(g.pulse, .82 + .18 * Math.sin(now / 650)); gl.uniform1f(g.fade, live.fade); gl.uniform2f(g.px, 1 / 720, 1 / 1440);
+  views.querySelectorAll('svg.body').forEach((svg, row) => {
+    // Kadr klipu = jednostki obrysu x 40–160, y 0–360 (postać rysowana jest z przesunięciem o 20, jak w figure).
+    const m = svg.getScreenCTM(); if (!m) return;
+    const pt = (x, y) => { const q = new DOMPoint(x, y).matrixTransform(m); return [(q.x - box.left) / box.width * 2 - 1, 1 - (q.y - box.top) / box.height * 2]; };
+    const [x0, y0] = pt(40, 360), [x1, y1] = pt(160, 0);
+    gl.uniform4f(g.r, x0, y0, x1 - x0, y1 - y0); gl.uniform1f(g.row, 1 - row);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  });
+}
+function liveStop() {
+  if (!live) return;
+  for (const v of [live.idle, live.move]) { v.pause(); v.removeAttribute('src'); v.load(); }
+  live.cv.remove(); live.views?.classList.remove('alive');
+  for (const ev of ['pointerdown', 'scroll', 'keydown']) removeEventListener(ev, liveWait);
+  live = null;
+}
+
 // --- ćwiczenie
 // Animacja ruchu z legendą (ćwiczenie spoza biblioteki nie ma animacji, zostaje opis i wideo).
 const moveBlock = id => {
@@ -1000,7 +1105,7 @@ function renderHome() {
   // Postać rysuje się tylko, gdy coś się zmieniło (trening, płeć, język, ekran): drugie odświeżenie po pobraniu rozpiski nie przerywa
   // animacji rysowania przy starcie (poprawka z 2026-10-22). Animacja zużywa się dopiero na widocznym ekranie.
   const widac = !$('home').hidden, figKey = [sel, p.name, p.items.map(i => i.ex + ':' + i.sets).join(), SEX, LANG, innerWidth, innerHeight, widac].join('|');
-  if (figKey !== lastFig || !plotted && widac) { drawFigure($('hFig'), muscleLoad(p.items), { plot: !plotted && widac }); lastFig = figKey; if (widac) plotted = true; }
+  if (figKey !== lastFig || !plotted && widac) { const plot = !plotted && widac, load = muscleLoad(p.items); drawFigure($('hFig'), load, { plot }); liveFigure($('hFig'), load, plot); lastFig = figKey; if (widac) plotted = true; }
   wiecej();
   $('hBlock').innerHTML = cells([[t('sets'), steps(p).length], [t('time'), `~${estimate(p)}`, t('minutes', estimate(p))], [t('lastTime'), prev ? prev.reps : '—', prev ? t('repsOn', day(prev.t0)) : t('none')]]);
   $('hNote').hidden = !p.note; $('hNote').textContent = p.note;
