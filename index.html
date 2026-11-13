@@ -911,9 +911,9 @@ function drawFigure(box, load, opt = {}) {
 // Klip: MP4 720×1440, rząd przód i rząd tył, panele kolor | alfa | mapa mięśni (szarość = numer z LIVE_IDS × 15); kadr każdego widoku
 // to jednostki obrysu x 40–160, y 0–360, więc podpisy i kreski do mięśni zostają na swoich miejscach. Bez WebGL, przy ograniczonym ruchu
 // albo gdy klip się nie wczyta, zostaje sam obrys. LIVE: lista ruchów danej płci; pusta = funkcja wyłączona.
-const LIVE = { M: ['ruch1', 'ruch2', 'ruch3'], K: ['ruch1', 'ruch2', 'ruch3'] };
+const LIVE = { M: ['ruch1', 'ruch2'], K: ['ruch1', 'ruch2'] }; // 13.11: krążenie barkami i przechył głowy; potrząśnięcie dłońmi (ruch3) odrzucone: „jak machający ptak”
 const LIVE_IDS = ['chest', 'shoulders', 'biceps', 'forearms', 'abs', 'obliques', 'quads', 'adductors', 'traps', 'triceps', 'lats', 'midback', 'lowerback', 'glutes', 'hamstrings', 'calves'];
-const LIVE_IDLE = [12000, 22000]; // ruch po tylu ms bez dotykania (losowo z przedziału)
+const LIVE_IDLE = [7000, 12000]; // ruch po tylu ms bez dotykania (losowo z przedziału)
 let live = null;
 const liveSrc = clip => `render/glowna/${SEX === 'K' ? 'K' : 'M'}-${clip}.mp4`;
 function liveGL(cv) {
@@ -971,7 +971,7 @@ function liveWait() { if (live) live.next = Date.now() + LIVE_IDLE[0] + Math.ran
 function liveNext() {
   if (!live) return;
   if (Date.now() >= live.next) {
-    const list = LIVE[live.sex].filter(c => c !== live.last), c = list[Math.floor(Math.random() * list.length)];
+    const all = LIVE[live.sex], list = all.length > 1 ? all.filter(c => c !== live.last) : all, c = list[Math.floor(Math.random() * list.length)];
     live.last = c; live.move.src = liveSrc(c); live.cur = live.move; live.move.play().catch(() => { live.cur = live.idle; live.idle.play().catch(() => {}); });
   } else { live.idle.currentTime = 0; live.idle.play().catch(() => {}); }
 }
